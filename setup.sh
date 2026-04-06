@@ -4,12 +4,27 @@ DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ERRORS=()
 
 # ---------------------------------------------------------------------------
+# Resolve o usuário e home real (funciona mesmo rodando com sudo)
+# ---------------------------------------------------------------------------
+if [ -n "$SUDO_USER" ]; then
+  REAL_USER="$SUDO_USER"
+  REAL_HOME="$(getent passwd "$SUDO_USER" | cut -d: -f6)"
+else
+  REAL_USER="$(whoami)"
+  REAL_HOME="$HOME"
+fi
+
+export HOME="$REAL_HOME"
+
+# ---------------------------------------------------------------------------
 # Logging
 # ---------------------------------------------------------------------------
 log_info() { printf "\033[1;34m[INFO]\033[0m  %s\n" "$1"; }
-log_ok() { printf "\033[1;32m[OK]\033[0m    %s\n" "$1"; }
+log_ok()   { printf "\033[1;32m[OK]\033[0m    %s\n" "$1"; }
 log_warn() { printf "\033[1;33m[WARN]\033[0m  %s\n" "$1"; }
-log_err() { printf "\033[1;31m[ERROR]\033[0m %s\n" "$1"; }
+log_err()  { printf "\033[1;31m[ERROR]\033[0m %s\n" "$1"; }
+
+log_info "Usuário: $REAL_USER | Home: $REAL_HOME"
 
 # ---------------------------------------------------------------------------
 # Detect OS
