@@ -1,0 +1,9 @@
+.DS_Store
+*.bak
+*.log
+
+# Tmux resurrect sessions (dados de sessão, não config)
+tmux/resurrect/
+
+# Neovim cache/state (gerado automaticamente)
+nvim/.lazy/

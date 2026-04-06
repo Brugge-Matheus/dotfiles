@@ -1,0 +1,87 @@
+# Adiciona uma linha em branco entre os comandos para melhor visualização
+add_newline = true
+
+# Personaliza o caractere do prompt
+[character]
+success_symbol = "[➜](bold green)"
+error_symbol = "[➜](bold red)"
+
+# Diretório atual com truncamento e ícone
+[directory]
+truncation_length = 3
+truncation_symbol = "…/"
+style = "bold cyan"
+read_only = " "
+format = "[$path]($style)[$read_only]($read_only_style) "
+
+# Git: mostra branch, status e ícones
+[git_branch]
+symbol = " "
+style = "bold purple"
+
+[git_status]
+conflicted = "⚔️ "
+ahead = "⇡${count} "
+behind = "⇣${count} "
+diverged = "⇕${ahead_count}⇓${behind_count} "
+untracked = "?"
+stashed = "⚑ "
+modified = "✎ "
+staged = "● "
+renamed = "➜ "
+deleted = "✘ "
+style = "bold red"
+
+# Ruby: com ícone de diamante e cor vibrante
+[ruby]
+format = "via [💎 $version]($style) "
+style = "bold red"
+detect_extensions = ["rb", "rake"]
+detect_files = ["Gemfile", ".ruby-version"]
+
+# PHP: com ícone de elefante, cor azul e formato mais clean
+[php]
+format = "via [🐘 $version]($style) "
+style = "bold blue"
+detect_extensions = ["php"]
+detect_files = ["composer.json"]
+
+# Node.js (útil para projetos Rails com JS)
+[nodejs]
+format = "via [⬢ $version]($style) "
+style = "bold green"
+detect_extensions = ["js", "jsx", "ts", "tsx"]
+detect_files = ["package.json"]
+
+# Python (caso use scripts auxiliares)
+[python]
+format = "via [🐍 $version]($style) "
+style = "bold yellow"
+detect_extensions = ["py"]
+detect_files = ["requirements.txt", "Pipfile"]
+
+# Tempo de execução do último comando (útil para comandos demorados)
+[cmd_duration]
+min_time = 2000
+format = "took [$duration]($style) "
+style = "bold yellow"
+
+# Status do último comando (exibe ✔️ ou ❌)
+[status]
+disabled = false
+symbol = "➜"
+format = '[\[$symbol$status\]]($style) '
+style = "bold red"
+
+# Tempo atual no prompt (opcional, para quem gosta)
+[time]
+disabled = false
+format = "[$time]($style) "
+style = "bold dimmed"
+use_12hr = false
+
+# Configurações gerais para limpar o prompt quando estiver vazio
+[custom.empty_line]
+when = "true"
+command = "echo ''"
+format = ""
