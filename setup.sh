@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 
-set -e
-
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ERRORS=()
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -76,32 +75,43 @@ install_macos_deps() {
 # ---------------------------------------------------------------------------
 install_linux_deps() {
   log_info "Atualizando pacotes..."
-  sudo apt-get update -y
-  sudo apt-get upgrade -y
+  sudo apt-get update -y || ERRORS+=("apt-get update falhou")
 
   log_info "Instalando dependências base..."
   sudo apt-get install -y \
     zsh tmux git curl wget unzip build-essential \
-    fzf ripgrep tree bat fd-find \
-    gettext cmake ninja-build pkg-config libtool libtool-bin \
-    autoconf automake lua5.4 liblua5.4-dev luarocks \
-    fonts-firacode fonts-jetbrains-mono
+    fzf ripgrep tree gettext \
+    cmake ninja-build pkg-config libtool libtool-bin \
+    autoconf automake luarocks \
+    fonts-firacode fonts-jetbrains-mono 2>/dev/null || \
+  sudo apt-get install -y \
+    zsh tmux git curl wget unzip build-essential \
+    fzf ripgrep tree gettext \
+    cmake ninja-build pkg-config libtool libtool-bin \
+    autoconf automake luarocks || \
+    ERRORS+=("Alguns pacotes apt falharam — verifique manualmente")
 
-  # Neovim: tenta instalar versão recente via snap, senão compila
+  # bat (pode ser batcat no Ubuntu)
+  if ! command -v bat &>/dev/null && ! command -v batcat &>/dev/null; then
+    sudo apt-get install -y bat 2>/dev/null || sudo apt-get install -y batcat 2>/dev/null || true
+  fi
+
+  # fd
+  if ! command -v fd &>/dev/null; then
+    sudo apt-get install -y fd-find 2>/dev/null && \
+      ln -sf "$(command -v fdfind)" "$HOME/.local/bin/fd" 2>/dev/null || true
+  fi
+
+  # Neovim: baixa binário pré-compilado do GitHub (mais confiável que snap ou compilar)
   if ! command -v nvim &>/dev/null; then
-    log_info "Instalando Neovim..."
-    if command -v snap &>/dev/null; then
-      sudo snap install nvim --classic
-    else
-      log_info "Compilando Neovim a partir do source..."
-      git clone https://github.com/neovim/neovim.git /tmp/neovim
-      cd /tmp/neovim
-      git checkout stable
-      make CMAKE_BUILD_TYPE=Release
-      sudo make install
-      cd ~
-      rm -rf /tmp/neovim
-    fi
+    log_info "Instalando Neovim (binário pré-compilado)..."
+    NVIM_URL="https://github.com/neovim/neovim/releases/download/stable/nvim-linux-x86_64.tar.gz"
+    curl -Lo /tmp/nvim.tar.gz "$NVIM_URL" && \
+      sudo tar -xzf /tmp/nvim.tar.gz -C /opt && \
+      sudo ln -sf /opt/nvim-linux-x86_64/bin/nvim /usr/local/bin/nvim && \
+      rm -f /tmp/nvim.tar.gz && \
+      log_ok "Neovim instalado: $(nvim --version | head -1)" || \
+      ERRORS+=("Falha ao instalar Neovim — instale manualmente")
   else
     log_ok "Neovim já instalado: $(nvim --version | head -1)"
   fi
@@ -109,7 +119,8 @@ install_linux_deps() {
   # Starship
   if ! command -v starship &>/dev/null; then
     log_info "Instalando Starship..."
-    curl -sS https://starship.rs/install.sh | sh -s -- --yes
+    curl -sS https://starship.rs/install.sh | sh -s -- --yes || \
+      ERRORS+=("Falha ao instalar Starship")
   else
     log_ok "Starship já instalado."
   fi
@@ -117,11 +128,19 @@ install_linux_deps() {
   # lazygit
   if ! command -v lazygit &>/dev/null; then
     log_info "Instalando lazygit..."
-    LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" | grep '"tag_name"' | sed 's/.*"v\([^"]*\)".*/\1/')
-    curl -Lo /tmp/lazygit.tar.gz "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_Linux_x86_64.tar.gz"
-    tar -xf /tmp/lazygit.tar.gz -C /tmp lazygit
-    sudo install /tmp/lazygit /usr/local/bin
-    rm -f /tmp/lazygit.tar.gz /tmp/lazygit
+    LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygit/releases/latest" \
+      | grep '"tag_name"' | sed 's/.*"v\([^"]*\)".*/\1/')
+    if [ -n "$LAZYGIT_VERSION" ]; then
+      ARCH="$(uname -m)"
+      [ "$ARCH" = "aarch64" ] && LG_ARCH="arm64" || LG_ARCH="x86_64"
+      curl -Lo /tmp/lazygit.tar.gz \
+        "https://github.com/jesseduffield/lazygit/releases/download/v${LAZYGIT_VERSION}/lazygit_${LAZYGIT_VERSION}_Linux_${LG_ARCH}.tar.gz" && \
+        tar -xf /tmp/lazygit.tar.gz -C /tmp lazygit && \
+        sudo install /tmp/lazygit /usr/local/bin && \
+        rm -f /tmp/lazygit.tar.gz /tmp/lazygit && \
+        log_ok "lazygit instalado." || \
+        ERRORS+=("Falha ao instalar lazygit")
+    fi
   else
     log_ok "lazygit já instalado."
   fi
@@ -182,6 +201,12 @@ safe_link() {
   local dst_dir
   dst_dir="$(dirname "$dst")"
 
+  if [ ! -e "$src" ]; then
+    log_err "Origem não encontrada, pulando: $src"
+    ERRORS+=("Symlink ignorado — origem não existe: $src")
+    return 1
+  fi
+
   mkdir -p "$dst_dir"
 
   if [ -L "$dst" ]; then
@@ -192,40 +217,72 @@ safe_link() {
   fi
 
   ln -sf "$src" "$dst"
-  log_ok "  $src -> $dst"
+
+  if [ -L "$dst" ]; then
+    log_ok "Linked: $dst -> $src"
+  else
+    log_err "Falhou ao criar symlink: $dst"
+    ERRORS+=("Falha no symlink: $dst -> $src")
+  fi
 }
 
 # Zsh
-safe_link "$DOTFILES_DIR/zsh/.zshrc" "$HOME/.zshrc"
+safe_link "$DOTFILES_DIR/zsh/.zshrc"             "$HOME/.zshrc"
 
 # Starship
 safe_link "$DOTFILES_DIR/starship/starship.toml" "$HOME/.config/starship.toml"
 
 # Tmux
-safe_link "$DOTFILES_DIR/tmux/.tmux.conf" "$HOME/.tmux.conf"
+safe_link "$DOTFILES_DIR/tmux/.tmux.conf"        "$HOME/.tmux.conf"
 mkdir -p "$HOME/.tmux/scripts"
 for script in "$DOTFILES_DIR/tmux/scripts/"*.sh; do
+  [ -f "$script" ] || continue
   safe_link "$script" "$HOME/.tmux/scripts/$(basename "$script")"
   chmod +x "$script"
 done
 
 # Neovim
-safe_link "$DOTFILES_DIR/nvim" "$HOME/.config/nvim"
+safe_link "$DOTFILES_DIR/nvim"                   "$HOME/.config/nvim"
 
 # Git
-safe_link "$DOTFILES_DIR/git/.gitconfig" "$HOME/.gitconfig"
+safe_link "$DOTFILES_DIR/git/.gitconfig"         "$HOME/.gitconfig"
+
+# ---------------------------------------------------------------------------
+# Verificação dos symlinks criados
+# ---------------------------------------------------------------------------
+echo ""
+log_info "Verificando symlinks criados:"
+LINKS=(
+  "$HOME/.zshrc"
+  "$HOME/.config/starship.toml"
+  "$HOME/.tmux.conf"
+  "$HOME/.config/nvim"
+  "$HOME/.gitconfig"
+)
+for link in "${LINKS[@]}"; do
+  if [ -L "$link" ]; then
+    printf "  \033[1;32m✔\033[0m  %s -> %s\n" "$link" "$(readlink "$link")"
+  else
+    printf "  \033[1;31m✘\033[0m  %s  (NÃO criado)\n" "$link"
+    ERRORS+=("Symlink não criado: $link")
+  fi
+done
 
 # ---------------------------------------------------------------------------
 # Mudar shell padrão para zsh (se necessário)
 # ---------------------------------------------------------------------------
-if [ "$SHELL" != "$(command -v zsh)" ]; then
-  log_info "Alterando shell padrão para zsh..."
+if command -v zsh &>/dev/null; then
   ZSH_PATH="$(command -v zsh)"
-  if ! grep -qF "$ZSH_PATH" /etc/shells; then
-    echo "$ZSH_PATH" | sudo tee -a /etc/shells
+  if [ "$SHELL" != "$ZSH_PATH" ]; then
+    log_info "Alterando shell padrão para zsh..."
+    if ! grep -qF "$ZSH_PATH" /etc/shells; then
+      echo "$ZSH_PATH" | sudo tee -a /etc/shells
+    fi
+    chsh -s "$ZSH_PATH" || ERRORS+=("Falha ao alterar shell para zsh — rode: chsh -s $(command -v zsh)")
+    log_ok "Shell padrão alterado para zsh."
   fi
-  chsh -s "$ZSH_PATH"
-  log_ok "Shell padrão alterado para zsh."
+else
+  ERRORS+=("zsh não encontrado — instale manualmente e rode: chsh -s \$(which zsh)")
 fi
 
 # ---------------------------------------------------------------------------
@@ -235,18 +292,26 @@ echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 log_ok "Setup concluído!"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+if [ ${#ERRORS[@]} -gt 0 ]; then
+  echo ""
+  log_warn "Itens que precisam de atenção manual:"
+  for err in "${ERRORS[@]}"; do
+    echo "  - $err"
+  done
+fi
+
 echo ""
-echo "Próximos passos manuais (abra um novo terminal):"
+echo "Próximos passos (abra um novo terminal):"
 echo ""
 echo "  1. Abra o Neovim:  nvim"
-echo "     O Lazy.nvim vai instalar todos os plugins automaticamente."
+echo "     O Lazy.nvim instalará todos os plugins automaticamente."
 echo ""
 echo "  2. Abra o Tmux e pressione:  Ctrl+b + I"
 echo "     Para instalar os plugins do TPM."
 echo ""
-echo "  3. Se quiser configs específicas desta máquina (Herd, conda, etc.):"
-echo "     Crie o arquivo ~/.zshrc.local — ele é carregado pelo .zshrc"
-echo "     mas NÃO está no repositório."
+echo "  3. Configs específicas desta máquina (Herd, conda, etc.):"
+echo "     Crie ~/.zshrc.local — é carregado pelo .zshrc mas não está no repo."
 echo ""
 echo "  4. Reinicie o terminal."
 echo ""
