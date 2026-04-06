@@ -72,7 +72,7 @@ install_macos_deps() {
   BREW_PACKAGES=(
     zsh tmux neovim starship fzf ripgrep
     coreutils gnu-sed gawk tree wget curl git
-    lazygit fd bat
+    lazygit fd bat asdf
   )
 
   for pkg in "${BREW_PACKAGES[@]}"; do
@@ -95,16 +95,25 @@ install_linux_deps() {
   log_info "Instalando dependências base..."
   sudo apt-get install -y \
     zsh tmux git curl wget unzip build-essential \
-    fzf ripgrep tree gettext \
+    fzf ripgrep tree gettext gpg \
     cmake ninja-build pkg-config libtool libtool-bin \
     autoconf automake luarocks \
     fonts-firacode fonts-jetbrains-mono 2>/dev/null || \
   sudo apt-get install -y \
     zsh tmux git curl wget unzip build-essential \
-    fzf ripgrep tree gettext \
+    fzf ripgrep tree gettext gpg \
     cmake ninja-build pkg-config libtool libtool-bin \
     autoconf automake luarocks || \
     ERRORS+=("Alguns pacotes apt falharam — verifique manualmente")
+  
+  # Dependências para compilar linguagens via asdf
+  log_info "Instalando dependências para asdf (Node.js, Python, Ruby)..."
+  sudo apt-get install -y \
+    libssl-dev libreadline-dev zlib1g-dev \
+    libbz2-dev libsqlite3-dev libffi-dev \
+    liblzma-dev libncurses5-dev libgdbm-dev \
+    libyaml-dev rustc || \
+    ERRORS+=("Algumas dependências asdf falharam")
 
   # bat (pode ser batcat no Ubuntu)
   if ! command -v bat &>/dev/null && ! command -v batcat &>/dev/null; then
@@ -113,6 +122,7 @@ install_linux_deps() {
 
   # fd
   if ! command -v fd &>/dev/null; then
+    mkdir -p "$HOME/.local/bin"
     sudo apt-get install -y fd-find 2>/dev/null && \
       ln -sf "$(command -v fdfind)" "$HOME/.local/bin/fd" 2>/dev/null || true
   fi
@@ -171,8 +181,129 @@ elif [ "$OS" = "linux" ]; then
 fi
 
 # ---------------------------------------------------------------------------
+# asdf — Version Manager para múltiplas linguagens
+# ---------------------------------------------------------------------------
+log_info "Configurando asdf..."
+export ASDF_DIR="$HOME/.asdf"
+
+# No macOS, asdf vem via Homebrew
+if [ "$OS" = "macos" ] && [ -f /opt/homebrew/opt/asdf/libexec/asdf.sh ]; then
+  export ASDF_DIR="/opt/homebrew/opt/asdf"
+  . "$ASDF_DIR/libexec/asdf.sh"
+  log_ok "asdf carregado via Homebrew."
+# No Linux, clona do GitHub
+elif [ ! -d "$HOME/.asdf" ]; then
+  log_info "Instalando asdf..."
+  git clone https://github.com/asdf-vm/asdf.git "$HOME/.asdf" --branch v0.14.0 || \
+    ERRORS+=("Falha ao instalar asdf")
+  export ASDF_DIR="$HOME/.asdf"
+  [ -f "$ASDF_DIR/asdf.sh" ] && . "$ASDF_DIR/asdf.sh"
+  log_ok "asdf instalado e carregado."
+else
+  export ASDF_DIR="$HOME/.asdf"
+  [ -f "$ASDF_DIR/asdf.sh" ] && . "$ASDF_DIR/asdf.sh"
+  log_ok "asdf já existe e foi carregado."
+fi
+
+# Verifica se asdf carregou corretamente
+if ! command -v asdf &>/dev/null; then
+  ERRORS+=("asdf não carregou corretamente — verifique o PATH")
+fi
+
+# ---------------------------------------------------------------------------
+# Instalar plugins asdf
+# ---------------------------------------------------------------------------
+install_asdf_plugin() {
+  local plugin_name="$1"
+  if ! asdf plugin list | grep -q "^${plugin_name}$"; then
+    log_info "Adicionando plugin asdf: $plugin_name"
+    asdf plugin add "$plugin_name" || ERRORS+=("Falha ao adicionar plugin $plugin_name")
+  else
+    log_ok "Plugin asdf $plugin_name já adicionado."
+  fi
+}
+
+if command -v asdf &>/dev/null; then
+  install_asdf_plugin "nodejs"
+  install_asdf_plugin "python"
+  install_asdf_plugin "ruby"
+  
+  # ---------------------------------------------------------------------------
+  # Node.js via asdf (necessário para LSP servers: copilot, typescript, etc.)
+  # ---------------------------------------------------------------------------
+  if ! asdf list nodejs 2>/dev/null | grep -q "lts"; then
+    log_info "Instalando Node.js LTS via asdf..."
+    # Importar chaves GPG do Node.js (necessário no Linux)
+    if [ "$OS" = "linux" ]; then
+      bash -c '${ASDF_DATA_DIR:=$HOME/.asdf}/plugins/nodejs/bin/import-release-team-keyring' 2>/dev/null || true
+    fi
+    asdf install nodejs lts && \
+      asdf global nodejs lts && \
+      log_ok "Node.js instalado: $(node --version 2>/dev/null || echo 'será disponível no próximo shell')" || \
+      ERRORS+=("Falha ao instalar Node.js via asdf")
+  else
+    log_ok "Node.js já instalado via asdf: $(asdf current nodejs 2>/dev/null | awk '{print $2}')"
+  fi
+  
+  # ---------------------------------------------------------------------------
+  # Python via asdf (necessário para pyright, ruff via Mason)
+  # ---------------------------------------------------------------------------
+  PYTHON_VERSION="3.12.7"
+  if ! asdf list python 2>/dev/null | grep -q "$PYTHON_VERSION"; then
+    log_info "Instalando Python $PYTHON_VERSION via asdf..."
+    asdf install python "$PYTHON_VERSION" && \
+      asdf global python "$PYTHON_VERSION" && \
+      log_ok "Python instalado: $(python --version 2>/dev/null)" || \
+      ERRORS+=("Falha ao instalar Python via asdf")
+  else
+    log_ok "Python já instalado via asdf: $(asdf current python 2>/dev/null | awk '{print $2}')"
+  fi
+  
+  # Instalar pip packages globais necessários
+  if command -v pip &>/dev/null; then
+    log_info "Instalando ferramentas Python globais..."
+    pip install --upgrade pip setuptools wheel || true
+    pip install pynvim || ERRORS+=("Falha ao instalar pynvim")
+    asdf reshim python || true
+  fi
+  
+  # ---------------------------------------------------------------------------
+  # Ruby via asdf (necessário para projetos Ruby/Rails)
+  # ---------------------------------------------------------------------------
+  RUBY_VERSION="3.3.6"
+  if ! asdf list ruby 2>/dev/null | grep -q "$RUBY_VERSION"; then
+    log_info "Instalando Ruby $RUBY_VERSION via asdf..."
+    asdf install ruby "$RUBY_VERSION" && \
+      asdf global ruby "$RUBY_VERSION" && \
+      log_ok "Ruby instalado: $(ruby --version 2>/dev/null)" || \
+      ERRORS+=("Falha ao instalar Ruby via asdf")
+  else
+    log_ok "Ruby já instalado via asdf: $(asdf current ruby 2>/dev/null | awk '{print $2}')"
+  fi
+  
+  # Instalar gem neovim (necessário para plugins nvim)
+  if command -v gem &>/dev/null; then
+    log_info "Instalando gem neovim..."
+    gem install neovim || ERRORS+=("Falha ao instalar gem neovim")
+    asdf reshim ruby || true
+  fi
+  
+  # ---------------------------------------------------------------------------
+  # Reshim asdf para disponibilizar os comandos
+  # ---------------------------------------------------------------------------
+  log_info "Executando asdf reshim..."
+  asdf reshim || true
+  
+else
+  ERRORS+=("asdf não está disponível — reabra o terminal")
+fi
+
+# ---------------------------------------------------------------------------
 # Zsh plugins
 # ---------------------------------------------------------------------------
+# Garante que .local/bin existe (usado para fd e outros binários locais)
+mkdir -p "$HOME/.local/bin"
+
 ZSH_PLUGIN_DIR="$HOME/.zsh"
 mkdir -p "$ZSH_PLUGIN_DIR"
 
@@ -319,14 +450,22 @@ fi
 echo ""
 echo "Próximos passos (abra um novo terminal):"
 echo ""
-echo "  1. Abra o Neovim:  nvim"
-echo "     O Lazy.nvim instalará todos os plugins automaticamente."
+echo "  1. Recarregue o shell para ativar asdf, zsh e todas as ferramentas:"
+echo "     exec zsh -l"
 echo ""
-echo "  2. Abra o Tmux e pressione:  Ctrl+b + I"
+echo "  2. Verifique as versões instaladas:"
+echo "     asdf current"
+echo "     node --version"
+echo "     python --version"
+echo "     ruby --version"
+echo ""
+echo "  3. Abra o Neovim:  nvim"
+echo "     O Lazy.nvim instalará todos os plugins automaticamente."
+echo "     O Mason instalará os LSP servers (precisa de Node.js e Python)."
+echo ""
+echo "  4. Abra o Tmux e pressione:  Ctrl+b + I"
 echo "     Para instalar os plugins do TPM."
 echo ""
-echo "  3. Configs específicas desta máquina (Herd, conda, etc.):"
+echo "  5. Configs específicas desta máquina (Herd, conda, etc.):"
 echo "     Crie ~/.zshrc.local — é carregado pelo .zshrc mas não está no repo."
-echo ""
-echo "  4. Reinicie o terminal."
 echo ""

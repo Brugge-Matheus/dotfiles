@@ -1,0 +1,5 @@
+# asdf tool versions
+# Execute: asdf install
+nodejs lts
+python 3.12.7
+ruby 3.3.6
