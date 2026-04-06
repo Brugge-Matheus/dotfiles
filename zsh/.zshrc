@@ -1,3 +1,10 @@
+# Proteção: só executa se estiver rodando zsh
+if [ -z "$ZSH_VERSION" ]; then
+  echo "⚠️  Este arquivo é apenas para Zsh. Shell atual: $SHELL"
+  echo "   Execute: exec zsh"
+  return 2>/dev/null || exit 0
+fi
+
 # --- HISTÓRICO ---
 HISTFILE=~/.zsh_history
 HISTSIZE=10000
@@ -72,10 +79,14 @@ export LANG=en_US.UTF-8
 # --- VIM MOTIONS ---
 bindkey -v
 bindkey -M viins jj vi-cmd-mode
+
+# Carregar módulo menuselect para navegação no menu de completar
+zmodload zsh/complist
 bindkey -M menuselect 'h' vi-backward-char
 bindkey -M menuselect 'k' vi-up-line-or-history
 bindkey -M menuselect 'l' vi-forward-char
 bindkey -M menuselect 'j' vi-down-line-or-history
+
 bindkey -v '^?' backward-delete-char
 
 function zle-line-init zle-keymap-select {
