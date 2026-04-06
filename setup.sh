@@ -8,7 +8,16 @@ ERRORS=()
 # ---------------------------------------------------------------------------
 if [ -n "$SUDO_USER" ]; then
   REAL_USER="$SUDO_USER"
-  REAL_HOME="$(getent passwd "$SUDO_USER" | cut -d: -f6)"
+  # getent não existe no macOS, usa dscl ou fallback
+  if command -v getent &>/dev/null; then
+    REAL_HOME="$(getent passwd "$SUDO_USER" | cut -d: -f6)"
+  elif command -v dscl &>/dev/null; then
+    # macOS
+    REAL_HOME="$(dscl . -read /Users/"$SUDO_USER" NFSHomeDirectory | awk '{print $2}')"
+  else
+    # Fallback
+    REAL_HOME="/home/$SUDO_USER"
+  fi
 else
   REAL_USER="$(whoami)"
   REAL_HOME="$HOME"
@@ -83,6 +92,43 @@ install_macos_deps() {
       brew install "$pkg"
     fi
   done
+
+  # Fontes
+  log_info "Instalando fontes..."
+  FONTS=(
+    font-jetbrains-mono
+    font-jetbrains-mono-nerd-font
+    font-fira-code
+    font-fira-code-nerd-font
+  )
+  
+  for font in "${FONTS[@]}"; do
+    if brew list --cask "$font" &>/dev/null; then
+      log_ok "$font já instalado."
+    else
+      log_info "Instalando $font..."
+      brew install --cask "$font" || log_warn "Falha ao instalar $font"
+    fi
+  done
+  
+  # Dependências do PHP para macOS (necessárias para asdf compilar PHP)
+  log_info "Instalando dependências do PHP para macOS..."
+  PHP_DEPS=(
+    bison re2c libiconv zlib libzip libxml2 
+    icu4c krb5 oniguruma postgresql gmp 
+    libsodium imagemagick freetype jpeg libpng webp
+  )
+  
+  for dep in "${PHP_DEPS[@]}"; do
+    if brew list "$dep" &>/dev/null; then
+      log_ok "$dep já instalado."
+    else
+      log_info "Instalando $dep..."
+      brew install "$dep" || log_warn "Falha ao instalar $dep"
+    fi
+  done
+  
+  log_ok "Dependências do PHP para macOS instaladas."
 }
 
 # ---------------------------------------------------------------------------
@@ -169,6 +215,43 @@ install_linux_deps() {
   else
     log_ok "lazygit já instalado."
   fi
+  
+  # Fontes
+  log_info "Instalando fontes JetBrains Mono e Fira Code..."
+  FONT_DIR="$HOME/.local/share/fonts"
+  mkdir -p "$FONT_DIR"
+  
+  # JetBrains Mono
+  if [ ! -f "$FONT_DIR/JetBrainsMono-Regular.ttf" ]; then
+    log_info "Baixando JetBrains Mono..."
+    curl -fLo /tmp/JetBrainsMono.zip https://github.com/JetBrains/JetBrainsMono/releases/download/v2.304/JetBrainsMono-2.304.zip && \
+      unzip -q /tmp/JetBrainsMono.zip -d /tmp/JetBrainsMono && \
+      cp /tmp/JetBrainsMono/fonts/ttf/*.ttf "$FONT_DIR/" && \
+      rm -rf /tmp/JetBrainsMono /tmp/JetBrainsMono.zip && \
+      log_ok "JetBrains Mono instalado." || \
+      log_warn "Falha ao instalar JetBrains Mono"
+  else
+    log_ok "JetBrains Mono já instalado."
+  fi
+  
+  # Fira Code
+  if [ ! -f "$FONT_DIR/FiraCode-Regular.ttf" ]; then
+    log_info "Baixando Fira Code..."
+    curl -fLo /tmp/FiraCode.zip https://github.com/tonsky/FiraCode/releases/download/6.2/Fira_Code_v6.2.zip && \
+      unzip -q /tmp/FiraCode.zip -d /tmp/FiraCode && \
+      cp /tmp/FiraCode/ttf/*.ttf "$FONT_DIR/" && \
+      rm -rf /tmp/FiraCode /tmp/FiraCode.zip && \
+      log_ok "Fira Code instalado." || \
+      log_warn "Falha ao instalar Fira Code"
+  else
+    log_ok "Fira Code já instalado."
+  fi
+  
+  # Atualizar cache de fontes
+  if command -v fc-cache &>/dev/null; then
+    log_info "Atualizando cache de fontes..."
+    fc-cache -f "$FONT_DIR" 2>/dev/null || true
+  fi
 }
 
 # ---------------------------------------------------------------------------
@@ -227,6 +310,7 @@ if command -v asdf &>/dev/null; then
   install_asdf_plugin "nodejs"
   install_asdf_plugin "python"
   install_asdf_plugin "ruby"
+  install_asdf_plugin "php"
   
   # ---------------------------------------------------------------------------
   # Node.js via asdf (necessário para LSP servers: copilot, typescript, etc.)
@@ -286,6 +370,89 @@ if command -v asdf &>/dev/null; then
     log_info "Instalando gem neovim..."
     gem install neovim || ERRORS+=("Falha ao instalar gem neovim")
     asdf reshim ruby || true
+  fi
+  
+  # ---------------------------------------------------------------------------
+  # PHP via asdf (necessário para projetos Laravel/WordPress)
+  # ---------------------------------------------------------------------------
+  PHP_VERSION="8.3.14"
+  if ! asdf list php 2>/dev/null | grep -q "$PHP_VERSION"; then
+    log_info "Instalando PHP $PHP_VERSION via asdf..."
+    
+    # No macOS, configurar PKG_CONFIG_PATH para encontrar libs do Homebrew
+    if [ "$OS" = "macos" ]; then
+      log_info "Configurando variáveis de ambiente para compilar PHP no macOS..."
+      
+      # Detectar arquitetura (ARM ou Intel)
+      if [ -d "/opt/homebrew" ]; then
+        BREW_PREFIX="/opt/homebrew"
+      else
+        BREW_PREFIX="/usr/local"
+      fi
+      
+      export PKG_CONFIG_PATH="$BREW_PREFIX/opt/icu4c/lib/pkgconfig:$BREW_PREFIX/opt/krb5/lib/pkgconfig:$BREW_PREFIX/opt/libedit/lib/pkgconfig:$BREW_PREFIX/opt/libxml2/lib/pkgconfig:$BREW_PREFIX/opt/zlib/lib/pkgconfig:$PKG_CONFIG_PATH"
+      export PATH="$BREW_PREFIX/opt/bison/bin:$BREW_PREFIX/opt/re2c/bin:$PATH"
+      
+      log_ok "Variáveis configuradas para usar libs do Homebrew."
+    fi
+    
+    # No Linux, instalar TODAS as dependências do PHP antes
+    if [ "$OS" = "linux" ]; then
+      log_info "Instalando dependências completas do PHP (isso pode demorar)..."
+      log_info "Estas libs garantem que todas as extensões PHP sejam compiladas corretamente."
+      
+      sudo apt-get install -y \
+        autoconf bison re2c pkg-config \
+        libxml2-dev libcurl4-openssl-dev \
+        libssl-dev libsqlite3-dev \
+        libonig-dev libzip-dev \
+        libpng-dev libjpeg-dev libfreetype6-dev libwebp-dev \
+        libgd-dev libbz2-dev \
+        libreadline-dev libedit-dev \
+        libicu-dev libgmp-dev \
+        libpq-dev \
+        libsodium-dev \
+        libargon2-dev \
+        libtidy-dev \
+        libxslt1-dev \
+        libldap2-dev \
+        libsasl2-dev \
+        libkrb5-dev \
+        libc-client-dev \
+        2>/dev/null || \
+        log_warn "Algumas dependências do PHP falharam — PHP pode não compilar todas as extensões"
+      
+      log_ok "Dependências do PHP instaladas."
+      log_info "Extensões que serão habilitadas: mbstring, xml, curl, gd, zip, intl, bcmath, gmp, pdo_mysql, pdo_pgsql, soap, sodium, exif, pcntl, opcache"
+    fi
+    
+    # Instalar PHP via asdf
+    log_info "Compilando PHP $PHP_VERSION (pode levar 5-10 minutos)..."
+    if asdf install php "$PHP_VERSION"; then
+      asdf global php "$PHP_VERSION"
+      log_ok "PHP instalado: $(php --version 2>/dev/null | head -1)"
+      
+      # Verificar extensões instaladas
+      log_info "Verificando extensões PHP instaladas..."
+      php -m | grep -E "(mbstring|xml|curl|gd|zip|intl|pdo_mysql)" >/dev/null 2>&1 && \
+        log_ok "Extensões principais verificadas." || \
+        log_warn "Algumas extensões podem estar faltando — verifique com: php -m"
+    else
+      ERRORS+=("Falha ao compilar PHP via asdf — verifique os logs em ~/.asdf/installs/php/$PHP_VERSION/")
+      log_err "Se houver erros de compilação, instale as dependências manualmente e tente novamente."
+    fi
+  else
+    log_ok "PHP já instalado via asdf: $(asdf current php 2>/dev/null | awk '{print $2}')"
+  fi
+  
+  # Instalar Composer (gerenciador de pacotes PHP)
+  if command -v php &>/dev/null && ! command -v composer &>/dev/null; then
+    log_info "Instalando Composer..."
+    curl -sS https://getcomposer.org/installer | php -- --install-dir="$HOME/.local/bin" --filename=composer && \
+      chmod +x "$HOME/.local/bin/composer" && \
+      asdf reshim php || true && \
+      log_ok "Composer instalado." || \
+      ERRORS+=("Falha ao instalar Composer")
   fi
   
   # ---------------------------------------------------------------------------
