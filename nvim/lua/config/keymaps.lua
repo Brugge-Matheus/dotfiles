@@ -3,7 +3,12 @@
 -- Add any additional keymaps here
 
 vim.keymap.set("i", "jj", "<Esc>", { desc = "Sair do insert mode" })
-vim.keymap.set("n", "<leader>h", "<cmd>noh<cr>", { desc = "Limpar highlight de busca" })
+vim.keymap.set("n", "<leader>/", "<cmd>noh<cr>", { desc = "Limpar highlight de busca" })
+
+-- Navegação entre buffers
+pcall(vim.keymap.del, "n", "<leader>l")
+vim.keymap.set("n", "<leader>h", "<cmd>bprevious<cr>", { desc = "Buffer anterior" })
+vim.keymap.set("n", "<leader>l", "<cmd>bnext<cr>", { desc = "Próximo buffer" })
 
 -- Duplicar linha (como Shift+Alt+Down/Up no VSCode)
 local function duplicate_line_down()

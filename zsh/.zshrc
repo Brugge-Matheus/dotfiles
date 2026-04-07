@@ -42,6 +42,7 @@ alias migrate='bundle exec rake db:migrate'
 
 # PHP / Laravel
 alias sail='./vendor/bin/sail'
+alias pint='./vendor/bin/pint'
 
 # --- PLUGINS ---
 [ -f "$HOME/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh" ] && \

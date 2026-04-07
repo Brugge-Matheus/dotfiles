@@ -66,6 +66,14 @@ log_info "Sistema detectado: $OS ${DISTRO:+($DISTRO)}"
 # macOS — Homebrew
 # ---------------------------------------------------------------------------
 install_macos_deps() {
+  # Xcode CLT — necessário para gcc/make/treesitter e compilar gems/extensões
+  if ! xcode-select -p &>/dev/null; then
+    log_info "Instalando Xcode Command Line Tools (necessário para gcc/make)..."
+    xcode-select --install || log_warn "Instale o Xcode CLT manualmente: xcode-select --install"
+  else
+    log_ok "Xcode CLT já instalado."
+  fi
+
   log_info "Verificando Homebrew..."
   if ! command -v brew &>/dev/null; then
     log_info "Instalando Homebrew..."
@@ -82,6 +90,8 @@ install_macos_deps() {
     zsh tmux neovim starship fzf ripgrep
     coreutils gnu-sed gawk tree wget curl git
     lazygit fd bat asdf
+    gcc make
+    wl-clipboard
   )
 
   for pkg in "${BREW_PACKAGES[@]}"; do
@@ -140,17 +150,29 @@ install_linux_deps() {
 
   log_info "Instalando dependências base..."
   sudo apt-get install -y \
-    zsh tmux git curl wget unzip build-essential \
+    zsh tmux git curl wget unzip build-essential gcc g++ make \
     fzf ripgrep tree gettext gpg \
     cmake ninja-build pkg-config libtool libtool-bin \
     autoconf automake luarocks \
     fonts-firacode fonts-jetbrains-mono 2>/dev/null || \
   sudo apt-get install -y \
-    zsh tmux git curl wget unzip build-essential \
+    zsh tmux git curl wget unzip build-essential gcc g++ make \
     fzf ripgrep tree gettext gpg \
     cmake ninja-build pkg-config libtool libtool-bin \
     autoconf automake luarocks || \
     ERRORS+=("Alguns pacotes apt falharam — verifique manualmente")
+
+  # Clipboard — wl-clipboard (Wayland) ou xclip (X11)
+  if ! command -v wl-copy &>/dev/null && ! command -v xclip &>/dev/null; then
+    log_info "Instalando suporte a clipboard do sistema para Neovim..."
+    sudo apt-get install -y wl-clipboard 2>/dev/null || \
+      sudo apt-get install -y xclip 2>/dev/null || \
+      log_warn "Clipboard do sistema não instalado — copiar com '+y' pode não funcionar"
+  else
+    log_ok "Clipboard do sistema já disponível."
+  fi
+
+  # Xcode CLT não se aplica ao Linux — gcc/g++ já cobertos pelo build-essential acima
   
   # Dependências para compilar linguagens via asdf
   log_info "Instalando dependências para asdf (Node.js, Python, Ruby)..."
@@ -560,6 +582,9 @@ safe_link "$DOTFILES_DIR/nvim"                   "$HOME/.config/nvim"
 # Git
 safe_link "$DOTFILES_DIR/git/.gitconfig"         "$HOME/.gitconfig"
 
+# Ghostty
+safe_link "$DOTFILES_DIR/ghostty/config"         "$HOME/.config/ghostty/config"
+
 # ---------------------------------------------------------------------------
 # Verificação dos symlinks criados
 # ---------------------------------------------------------------------------
@@ -571,6 +596,7 @@ LINKS=(
   "$HOME/.tmux.conf"
   "$HOME/.config/nvim"
   "$HOME/.gitconfig"
+  "$HOME/.config/ghostty/config"
 )
 for link in "${LINKS[@]}"; do
   if [ -L "$link" ]; then
@@ -596,6 +622,25 @@ if command -v zsh &>/dev/null; then
   fi
 else
   ERRORS+=("zsh não encontrado — instale manualmente e rode: chsh -s \$(which zsh)")
+fi
+
+# ---------------------------------------------------------------------------
+# Neovim — instalar plugins e buildar markdown-preview
+# ---------------------------------------------------------------------------
+if command -v nvim &>/dev/null; then
+  log_info "Instalando plugins do Neovim via Lazy.nvim (headless)..."
+  nvim --headless "+Lazy! sync" +qa 2>/dev/null
+  log_ok "Plugins do Neovim instalados."
+
+  MKDP_PATH="$HOME/.local/share/nvim/lazy/markdown-preview.nvim/app"
+  if [ -d "$MKDP_PATH" ] && command -v node &>/dev/null; then
+    log_info "Buildando markdown-preview.nvim..."
+    (cd "$MKDP_PATH" && npm install && git checkout yarn.lock) && \
+      log_ok "markdown-preview.nvim buildado." || \
+      ERRORS+=("Falha ao buildar markdown-preview.nvim — rode: cd $MKDP_PATH && npm install && git checkout yarn.lock")
+  fi
+else
+  log_warn "nvim não encontrado — plugins serão instalados na primeira abertura."
 fi
 
 # ---------------------------------------------------------------------------
