@@ -586,6 +586,21 @@ safe_link "$DOTFILES_DIR/git/.gitconfig"         "$HOME/.gitconfig"
 safe_link "$DOTFILES_DIR/ghostty/config"         "$HOME/.config/ghostty/config"
 
 # ---------------------------------------------------------------------------
+# TPM Plugins — instala headless após symlinks (precisa do .tmux.conf)
+# ---------------------------------------------------------------------------
+log_info "Instalando plugins do TPM (tmux-resurrect, tmux-continuum)..."
+TPM_INSTALL="$HOME/.tmux/plugins/tpm/bin/install_plugins"
+if [ -f "$TPM_INSTALL" ] && [ -f "$HOME/.tmux.conf" ]; then
+  TMUX_PLUGIN_MANAGER_PATH="$HOME/.tmux/plugins" \
+    "$TPM_INSTALL" && \
+    log_ok "Plugins do TPM instalados (sessões serão salvas/restauradas automaticamente)." || \
+    log_warn "Falha ao instalar plugins do TPM — abra o tmux e pressione <prefix>+I manualmente"
+else
+  log_warn "TPM ou .tmux.conf não encontrado — pulando instalação de plugins"
+  ERRORS+=("Plugins do TPM não instalados — rode: ~/.tmux/plugins/tpm/bin/install_plugins")
+fi
+
+# ---------------------------------------------------------------------------
 # Verificação dos symlinks criados
 # ---------------------------------------------------------------------------
 echo ""
@@ -675,9 +690,6 @@ echo "  3. Abra o Neovim:  nvim"
 echo "     O Lazy.nvim instalará todos os plugins automaticamente."
 echo "     O Mason instalará os LSP servers (precisa de Node.js e Python)."
 echo ""
-echo "  4. Abra o Tmux e pressione:  Ctrl+b + I"
-echo "     Para instalar os plugins do TPM."
-echo ""
-echo "  5. Configs específicas desta máquina (Herd, conda, etc.):"
+echo "  4. Configs específicas desta máquina (Herd, conda, etc.):"
 echo "     Crie ~/.zshrc.local — é carregado pelo .zshrc mas não está no repo."
 echo ""
