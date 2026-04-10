@@ -84,10 +84,80 @@ Os plugins serão instalados automaticamente. O Mason instalará os LSP servers 
 
 ## 🖥️ Tmux
 
+Terminal multiplexer com suporte a persistência de sessões via `tmux-resurrect` e `tmux-continuum`.
+
+### Instalação dos plugins
+
 Após abrir o Tmux pela primeira vez, instale os plugins:
 ```bash
 tmux
 # Pressione: Ctrl+b + I (maiúsculo)
+```
+
+### Persistência de Sessões
+
+As configurações incluem salvamento automático de sessões a cada 15 minutos com `tmux-continuum`. Isso significa:
+
+- ✅ Suas sessões serão salvas automaticamente
+- ✅ Ao reiniciar a máquina, as sessões são restauradas
+- ✅ Histórico de panes é mantido
+
+**Como funciona internamente:**
+1. `tmux-resurrect` salva estado de sessões, windows e panes
+2. `tmux-continuum` automatiza esse salvamento a cada 15 minutos
+3. Dados são armazenados em: `~/.local/share/tmux/resurrect/`
+4. Ao iniciar tmux novamente, as sessões são restauradas automaticamente
+
+### Keybinds principais
+
+```
+Prefix: Ctrl+b (padrão)
+
+# Gerenciamento de sessões
+Ctrl+b c      # Nova window
+Ctrl+b n      # Próxima window
+Ctrl+b p      # Window anterior
+Ctrl+b ,      # Renomear window
+
+# Navegação entre painéis (vim-style)
+Ctrl+b h      # Paine à esquerda
+Ctrl+b j      # Paine abaixo
+Ctrl+b k      # Paine acima
+Ctrl+b l      # Paine à direita
+
+# Ressurreição de sessões (manual)
+Ctrl+b Ctrl+s # Salvar manualmente
+Ctrl+b Ctrl+r # Restaurar manualmente
+
+# Plugins customizados
+Ctrl+b Ctrl+l # Listar windows com fzf
+Ctrl+b Ctrl+n # Abrir notas (nvim popup)
+Ctrl+b Ctrl+h # Abrir htop (popup)
+Ctrl+b r      # Recarregar configuração
+```
+
+### Troubleshooting do Tmux
+
+**Sessões não são salvas:**
+```bash
+# Verificar se o diretório existe
+ls -la ~/.local/share/tmux/resurrect/
+
+# Se não existir, criar:
+mkdir -p ~/.local/share/tmux/resurrect/
+
+# Recarregar config
+tmux source-file ~/.tmux.conf
+```
+
+**Plugins não carregam:**
+```bash
+# Reinstalar TPM
+rm -rf ~/.tmux/plugins/tpm
+git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+
+# Reabrir tmux e instalar plugins (Ctrl+b + I)
+tmux
 ```
 
 ## ⚙️ Configurações locais
