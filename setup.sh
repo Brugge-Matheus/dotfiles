@@ -2,6 +2,9 @@
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ERRORS=()
+SETUP_STATE_FILE="$HOME/.dotfiles-setup-state"
+LAST_UPDATE_FILE="$HOME/.dotfiles-last-update"
+IS_FIRST_RUN=false
 
 # ---------------------------------------------------------------------------
 # Resolve o usuário e home real (funciona mesmo rodando com sudo)
@@ -32,6 +35,73 @@ log_info() { printf "\033[1;34m[INFO]\033[0m  %s\n" "$1"; }
 log_ok()   { printf "\033[1;32m[OK]\033[0m    %s\n" "$1"; }
 log_warn() { printf "\033[1;33m[WARN]\033[0m  %s\n" "$1"; }
 log_err()  { printf "\033[1;31m[ERROR]\033[0m %s\n" "$1"; }
+
+# ---------------------------------------------------------------------------
+# Idempotência — Detectar e rastrear estado
+# ---------------------------------------------------------------------------
+detect_first_run() {
+  if [ ! -f "$SETUP_STATE_FILE" ]; then
+    IS_FIRST_RUN=true
+    log_info "🆕 Primeira execução do setup detectada"
+  else
+    IS_FIRST_RUN=false
+    LAST_RUN=$(cat "$SETUP_STATE_FILE" 2>/dev/null || echo "unknown")
+    log_info "🔄 Re-execução detectada (último: $LAST_RUN)"
+  fi
+}
+
+update_state_file() {
+  echo "$(date '+%Y-%m-%d %H:%M:%S')" > "$SETUP_STATE_FILE"
+}
+
+git_pull_if_dirty() {
+  local repo_path="$1"
+  local name="$2"
+  
+  if [ ! -d "$repo_path/.git" ]; then
+    return 0
+  fi
+  
+  cd "$repo_path" || return 1
+  
+  # Verificar se há mudanças não commitadas
+  if ! git diff --quiet 2>/dev/null; then
+    log_warn "[$name] Mudanças locais detectadas — pulando git pull"
+    return 1
+  fi
+  
+  # Pull apenas se houver commits novos no remote
+  if git fetch --dry-run 2>/dev/null | grep -q '[new\|updated]'; then
+    log_info "[$name] Atualizando repositório..."
+    git pull --ff-only 2>/dev/null && log_ok "[$name] Repositório atualizado" || \
+      log_warn "[$name] Falha ao atualizar — pode ter conflitos"
+  fi
+}
+
+# ---------------------------------------------------------------------------
+# Git pull do dotfiles no início (buscar atualizações)
+# ---------------------------------------------------------------------------
+log_info "📥 Sincronizando dotfiles do repositório..."
+cd "$DOTFILES_DIR" || exit 1
+
+if [ -d .git ]; then
+  if ! git diff --quiet 2>/dev/null; then
+    log_warn "Mudanças locais em dotfiles — pulando git pull"
+  else
+    if git fetch --dry-run 2>/dev/null | grep -q '[new\|updated]'; then
+      log_info "Atualizações disponíveis — fazendo pull..."
+      git pull --ff-only 2>/dev/null && log_ok "dotfiles sincronizados!" || \
+        log_warn "Falha ao sincronizar dotfiles — verifique conflitos manualmente"
+    else
+      log_ok "dotfiles já estão atualizados"
+    fi
+  fi
+else
+  log_warn "dotfiles não é um repositório git — pulando sincronização"
+fi
+
+# Detectar se é primeira execução
+detect_first_run
 
 log_info "Usuário: $REAL_USER | Home: $REAL_HOME"
 
@@ -307,7 +377,9 @@ elif [ ! -d "$HOME/.asdf" ]; then
 else
   export ASDF_DIR="$HOME/.asdf"
   [ -f "$ASDF_DIR/asdf.sh" ] && . "$ASDF_DIR/asdf.sh"
-  log_ok "asdf já existe e foi carregado."
+  # Atualizar asdf se houver mudanças no remote
+  git_pull_if_dirty "$HOME/.asdf" "asdf"
+  log_ok "asdf carregado e verificado."
 fi
 
 # Verifica se asdf carregou corretamente
@@ -503,7 +575,8 @@ if [ ! -d "$ZSH_PLUGIN_DIR/zsh-autosuggestions" ]; then
     "$ZSH_PLUGIN_DIR/zsh-autosuggestions"
   log_ok "zsh-autosuggestions instalado."
 else
-  log_ok "zsh-autosuggestions já existe."
+  git_pull_if_dirty "$ZSH_PLUGIN_DIR/zsh-autosuggestions" "zsh-autosuggestions"
+  log_ok "zsh-autosuggestions pronto."
 fi
 
 if [ ! -d "$ZSH_PLUGIN_DIR/zsh-syntax-highlighting" ]; then
@@ -511,7 +584,8 @@ if [ ! -d "$ZSH_PLUGIN_DIR/zsh-syntax-highlighting" ]; then
     "$ZSH_PLUGIN_DIR/zsh-syntax-highlighting"
   log_ok "zsh-syntax-highlighting instalado."
 else
-  log_ok "zsh-syntax-highlighting já existe."
+  git_pull_if_dirty "$ZSH_PLUGIN_DIR/zsh-syntax-highlighting" "zsh-syntax-highlighting"
+  log_ok "zsh-syntax-highlighting pronto."
 fi
 
 # ---------------------------------------------------------------------------
@@ -522,7 +596,8 @@ if [ ! -d "$HOME/.tmux/plugins/tpm" ]; then
   git clone https://github.com/tmux-plugins/tpm "$HOME/.tmux/plugins/tpm"
   log_ok "TPM instalado."
 else
-  log_ok "TPM já existe."
+  git_pull_if_dirty "$HOME/.tmux/plugins/tpm" "TPM"
+  log_ok "TPM pronto."
 fi
 
 # ---------------------------------------------------------------------------
@@ -544,9 +619,22 @@ safe_link() {
 
   mkdir -p "$dst_dir"
 
+  # Se symlink já existe
   if [ -L "$dst" ]; then
-    rm "$dst"
+    local current_target
+    current_target="$(readlink "$dst")"
+    
+    # Se apontam para o mesmo lugar, fazer nada
+    if [ "$current_target" = "$src" ]; then
+      log_ok "Linked (já correto): $dst -> $src"
+      return 0
+    else
+      # Se apontam para lugar diferente, atualizar
+      log_warn "Symlink apontava para: $current_target — atualizando para: $src"
+      rm "$dst"
+    fi
   elif [ -e "$dst" ]; then
+    # Arquivo/diretório comum, fazer backup
     log_warn "Backup: $dst -> ${dst}.bak"
     mv "$dst" "${dst}.bak"
   fi
@@ -659,12 +747,25 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# Finalização
+# Finalização — Rastrear estado e exibir resumo
 # ---------------------------------------------------------------------------
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 log_ok "Setup concluído!"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+# Atualizar arquivo de estado
+update_state_file
+
+# Exibir resumo da execução
+echo ""
+if [ "$IS_FIRST_RUN" = true ]; then
+  log_info "✨ Este foi um setup completo de primeira vez"
+else
+  log_info "🔄 Setup re-executado — configurações atualizadas"
+fi
+echo "   Estado salvo em: $SETUP_STATE_FILE"
+echo "   Última atualização: $(cat "$SETUP_STATE_FILE")"
 
 if [ ${#ERRORS[@]} -gt 0 ]; then
   echo ""
