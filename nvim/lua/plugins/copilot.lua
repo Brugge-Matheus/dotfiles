@@ -22,4 +22,11 @@ return {
       return opts
     end,
   },
+  {
+    "coder/claudecode.nvim",
+    keys = {
+      { "<leader>aa", false },
+      { "<leader>aA", "<cmd>ClaudeCodeDiffAccept<cr>", desc = "Accept diff" },
+    },
+  },
 }
