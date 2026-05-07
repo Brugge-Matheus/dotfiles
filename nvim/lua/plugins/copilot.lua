@@ -10,8 +10,18 @@ return {
   {
     "saghen/blink.cmp",
     opts = function(_, opts)
-      -- Remove copilot das sources default
+      opts.completion = opts.completion or {}
+      opts.completion.ghost_text = { enabled = false }
+
       opts.sources = opts.sources or {}
+      opts.sources.default = { "lsp", "path" }
+
+      opts.sources.providers = opts.sources.providers or {}
+      opts.sources.providers.lsp = vim.tbl_deep_extend("force", opts.sources.providers.lsp or {}, {
+        score_offset = 100,
+      })
+
+      -- Remove copilot das sources default
       opts.sources.default = vim.tbl_filter(function(s)
         return s ~= "copilot"
       end, opts.sources.default or {})
