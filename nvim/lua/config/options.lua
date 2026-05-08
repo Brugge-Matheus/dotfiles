@@ -8,6 +8,7 @@ vim.opt.clipboard = "unnamedplus" -- yank/delete vai direto para o clipboard do 
 vim.opt.backupcopy = "yes"        -- evita que watchers (bun --watch, webpack) percam o arquivo ao salvar
 vim.opt.wrap = true               -- quebra linhas longas (sem scroll lateral)
 vim.opt.linebreak = true          -- quebra na palavra, não no meio dela
+vim.g.autoformat = false          -- desativa format on save global do LazyVim/Conform
 
 -- VSCode style
 vim.opt.cursorlineopt = "number"      -- highlight só no número da linha (como renderLineHighlight: gutter)
