@@ -13,4 +13,15 @@ return {
       },
     },
   },
+
+  -- vim-rails: navegação inteligente em projetos Rails
+  -- <leader>gv dentro de um action do controller → abre a view correspondente
+  -- <leader>gv dentro de uma view → volta pro controller
+  {
+    "tpope/vim-rails",
+    ft = { "ruby", "eruby" },
+    keys = {
+      { "<leader>gv", ":R<CR>", ft = { "ruby", "eruby" }, desc = "Go to related view/controller (Rails)" },
+    },
+  },
 }
