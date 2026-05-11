@@ -3,12 +3,11 @@ return {
     "Shatur/neovim-ayu",
     name = "ayu",
     priority = 1000,
-  },
-
-  {
-    "LazyVim/LazyVim",
     opts = {
-      colorscheme = "ayu",
+      mirage = false,
     },
+    config = function(_, opts)
+      require("ayu").setup(opts)
+    end,
   },
 }
