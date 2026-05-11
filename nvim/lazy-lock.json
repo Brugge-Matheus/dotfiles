@@ -1,7 +1,11 @@
 {
   "CopilotChat.nvim": { "branch": "main", "commit": "137d3bc527518f5ea982c43c43084496732365c3" },
   "LazyVim": { "branch": "main", "commit": "83d90f339defdb109a6ede333865a66ffc7ef6aa" },
+<<<<<<< HEAD
   "ayu-vim": { "branch": "master", "commit": "01faacb4cb76e8cf72ad9858c581d80876260ab3" },
+=======
+  "ayu": { "branch": "master", "commit": "e5a9f0fa2918d6b5f57c21b3ac014314ee5e41c8" },
+>>>>>>> f54f5679a260a900f54555146c1ed7ae19e70549
   "blade-nav.nvim": { "branch": "main", "commit": "d26170efab043b138870aca06eef7dc756a7eb6c" },
   "blink-copilot": { "branch": "main", "commit": "7ad8209b2f880a2840c94cdcd80ab4dc511d4f39" },
   "blink.cmp": { "branch": "main", "commit": "78336bc89ee5365633bcf754d93df01678b5c08f" },
