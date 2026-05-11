@@ -3,6 +3,7 @@ return {
   -- Primeiro uso: :SupermavenUseFree para ativar sem conta, ou :SupermavenUseProToken para Pro
   {
     "supermaven-inc/supermaven-nvim",
+    enabled = false,
     event = "InsertEnter",
     opts = {
       keymaps = {
