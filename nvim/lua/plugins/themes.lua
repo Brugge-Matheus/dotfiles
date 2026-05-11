@@ -2,16 +2,17 @@ return {
   {
     "catppuccin/nvim",
     name = "catppuccin",
-    priority = 1000,
     opts = {
       flavour = "mocha", -- latte, frappe, macchiato, mocha
     },
   },
-
+  {
+     "ayu-theme/ayu-vim",
+  },
   {
     "LazyVim/LazyVim",
     opts = {
-      colorscheme = "catppuccin",
+      colorscheme = "ayu",
     },
   },
 }
