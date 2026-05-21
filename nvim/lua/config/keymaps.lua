@@ -24,5 +24,5 @@ local function duplicate_line_up()
   vim.api.nvim_win_set_cursor(0, { row + 1, col })
 end
 
-vim.keymap.set({ "n", "i" }, "<S-M-Down>", duplicate_line_down, { desc = "Duplicate line down" })
-vim.keymap.set({ "n", "i" }, "<S-M-Up>", duplicate_line_up, { desc = "Duplicate line up" })
+vim.keymap.set({ "n", "i" }, "<M-J>", duplicate_line_down, { desc = "Duplicate line down" })
+vim.keymap.set({ "n", "i" }, "<M-K>", duplicate_line_up, { desc = "Duplicate line up" })
