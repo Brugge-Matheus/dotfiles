@@ -1,2 +1,4 @@
 gtk-titlebar = false
 theme = Ayu
+macos-option-as-alt = true
+font-size = 16
