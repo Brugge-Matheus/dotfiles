@@ -57,21 +57,25 @@ update_state_file() {
 git_pull_if_dirty() {
   local repo_path="$1"
   local name="$2"
-  
+
   if [ ! -d "$repo_path/.git" ]; then
     return 0
   fi
-  
+
   cd "$repo_path" || return 1
-  
+
   # Verificar se há mudanças não commitadas
   if ! git diff --quiet 2>/dev/null; then
     log_warn "[$name] Mudanças locais detectadas — pulando git pull"
     return 1
   fi
-  
-  # Pull apenas se houver commits novos no remote
-  if git fetch --dry-run 2>/dev/null | grep -q '[new\|updated]'; then
+
+  # Compara hash local vs remote para detectar updates
+  git fetch origin 2>/dev/null
+  local local_hash remote_hash
+  local_hash="$(git rev-parse HEAD 2>/dev/null)"
+  remote_hash="$(git rev-parse @{u} 2>/dev/null)"
+  if [ "$local_hash" != "$remote_hash" ]; then
     log_info "[$name] Atualizando repositório..."
     git pull --ff-only 2>/dev/null && log_ok "[$name] Repositório atualizado" || \
       log_warn "[$name] Falha ao atualizar — pode ter conflitos"
@@ -88,7 +92,10 @@ if [ -d .git ]; then
   if ! git diff --quiet 2>/dev/null; then
     log_warn "Mudanças locais em dotfiles — pulando git pull"
   else
-    if git fetch --dry-run 2>/dev/null | grep -q '[new\|updated]'; then
+    git fetch origin 2>/dev/null
+    LOCAL_HASH="$(git rev-parse HEAD 2>/dev/null)"
+    REMOTE_HASH="$(git rev-parse @{u} 2>/dev/null)"
+    if [ "$LOCAL_HASH" != "$REMOTE_HASH" ]; then
       log_info "Atualizações disponíveis — fazendo pull..."
       git pull --ff-only 2>/dev/null && log_ok "dotfiles sincronizados!" || \
         log_warn "Falha ao sincronizar dotfiles — verifique conflitos manualmente"
@@ -159,9 +166,8 @@ install_macos_deps() {
   BREW_PACKAGES=(
     zsh tmux neovim starship fzf ripgrep
     coreutils gnu-sed gawk tree wget curl git
-    lazygit fd bat asdf
+    lazygit fd bat asdf go
     gcc make
-    wl-clipboard
   )
 
   for pkg in "${BREW_PACKAGES[@]}"; do
@@ -212,46 +218,93 @@ install_macos_deps() {
 }
 
 # ---------------------------------------------------------------------------
-# Linux — apt (Ubuntu/Debian) ou genérico
+# Linux — detecta gerenciador de pacotes e instala dependências
 # ---------------------------------------------------------------------------
 install_linux_deps() {
-  log_info "Atualizando pacotes..."
-  sudo apt-get update -y || ERRORS+=("apt-get update falhou")
+  # Detectar gerenciador de pacotes
+  if command -v apt-get &>/dev/null; then
+    PKG_MANAGER="apt"
+  elif command -v dnf &>/dev/null; then
+    PKG_MANAGER="dnf"
+  elif command -v pacman &>/dev/null; then
+    PKG_MANAGER="pacman"
+  elif command -v zypper &>/dev/null; then
+    PKG_MANAGER="zypper"
+  else
+    log_err "Gerenciador de pacotes não suportado. Instale manualmente: zsh tmux git curl wget gcc make"
+    ERRORS+=("Gerenciador de pacotes não detectado")
+    PKG_MANAGER="unknown"
+  fi
+  log_info "Gerenciador de pacotes: $PKG_MANAGER"
 
-  log_info "Instalando dependências base..."
-  sudo apt-get install -y \
-    zsh tmux git curl wget unzip build-essential gcc g++ make \
-    fzf ripgrep tree gettext gpg \
-    cmake ninja-build pkg-config libtool libtool-bin \
-    autoconf automake luarocks \
-    fonts-firacode fonts-jetbrains-mono 2>/dev/null || \
-  sudo apt-get install -y \
-    zsh tmux git curl wget unzip build-essential gcc g++ make \
-    fzf ripgrep tree gettext gpg \
-    cmake ninja-build pkg-config libtool libtool-bin \
-    autoconf automake luarocks || \
-    ERRORS+=("Alguns pacotes apt falharam — verifique manualmente")
+  case "$PKG_MANAGER" in
+  apt)
+    log_info "Atualizando pacotes..."
+    sudo apt-get update -y || ERRORS+=("apt-get update falhou")
+    log_info "Instalando dependências base..."
+    sudo apt-get install -y \
+      zsh tmux git curl wget unzip build-essential gcc g++ make \
+      fzf ripgrep tree gettext gpg golang-go \
+      cmake ninja-build pkg-config libtool libtool-bin \
+      autoconf automake luarocks || \
+      ERRORS+=("Alguns pacotes apt falharam — verifique manualmente")
+    ;;
+  dnf)
+    log_info "Atualizando pacotes (dnf)..."
+    sudo dnf update -y || true
+    sudo dnf install -y \
+      zsh tmux git curl wget unzip gcc g++ make \
+      fzf ripgrep tree gettext gnupg golang \
+      cmake ninja-build pkg-config libtool \
+      autoconf automake luarocks || \
+      ERRORS+=("Alguns pacotes dnf falharam — verifique manualmente")
+    ;;
+  pacman)
+    log_info "Atualizando pacotes (pacman)..."
+    sudo pacman -Syu --noconfirm || true
+    sudo pacman -S --noconfirm --needed \
+      zsh tmux git curl wget unzip gcc make \
+      fzf ripgrep tree gettext gnupg go \
+      cmake ninja pkgconf libtool \
+      autoconf automake luarocks || \
+      ERRORS+=("Alguns pacotes pacman falharam — verifique manualmente")
+    ;;
+  zypper)
+    log_info "Atualizando pacotes (zypper)..."
+    sudo zypper refresh || true
+    sudo zypper install -y \
+      zsh tmux git curl wget unzip gcc gcc-c++ make \
+      fzf ripgrep tree gettext gnupg go \
+      cmake ninja pkg-config libtool \
+      autoconf automake luarocks || \
+      ERRORS+=("Alguns pacotes zypper falharam — verifique manualmente")
+    ;;
+  esac
 
   # Clipboard — wl-clipboard (Wayland) ou xclip (X11)
   if ! command -v wl-copy &>/dev/null && ! command -v xclip &>/dev/null; then
     log_info "Instalando suporte a clipboard do sistema para Neovim..."
-    sudo apt-get install -y wl-clipboard 2>/dev/null || \
-      sudo apt-get install -y xclip 2>/dev/null || \
-      log_warn "Clipboard do sistema não instalado — copiar com '+y' pode não funcionar"
+    case "$PKG_MANAGER" in
+      apt)    sudo apt-get install -y wl-clipboard 2>/dev/null || sudo apt-get install -y xclip 2>/dev/null || true ;;
+      dnf)    sudo dnf install -y wl-clipboard 2>/dev/null || sudo dnf install -y xclip 2>/dev/null || true ;;
+      pacman) sudo pacman -S --noconfirm --needed wl-clipboard 2>/dev/null || sudo pacman -S --noconfirm --needed xclip 2>/dev/null || true ;;
+      zypper) sudo zypper install -y wl-clipboard 2>/dev/null || sudo zypper install -y xclip 2>/dev/null || true ;;
+    esac
+    log_ok "Clipboard instalado."
   else
     log_ok "Clipboard do sistema já disponível."
   fi
 
-  # Xcode CLT não se aplica ao Linux — gcc/g++ já cobertos pelo build-essential acima
-  
-  # Dependências para compilar linguagens via asdf
-  log_info "Instalando dependências para asdf (Node.js, Python, Ruby)..."
-  sudo apt-get install -y \
-    libssl-dev libreadline-dev zlib1g-dev \
-    libbz2-dev libsqlite3-dev libffi-dev \
-    liblzma-dev libncurses5-dev libgdbm-dev \
-    libyaml-dev rustc || \
-    ERRORS+=("Algumas dependências asdf falharam")
+  # Dependências para compilar linguagens via asdf (apenas apt por enquanto — dnf/pacman já têm os nomes certos)
+  if [ "$PKG_MANAGER" = "apt" ]; then
+    log_info "Instalando dependências para asdf (Node.js, Python, Ruby)..."
+    sudo apt-get install -y \
+      libssl-dev libreadline-dev zlib1g-dev \
+      libbz2-dev libsqlite3-dev libffi-dev \
+      liblzma-dev libncurses5-dev libgdbm-dev \
+      libyaml-dev rustc || \
+      ERRORS+=("Algumas dependências asdf falharam")
+  fi
 
   # bat (pode ser batcat no Ubuntu)
   if ! command -v bat &>/dev/null && ! command -v batcat &>/dev/null; then
@@ -265,13 +318,21 @@ install_linux_deps() {
       ln -sf "$(command -v fdfind)" "$HOME/.local/bin/fd" 2>/dev/null || true
   fi
 
-  # Neovim: baixa binário pré-compilado do GitHub (mais confiável que snap ou compilar)
+  # Neovim: baixa binário pré-compilado do GitHub detectando arquitetura
   if ! command -v nvim &>/dev/null; then
     log_info "Instalando Neovim (binário pré-compilado)..."
-    NVIM_URL="https://github.com/neovim/neovim/releases/download/stable/nvim-linux-x86_64.tar.gz"
+    ARCH="$(uname -m)"
+    if [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then
+      NVIM_TARBALL="nvim-linux-arm64.tar.gz"
+      NVIM_DIR="nvim-linux-arm64"
+    else
+      NVIM_TARBALL="nvim-linux-x86_64.tar.gz"
+      NVIM_DIR="nvim-linux-x86_64"
+    fi
+    NVIM_URL="https://github.com/neovim/neovim/releases/download/stable/${NVIM_TARBALL}"
     curl -Lo /tmp/nvim.tar.gz "$NVIM_URL" && \
       sudo tar -xzf /tmp/nvim.tar.gz -C /opt && \
-      sudo ln -sf /opt/nvim-linux-x86_64/bin/nvim /usr/local/bin/nvim && \
+      sudo ln -sf /opt/${NVIM_DIR}/bin/nvim /usr/local/bin/nvim && \
       rm -f /tmp/nvim.tar.gz && \
       log_ok "Neovim instalado: $(nvim --version | head -1)" || \
       ERRORS+=("Falha ao instalar Neovim — instale manualmente")
@@ -313,30 +374,34 @@ install_linux_deps() {
   FONT_DIR="$HOME/.local/share/fonts"
   mkdir -p "$FONT_DIR"
   
-  # JetBrains Mono
-  if [ ! -f "$FONT_DIR/JetBrainsMono-Regular.ttf" ]; then
-    log_info "Baixando JetBrains Mono..."
-    curl -fLo /tmp/JetBrainsMono.zip https://github.com/JetBrains/JetBrainsMono/releases/download/v2.304/JetBrainsMono-2.304.zip && \
-      unzip -q /tmp/JetBrainsMono.zip -d /tmp/JetBrainsMono && \
-      cp /tmp/JetBrainsMono/fonts/ttf/*.ttf "$FONT_DIR/" && \
-      rm -rf /tmp/JetBrainsMono /tmp/JetBrainsMono.zip && \
-      log_ok "JetBrains Mono instalado." || \
-      log_warn "Falha ao instalar JetBrains Mono"
+  # JetBrains Mono Nerd Font (necessário para ícones no Neovim)
+  if [ ! -f "$FONT_DIR/JetBrainsMonoNerdFont-Regular.ttf" ]; then
+    log_info "Baixando JetBrains Mono Nerd Font..."
+    curl -fLo /tmp/JetBrainsMonoNF.tar.xz \
+      "https://github.com/ryanoasis/nerd-fonts/releases/download/v3.2.1/JetBrainsMono.tar.xz" && \
+      mkdir -p /tmp/JetBrainsMonoNF && \
+      tar -xf /tmp/JetBrainsMonoNF.tar.xz -C /tmp/JetBrainsMonoNF && \
+      cp /tmp/JetBrainsMonoNF/*.ttf "$FONT_DIR/" 2>/dev/null || true && \
+      rm -rf /tmp/JetBrainsMonoNF /tmp/JetBrainsMonoNF.tar.xz && \
+      log_ok "JetBrains Mono Nerd Font instalado." || \
+      log_warn "Falha ao instalar JetBrains Mono Nerd Font"
   else
-    log_ok "JetBrains Mono já instalado."
+    log_ok "JetBrains Mono Nerd Font já instalado."
   fi
-  
-  # Fira Code
-  if [ ! -f "$FONT_DIR/FiraCode-Regular.ttf" ]; then
-    log_info "Baixando Fira Code..."
-    curl -fLo /tmp/FiraCode.zip https://github.com/tonsky/FiraCode/releases/download/6.2/Fira_Code_v6.2.zip && \
-      unzip -q /tmp/FiraCode.zip -d /tmp/FiraCode && \
-      cp /tmp/FiraCode/ttf/*.ttf "$FONT_DIR/" && \
-      rm -rf /tmp/FiraCode /tmp/FiraCode.zip && \
-      log_ok "Fira Code instalado." || \
-      log_warn "Falha ao instalar Fira Code"
+
+  # Fira Code Nerd Font
+  if [ ! -f "$FONT_DIR/FiraCodeNerdFont-Regular.ttf" ]; then
+    log_info "Baixando Fira Code Nerd Font..."
+    curl -fLo /tmp/FiraCodeNF.tar.xz \
+      "https://github.com/ryanoasis/nerd-fonts/releases/download/v3.2.1/FiraCode.tar.xz" && \
+      mkdir -p /tmp/FiraCodeNF && \
+      tar -xf /tmp/FiraCodeNF.tar.xz -C /tmp/FiraCodeNF && \
+      cp /tmp/FiraCodeNF/*.ttf "$FONT_DIR/" 2>/dev/null || true && \
+      rm -rf /tmp/FiraCodeNF /tmp/FiraCodeNF.tar.xz && \
+      log_ok "Fira Code Nerd Font instalado." || \
+      log_warn "Falha ao instalar Fira Code Nerd Font"
   else
-    log_ok "Fira Code já instalado."
+    log_ok "Fira Code Nerd Font já instalado."
   fi
   
   # Atualizar cache de fontes
@@ -491,10 +556,10 @@ if command -v asdf &>/dev/null; then
     fi
     
     # No Linux, instalar TODAS as dependências do PHP antes
-    if [ "$OS" = "linux" ]; then
+    if [ "$OS" = "linux" ] && [ "$PKG_MANAGER" = "apt" ]; then
       log_info "Instalando dependências completas do PHP (isso pode demorar)..."
       log_info "Estas libs garantem que todas as extensões PHP sejam compiladas corretamente."
-      
+
       sudo apt-get install -y \
         autoconf bison re2c pkg-config \
         libxml2-dev libcurl4-openssl-dev \

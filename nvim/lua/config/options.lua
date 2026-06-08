@@ -3,6 +3,8 @@
 -- Add any additional options here
 
 vim.g.autoformat = false           -- desabilita format on save (use <leader>cf para formatar manualmente)
+-- Centraliza swaps em diretório temp (// = nome único por caminho completo)
+vim.opt.directory = vim.fn.stdpath("state") .. "/swap//"
 
 vim.opt.clipboard = "unnamedplus" -- yank/delete vai direto para o clipboard do sistema
 vim.opt.backupcopy = "yes"        -- evita que watchers (bun --watch, webpack) percam o arquivo ao salvar
