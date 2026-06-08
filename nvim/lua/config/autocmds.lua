@@ -7,6 +7,17 @@
 -- Or remove existing autocmds by their group name (which is prefixed with `lazyvim_` for the defaults)
 -- e.g. vim.api.nvim_del_augroup_by_name("lazyvim_wrap_spell")
 
+-- Apaga swap de processos mortos automaticamente (evita W325)
+vim.api.nvim_create_autocmd("SwapExists", {
+  callback = function()
+    local info = vim.fn.swapinfo(vim.v.swapname)
+    local pid = info and info.pid
+    if pid and vim.fn.system("kill -0 " .. pid .. " 2>/dev/null; echo $?"):gsub("\n", "") ~= "0" then
+      vim.v.swapchoice = "d"
+    end
+  end,
+})
+
 -- Pisca o texto copiado por 1 segundo
 vim.api.nvim_create_autocmd("TextYankPost", {
   desc = "Highlight on yank",

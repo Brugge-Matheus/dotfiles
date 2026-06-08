@@ -98,6 +98,7 @@ check_symlink "Starship config" "$HOME/.config/starship.toml"
 check_symlink "Tmux config" "$HOME/.tmux.conf"
 check_symlink "Neovim config" "$HOME/.config/nvim"
 check_symlink "Git config" "$HOME/.gitconfig"
+check_symlink "Ghostty config" "$HOME/.config/ghostty/config"
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
