@@ -91,6 +91,10 @@ bindkey -M menuselect 'j' vi-down-line-or-history
 
 bindkey -v '^?' backward-delete-char
 
+# Alt+Backspace = apagar palavra anterior (evita ativar vi-cmd-mode)
+bindkey -M viins '\e^?' backward-kill-word
+bindkey -M viins '\e^H' backward-kill-word
+
 function zle-line-init zle-keymap-select {
   if [[ $KEYMAP == vicmd ]]; then
     echo -ne '\e[2 q'
@@ -127,3 +131,11 @@ fi
 unset __conda_setup
 # <<< conda initialize <<<
 
+# Acesse Docker Config
+#export DOCKER_HOST="unix://${HOME}/.colima/default/docker.sock"
+alias acesse-shell='docker-compose -f ~/svn/docker/docker-compose.yml exec web bash'
+alias acesse-logs='docker-compose -f ~/Projects/Acesse/svn/docker/docker-compose.yml logs -f web'
+alias acesse-up='docker-compose -f ~/Projects/Acesse/svn/docker/docker-compose.yml up -d'
+alias acesse-down='docker-compose -f ~/Projects/Acesse/svn/docker/docker-compose.yml down'
+alias acesse-rebuild='docker-compose -f ~/Projects/Acesse/svn/docker/docker-compose.yml build web && docker-compose -f ~/Projects/Acesse/svn/docker/docker-compose.yml up -d'
+alias acesse-erros='docker-compose -f ~/Projects/Acesse/svn/docker/docker-compose.yml exec web tail -f /var/log/apache2/php_errors.log'

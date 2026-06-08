@@ -10,6 +10,12 @@ pcall(vim.keymap.del, "n", "<leader>l")
 vim.keymap.set("n", "<leader>h", "<cmd>bprevious<cr>", { desc = "Buffer anterior" })
 vim.keymap.set("n", "<leader>l", "<cmd>bnext<cr>", { desc = "Próximo buffer" })
 
+-- Reordenar buffers na tabline
+pcall(vim.keymap.del, "n", "[B")
+pcall(vim.keymap.del, "n", "]B")
+vim.keymap.set("n", "[l", "<cmd>BufferLineMovePrev<cr>", { desc = "Mover buffer para esquerda" })
+vim.keymap.set("n", "]l", "<cmd>BufferLineMoveNext<cr>", { desc = "Mover buffer para direita" })
+
 -- Duplicar linha (como Shift+Alt+Down/Up no VSCode)
 local function duplicate_line_down()
   local line = vim.api.nvim_get_current_line()
