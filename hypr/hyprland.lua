@@ -122,14 +122,14 @@ hl.env("LC_TIME", "pt_BR.UTF-8")
 -- Refer to https://wiki.hypr.land/Configuring/Basics/Variables/
 hl.config({
     general = {
-        gaps_in  = 4,
-        gaps_out = 8,
+        gaps_in  = 2,
+        gaps_out = 5,
 
         border_size = 2,
 
         col = {
-            active_border   = { colors = {"rgba(7aa2f7ee)", "rgba(bb9af7ee)"}, angle = 45 },
-            inactive_border = "rgba(292e42aa)",
+            active_border   = "rgba(ffffffff)",   -- borda da janela ativa: branca
+            inactive_border = "rgba(2a2a2aaa)",    -- inativa: cinza neutro (tema black)
         },
 
         -- Set to true to enable resizing windows by clicking and dragging on borders and gaps
