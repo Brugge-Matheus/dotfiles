@@ -12,3 +12,4 @@ elephant-runner-bin             # rodar comandos
 elephant-files-bin              # busca de arquivos
 elephant-menus-bin              # menus customizados (ex.: power menu)
 elephant-clipboard-bin          # historico de clipboard
+

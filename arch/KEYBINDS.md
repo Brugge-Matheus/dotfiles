@@ -73,8 +73,11 @@
 | Bluetooth | Abre `bluetoothctl` |
 | Rede | Abre `nmtui` |
 | Clima | Atualiza · (hover) min/máx/sensação |
+| Bateria | Menu de perfis de energia (Performance/Equilibrado/Economia) |
 | Relógio | Abre o calendário (gsimplecal) |
 | Power () | Menu: bloquear/sair/suspender/reiniciar/desligar |
+
+> Os menus (power/bateria) fecham com `Esc`, ao escolher, ou clicando no mesmo botão.
 
 ---
 

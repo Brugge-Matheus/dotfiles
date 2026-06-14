@@ -37,7 +37,7 @@ window#waybar {
 #bluetooth,
 #network,
 #battery,
-#clock,
+#custom-clock,
 #custom-power {
   padding: 0 9px;
   color: #d4d4d4;
@@ -82,7 +82,7 @@ window#waybar {
 /* direita */
 #custom-weather { color: #7aa2cf; }
 #backlight, #pulseaudio, #bluetooth, #network, #battery { color: #c8c8c8; }
-#clock { color: #ffffff; font-weight: 700; }
+#custom-clock { color: #ffffff; font-weight: 700; }
 
 #pulseaudio.muted,
 #network.disconnected,

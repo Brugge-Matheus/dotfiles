@@ -65,6 +65,7 @@ safe_link "$DOTFILES_DIR/swaync"             "$HOME/.config/swaync"
 safe_link "$DOTFILES_DIR/gsimplecal/config"  "$HOME/.config/gsimplecal/config"
 safe_link "$DOTFILES_DIR/gtk-3.0/gtk.css"    "$HOME/.config/gtk-3.0/gtk.css"
 safe_link "$DOTFILES_DIR/gtk-3.0/settings.ini" "$HOME/.config/gtk-3.0/settings.ini"
+safe_link "$DOTFILES_DIR/fuzzel/powermenu.ini" "$HOME/.config/fuzzel/powermenu.ini"
 # Unit que ativa o graphical-session.target (portais/polkit no Hyprland do TTY)
 safe_link "$DOTFILES_DIR/systemd/user/tty-graphical-session.target" "$HOME/.config/systemd/user/tty-graphical-session.target"
 

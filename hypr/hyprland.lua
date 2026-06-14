@@ -84,6 +84,9 @@ hl.env("ELECTRON_OZONE_PLATFORM_HINT", "auto") -- VSCode, Discord, etc.
 hl.env("GTK_IM_MODULE", "cedilla")
 hl.env("QT_IM_MODULE", "cedilla")
 
+-- Datas/horas em portugues (Waybar, hyprlock, etc.) sem mudar o idioma do sistema
+hl.env("LC_TIME", "pt_BR.UTF-8")
+
 -- GPU HIBRIDA (Optimus): a Intel dirige o compositor; a NVIDIA fica so para
 -- offload via "prime-run <app>". O Hyprland costuma escolher a Intel sozinho.
 -- SE algum dia der tela preta/lag (escolheu a GPU errada), descomente a linha:
