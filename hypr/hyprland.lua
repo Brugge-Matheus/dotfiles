@@ -34,8 +34,8 @@ hl.monitor({
 ---------------------
 
 -- Set programs that you use
-local terminal    = "kitty"
-local fileManager = "kitty"   -- temporario: file manager definitivo fica para a Fase 4
+local terminal    = "ghostty"
+local fileManager = "ghostty"  -- temporario: file manager definitivo fica para a Fase 4
 local menu        = "walker"
 
 
