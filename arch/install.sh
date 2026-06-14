@@ -69,6 +69,9 @@ safe_link "$DOTFILES_DIR/fuzzel/powermenu.ini" "$HOME/.config/fuzzel/powermenu.i
 # Unit que ativa o graphical-session.target (portais/polkit no Hyprland do TTY)
 safe_link "$DOTFILES_DIR/systemd/user/tty-graphical-session.target" "$HOME/.config/systemd/user/tty-graphical-session.target"
 
+# Ajustes minimalistas do Thunar (se instalado)
+command -v thunar >/dev/null 2>&1 && bash "$DOTFILES_DIR/arch/scripts/thunar-minimal.sh" || true
+
 # Wallpaper padrao (gera se nao existir)
 if [ ! -f "$HOME/Pictures/Wallpapers/default.png" ]; then
   log_info "Gerando wallpaper padrao..."
