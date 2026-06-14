@@ -38,7 +38,7 @@
 |---|---|---|
 | `SUPER + Q` | Terminal (kitty) | ✅ |
 | `SUPER + E` | Gerenciador de arquivos | ⏳ (app a definir — Fase 4) |
-| `SUPER + R` | Launcher de apps | ⏳ (a definir — Fase 2) |
+| `SUPER + R` | Launcher de apps (walker) | ✅ |
 
 ## 🔊 Mídia & Hardware (teclas de função)
 
@@ -47,13 +47,18 @@
 | `🔊 Volume +/−` | `wpctl` ajusta volume | ✅ |
 | `🔇 Mute` | Mutar saída de áudio | ✅ |
 | `🎤 Mic Mute` | Mutar microfone | ✅ |
-| `☀️ Brilho +/−` | `brightnessctl` | ⏳ (instalar `brightnessctl` — Fase 2) |
-| `⏯️ Play/Pause, ⏭️ Next, ⏮️ Prev` | `playerctl` | ⏳ (instalar `playerctl` — Fase 2) |
+| `☀️ Brilho +/−` | `brightnessctl` | ✅ |
+| `⏯️ Play/Pause, ⏭️ Next, ⏮️ Prev` | `playerctl` | ✅ |
 
 ## ⚙️ Sessão
 
 | Atalho | Ação | Status |
 |---|---|---|
+| `SUPER + L` | Bloquear a tela (hyprlock) | ✅ |
+| `SUPER + N` | Abrir/fechar central de notificações (SwayNC) | ✅ |
+| `SUPER + F` | Maximizar janela | ✅ |
+| `SUPER + SHIFT + F` | Tela cheia (real) | ✅ |
+| `SUPER + SHIFT + R` | Recarregar config do Hyprland | ✅ |
 | `SUPER + M` | Sair do Hyprland (volta ao TTY/login) | ✅ |
 
 ---
@@ -64,16 +69,8 @@ Atalhos que vamos adicionar conforme instalarmos as ferramentas. **Nada disso es
 
 | Atalho (proposto) | Ação | Fase |
 |---|---|---|
-| `SUPER + SHIFT + R` | Recarregar config do Hyprland | 2 |
-| `SUPER + F` | Tela cheia | 2 |
-| `SUPER + SHIFT + Space` | Alternar flutuante (alt) | 2 |
 | `Print` / `SUPER + SHIFT + S` | Screenshot (grim + slurp) | 3 |
+| `SUPER + SHIFT + V` | Histórico de clipboard (cliphist) | 3 |
 | `SUPER + W` | Trocar wallpaper | 3 |
-| `SUPER + L` | Bloquear tela (hyprlock) | 3 |
-| `SUPER + N` | Centro de notificações | 3 |
 | `SUPER + Backspace` | Power menu (logout/reboot/shutdown) | 3 |
 | `SUPER + period` | Seletor de emoji | 3 |
-| `SUPER + V` (clipboard) | Histórico de clipboard | 3 |
-
-> ⚠️ Conflito a resolver: `SUPER + V` hoje é "flutuante" e está proposto para clipboard.
-> Decidiremos os bindings finais na Fase 2/3 (provavelmente flutuante → `SUPER + SHIFT + Space`).

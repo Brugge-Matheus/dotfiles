@@ -1,0 +1,83 @@
+/* Waybar — tema Tokyo Night (dark) */
+
+* {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 13px;
+  font-weight: 600;
+  min-height: 0;
+}
+
+window#waybar {
+  background: transparent;
+  color: #c0caf5;
+}
+
+/* "ilhas" arredondadas */
+.modules-left,
+.modules-center,
+.modules-right {
+  background: #1a1b26;
+  border: 1px solid #292e42;
+  border-radius: 12px;
+  padding: 0 6px;
+}
+
+#workspaces button {
+  color: #565f89;
+  padding: 0 8px;
+  border-radius: 10px;
+  background: transparent;
+}
+#workspaces button.active {
+  color: #1a1b26;
+  background: #7aa2f7;
+}
+#workspaces button.urgent {
+  color: #1a1b26;
+  background: #f7768e;
+}
+#workspaces button:hover {
+  color: #c0caf5;
+  background: #292e42;
+}
+
+#window {
+  color: #7aa2f7;
+  padding: 0 10px;
+}
+window#waybar.empty #window {
+  background: transparent;
+  border: none;
+}
+
+#clock {
+  color: #bb9af7;
+  padding: 0 12px;
+}
+
+#backlight,
+#pulseaudio,
+#network,
+#battery,
+#tray {
+  padding: 0 10px;
+  color: #c0caf5;
+}
+
+#backlight   { color: #e0af68; }
+#pulseaudio  { color: #7dcfff; }
+#network     { color: #9ece6a; }
+#battery     { color: #c0caf5; }
+
+#battery.charging { color: #9ece6a; }
+#battery.warning:not(.charging)  { color: #e0af68; }
+#battery.critical:not(.charging) {
+  color: #f7768e;
+  animation: blink 1s steps(2) infinite;
+}
+
+@keyframes blink {
+  to { color: #1a1b26; background: #f7768e; }
+}
+
+#pulseaudio.muted { color: #565f89; }
