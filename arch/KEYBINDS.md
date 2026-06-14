@@ -69,9 +69,12 @@
 | `SUPER + CTRL + P` | Screenshot da tela cheia (salva + copia) | ✅ |
 | `SUPER + ALT + P` | Screenshot da janela ativa | ✅ |
 | `SUPER + SHIFT + V` | Histórico de clipboard (cliphist) | ✅ |
-| `SUPER + W` | Trocar wallpaper (de `~/Pictures/Wallpapers`) | ✅ |
+| `SUPER + W` | Trocar wallpaper — escolhe o alvo (ambos ou um monitor) e a imagem | ✅ |
 
 > Screenshots salvos em `~/Pictures/Screenshots` e copiados para o clipboard.
+> Wallpapers lidos de `~/Pictures/Wallpapers`. O `SUPER + W` pergunta primeiro
+> **onde** aplicar (Ambos os monitores / eDP-1 / HDMI-A-1) e depois a imagem.
+> Aleatório em todos: `~/.config/waybar/scripts/wallpaper.sh random`.
 
 ## 🖱️ Cliques na Waybar
 
