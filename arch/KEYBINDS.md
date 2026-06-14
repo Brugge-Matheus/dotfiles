@@ -61,6 +61,18 @@
 | `SUPER + SHIFT + R` | Recarregar config do Hyprland | ✅ |
 | `SUPER + M` | Sair do Hyprland (volta ao TTY/login) | ✅ |
 
+## 📸 Capturas & utilitários
+
+| Atalho | Ação | Status |
+|---|---|---|
+| `SUPER + SHIFT + P` | Screenshot de região (abre o Satty p/ anotar) | ✅ |
+| `SUPER + CTRL + P` | Screenshot da tela cheia (salva + copia) | ✅ |
+| `SUPER + ALT + P` | Screenshot da janela ativa | ✅ |
+| `SUPER + SHIFT + V` | Histórico de clipboard (cliphist) | ✅ |
+| `SUPER + W` | Trocar wallpaper (de `~/Pictures/Wallpapers`) | ✅ |
+
+> Screenshots salvos em `~/Pictures/Screenshots` e copiados para o clipboard.
+
 ## 🖱️ Cliques na Waybar
 
 | Onde | Ação |
@@ -78,17 +90,3 @@
 | Power () | Menu: bloquear/sair/suspender/reiniciar/desligar |
 
 > Os menus (power/bateria) fecham com `Esc`, ao escolher, ou clicando no mesmo botão.
-
----
-
-## 🔜 Planejado (próximas fases)
-
-Atalhos que vamos adicionar conforme instalarmos as ferramentas. **Nada disso está ativo ainda** — serve de mapa:
-
-| Atalho (proposto) | Ação | Fase |
-|---|---|---|
-| `Print` / `SUPER + SHIFT + S` | Screenshot (grim + slurp) | 3 |
-| `SUPER + SHIFT + V` | Histórico de clipboard (cliphist) | 3 |
-| `SUPER + W` | Trocar wallpaper | 3 |
-| `SUPER + Backspace` | Power menu (logout/reboot/shutdown) | 3 |
-| `SUPER + period` | Seletor de emoji | 3 |
