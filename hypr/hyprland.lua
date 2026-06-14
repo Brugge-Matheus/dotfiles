@@ -151,16 +151,17 @@ hl.config({
 
         shadow = {
             enabled      = true,
-            range        = 4,
-            render_power = 3,
-            color        = 0xee1a1a1a,
+            range        = 3,
+            render_power = 2,
+            color        = 0xee0a0a0a,
         },
 
         blur = {
-            enabled   = true,
-            size      = 3,
-            passes    = 1,
-            vibrancy  = 0.1696,
+            enabled           = true,
+            size              = 2,
+            passes            = 1,
+            vibrancy          = 0.1696,
+            new_optimizations = true,   -- reduz o custo do blur na iGPU
         },
     },
 
