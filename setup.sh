@@ -266,7 +266,8 @@ install_linux_deps() {
       zsh tmux git curl wget unzip gcc make \
       fzf ripgrep tree gettext gnupg go \
       cmake ninja pkgconf libtool \
-      autoconf automake luarocks || \
+      autoconf automake luarocks \
+      fd bat lazygit ghostty || \
       ERRORS+=("Alguns pacotes pacman falharam — verifique manualmente")
     ;;
   zypper)
