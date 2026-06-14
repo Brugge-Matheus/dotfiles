@@ -61,6 +61,21 @@
 | `SUPER + SHIFT + R` | Recarregar config do Hyprland | ✅ |
 | `SUPER + M` | Sair do Hyprland (volta ao TTY/login) | ✅ |
 
+## 🖱️ Cliques na Waybar
+
+| Onde | Ação |
+|---|---|
+| Workspace (número) | Vai para o workspace |
+| Spotify | Abre/foca o Spotify · (botão direito) play/pause |
+| CPU | Abre `btop` |
+| Volume | Mutar · (botão direito) `pavucontrol` · scroll = volume |
+| Brilho | Scroll = ajusta brilho |
+| Bluetooth | Abre `bluetoothctl` |
+| Rede | Abre `nmtui` |
+| Clima | Atualiza · (hover) min/máx/sensação |
+| Relógio | Abre o calendário (gsimplecal) |
+| Power () | Menu: bloquear/sair/suspender/reiniciar/desligar |
+
 ---
 
 ## 🔜 Planejado (próximas fases)

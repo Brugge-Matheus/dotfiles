@@ -1,0 +1,52 @@
+/* GTK3 — tema dark para popups (gsimplecal etc.), no mesmo visual do sistema */
+
+window, .background, popover, dialog {
+  background-color: #0a0a0a;
+  color: #d4d4d4;
+}
+
+/* botoes do topo (mes/ano) do gsimplecal */
+button {
+  background: #0a0a0a;
+  color: #d4d4d4;
+  border: 1px solid #1c1c1c;
+  border-radius: 8px;
+  padding: 2px 8px;
+}
+button:hover {
+  background: #1c1c1c;
+  color: #ffffff;
+}
+
+/* o calendario */
+calendar {
+  background-color: #0a0a0a;
+  color: #d4d4d4;
+  border: 1px solid #161616;
+  padding: 4px;
+}
+
+/* dia de hoje */
+calendar:selected,
+calendar.highlight {
+  background-color: #d4d4d4;
+  color: #0a0a0a;
+  border-radius: 6px;
+}
+
+/* dias de outros meses / cabecalho */
+calendar.header,
+calendar.button,
+calendar.highlight.header {
+  color: #ffffff;
+}
+calendar:indeterminate {     /* dias fora do mes atual */
+  color: #555555;
+}
+
+/* nomes dos dias da semana e numeros das semanas */
+calendar.day-name,
+calendar.week-number {
+  color: #777777;
+  font-size: 0.85em;
+}
