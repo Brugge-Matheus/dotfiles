@@ -37,7 +37,8 @@ no boot. A config conhecida-boa (aplicada por `install/01-foundation.sh`):
 | **1 — Núcleo Hyprland** | `hyprland.lua`: monitor, input US-Intl, keybinds, regras, env GPU | ✅ feito |
 | **2 — Visual** | Walker, Waybar, wallpaper (awww), hyprlock/hypridle, SwayNC, tema Tokyo Night, rede → NetworkManager | ✅ feito |
 | **3 — Funcionalidades** | Screenshots (grim+slurp+satty), clipboard (cliphist), trocador de wallpaper | ✅ feito |
-| **4 — Apps** | File manager, navegador, terminal definitivo, etc. | 🔜 |
+| **4 — Apps** | Zen, Thunar+yazi, Discord, Obsidian, Spotify, btop, pavucontrol | ✅ feito |
+| **6 — Boot elegante** | quiet + Plymouth + autologin (tty1) → Hyprland no hyprlock | ✅ feito |
 | **5 — Dotfiles dev** | zsh + tmux + LazyVim (via `../setup.sh`) | 🔜 |
 
 ## 🚀 Como usar (numa máquina nova)

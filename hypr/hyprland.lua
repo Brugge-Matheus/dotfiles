@@ -47,6 +47,8 @@ local menu        = "walker"
 
 -- Autostart necessary processes (like notifications daemons, status bars, etc.)
 hl.on("hyprland.start", function ()
+    -- Sobe JA travado na tela de bloqueio (boot -> autologin -> hyprlock).
+    hl.exec_cmd("hyprlock")
     -- Sessao systemd + portais: como o Hyprland e lancado do TTY (sem display
     -- manager), o graphical-session.target nao sobe sozinho. Sem ele, os portais
     -- (xdg-desktop-portal) e o polkit nao iniciam -> apps GTK (walker) ficam LENTOS.
