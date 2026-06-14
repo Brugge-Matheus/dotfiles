@@ -1,3 +1,4 @@
 # Fase 6 — Boot elegante (oficiais) — Arch + Hyprland
 # Instalado por: arch/install/06-boot-experience.sh
 plymouth          # splash grafico no boot (esconde os logs)
+uwsm              # Universal Wayland Session Manager (inicia a sessao Hyprland no systemd)

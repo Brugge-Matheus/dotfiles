@@ -47,6 +47,9 @@ local menu        = "walker"
 
 -- Autostart necessary processes (like notifications daemons, status bars, etc.)
 hl.on("hyprland.start", function ()
+    -- uwsm: exporta o ambiente p/ o systemd e marca a sessao como pronta
+    -- (inofensivo se o Hyprland nao foi iniciado via uwsm).
+    hl.exec_cmd("sh -c 'command -v uwsm >/dev/null && uwsm finalize 2>/dev/null || true'")
     -- Sobe JA travado na tela de bloqueio (boot -> autologin -> hyprlock).
     hl.exec_cmd("hyprlock")
     -- Sessao systemd + portais: como o Hyprland e lancado do TTY (sem display
