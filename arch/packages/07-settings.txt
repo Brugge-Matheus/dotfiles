@@ -1,0 +1,7 @@
+# Fase 7 — App de configuracoes + dark do Qt (oficiais) — Arch
+# Instalado por: arch/install/07-settings.sh
+xfce4-settings        # central de configuracoes (aparencia, tela, teclado, mouse, energia)
+qt6ct                 # tema/estilo dos apps Qt (deixa Qt dark) + GUI de settings Qt
+qt5ct                 # idem p/ apps Qt5
+kvantum               # engine de temas Qt (estilos dark consistentes)
+nm-connection-editor  # GUI de rede (NetworkManager: wifi/conexoes)

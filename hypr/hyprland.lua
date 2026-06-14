@@ -91,6 +91,9 @@ hl.env("ELECTRON_OZONE_PLATFORM_HINT", "auto") -- VSCode, Discord, etc.
 hl.env("GTK_IM_MODULE", "cedilla")
 hl.env("QT_IM_MODULE", "cedilla")
 
+-- Apps Qt seguem o tema do qt6ct (dark) em vez do padrao claro
+hl.env("QT_QPA_PLATFORMTHEME", "qt6ct")
+
 -- Datas/horas em portugues (Waybar, hyprlock, etc.) sem mudar o idioma do sistema
 hl.env("LC_TIME", "pt_BR.UTF-8")
 
