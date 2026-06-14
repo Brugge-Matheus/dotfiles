@@ -1,0 +1,93 @@
+/* SwayNC — tema Tokyo Night (dark) */
+
+* {
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  font-size: 13px;
+}
+
+.notification-row {
+  outline: none;
+}
+
+.notification {
+  border-radius: 12px;
+  margin: 6px 12px;
+  background: #1a1b26;
+  border: 1px solid #292e42;
+}
+
+.notification-content {
+  padding: 10px;
+  color: #c0caf5;
+}
+
+.notification-default-action,
+.notification-action {
+  background: transparent;
+  color: #c0caf5;
+  border: none;
+}
+
+.notification-action {
+  border: 1px solid #292e42;
+  border-radius: 10px;
+  margin: 4px;
+}
+.notification-action:hover {
+  background: #292e42;
+}
+
+.summary { color: #7aa2f7; font-weight: 700; }
+.body    { color: #a9b1d6; }
+.time    { color: #565f89; }
+
+.close-button {
+  background: transparent;
+  color: #f7768e;
+  border-radius: 8px;
+}
+.close-button:hover {
+  background: #f7768e;
+  color: #1a1b26;
+}
+
+/* Central de controle */
+.control-center {
+  background: #16161e;
+  border: 1px solid #292e42;
+  border-radius: 16px;
+  margin: 8px;
+  padding: 10px;
+}
+
+.control-center .notification {
+  background: #1a1b26;
+}
+
+.widget-title {
+  color: #c0caf5;
+  font-size: 16px;
+  font-weight: 700;
+  padding: 6px 10px;
+}
+.widget-title > button {
+  color: #1a1b26;
+  background: #7aa2f7;
+  border-radius: 10px;
+  padding: 4px 12px;
+}
+.widget-title > button:hover {
+  background: #bb9af7;
+}
+
+.widget-dnd {
+  color: #c0caf5;
+  padding: 6px 10px;
+}
+.widget-dnd > switch {
+  background: #292e42;
+  border-radius: 12px;
+}
+.widget-dnd > switch:checked {
+  background: #7aa2f7;
+}

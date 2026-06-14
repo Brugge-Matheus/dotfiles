@@ -35,8 +35,8 @@ hl.monitor({
 
 -- Set programs that you use
 local terminal    = "kitty"
-local fileManager = "dolphin"
-local menu        = "hyprlauncher"
+local fileManager = "kitty"   -- temporario: file manager definitivo fica para a Fase 4
+local menu        = "walker"
 
 
 -------------------
@@ -49,7 +49,15 @@ local menu        = "hyprlauncher"
 hl.on("hyprland.start", function ()
     -- Agente de autenticacao grafica (polkit): pede senha p/ montar discos, etc.
     hl.exec_cmd("systemctl --user start hyprpolkitagent.service")
-    -- (Fase 2 adiciona aqui: barra, wallpaper, notificacoes, idle/lock...)
+    -- Wallpaper (awww = swww): sobe o daemon e aplica a imagem padrao
+    hl.exec_cmd("awww-daemon")
+    hl.exec_cmd("sh -c 'sleep 1; awww img ~/Pictures/Wallpapers/default.png --transition-type any'")
+    -- Barra de status
+    hl.exec_cmd("waybar")
+    -- Notificacoes (daemon + central)
+    hl.exec_cmd("swaync")
+    -- Gerenciador de inatividade (dim/lock/dpms)
+    hl.exec_cmd("hypridle")
 end)
 
 
@@ -104,8 +112,8 @@ hl.config({
         border_size = 2,
 
         col = {
-            active_border   = { colors = {"rgba(33ccffee)", "rgba(00ff99ee)"}, angle = 45 },
-            inactive_border = "rgba(595959aa)",
+            active_border   = { colors = {"rgba(7aa2f7ee)", "rgba(bb9af7ee)"}, angle = 45 },
+            inactive_border = "rgba(292e42aa)",
         },
 
         -- Set to true to enable resizing windows by clicking and dragging on borders and gaps
@@ -277,6 +285,13 @@ hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }))
 hl.bind(mainMod .. " + R", hl.dsp.exec_cmd(menu))
 hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
 hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit"))    -- dwindle only
+
+-- Extras (Fase 2)
+hl.bind(mainMod .. " + F",         hl.dsp.exec_cmd("hyprctl dispatch fullscreen 1"))  -- maximizar
+hl.bind(mainMod .. " + SHIFT + F", hl.dsp.exec_cmd("hyprctl dispatch fullscreen 0"))  -- tela cheia real
+hl.bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd("hyprctl reload"))                 -- recarregar config
+hl.bind(mainMod .. " + L",         hl.dsp.exec_cmd("loginctl lock-session"))          -- bloquear (hyprlock)
+hl.bind(mainMod .. " + N",         hl.dsp.exec_cmd("swaync-client -t -sw"))           -- central de notificacoes
 
 -- Move focus with mainMod + arrow keys
 hl.bind(mainMod .. " + left",  hl.dsp.focus({ direction = "left" }))

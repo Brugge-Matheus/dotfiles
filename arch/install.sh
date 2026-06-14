@@ -39,11 +39,35 @@ safe_link() {
 }
 
 # ---------------------------------------------------------------------
+# 0. Pacotes do AUR (via yay, se presente)
+# ---------------------------------------------------------------------
+if command -v yay >/dev/null 2>&1; then
+  for f in "$DOTFILES_DIR"/arch/packages/*-aur.txt; do
+    [ -f "$f" ] || continue
+    mapfile -t AUR < <(grep -vE '^\s*#|^\s*$' "$f" | awk '{print $1}')
+    [ "${#AUR[@]}" -eq 0 ] && continue
+    log_info "Instalando ${#AUR[@]} pacote(s) do AUR: ${AUR[*]}"
+    yay -S --needed --noconfirm "${AUR[@]}" || log_warn "Falha em algum pacote AUR"
+  done
+else
+  log_warn "yay nao encontrado — pule ou instale os pacotes do AUR manualmente"
+fi
+
+# ---------------------------------------------------------------------
 # 1. Symlinks das configs do desktop
 # ---------------------------------------------------------------------
-log_info "Criando symlinks das configs do Hyprland..."
-safe_link "$DOTFILES_DIR/hypr/hyprland.lua" "$HOME/.config/hypr/hyprland.lua"
-# (Fase 2+ adiciona aqui: hyprlock, hypridle, hyprpaper, waybar, etc.)
+log_info "Criando symlinks das configs do desktop..."
+safe_link "$DOTFILES_DIR/hypr/hyprland.lua"  "$HOME/.config/hypr/hyprland.lua"
+safe_link "$DOTFILES_DIR/hypr/hyprlock.conf" "$HOME/.config/hypr/hyprlock.conf"
+safe_link "$DOTFILES_DIR/hypr/hypridle.conf" "$HOME/.config/hypr/hypridle.conf"
+safe_link "$DOTFILES_DIR/waybar"             "$HOME/.config/waybar"
+safe_link "$DOTFILES_DIR/swaync"             "$HOME/.config/swaync"
+
+# Wallpaper padrao (gera se nao existir)
+if [ ! -f "$HOME/Pictures/Wallpapers/default.png" ]; then
+  log_info "Gerando wallpaper padrao..."
+  python3 "$DOTFILES_DIR/arch/scripts/gen-default-wallpaper.py" || log_warn "Falha ao gerar wallpaper"
+fi
 
 # ---------------------------------------------------------------------
 # 2. Servicos de usuario
