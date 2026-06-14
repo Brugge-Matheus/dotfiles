@@ -1,0 +1,16 @@
+# gsimplecal — popup de calendario (clique no relogio da Waybar)
+mainfont=JetBrainsMono Nerd Font 11
+headerfont=JetBrainsMono Nerd Font 10
+prevfont=JetBrainsMono Nerd Font 12
+nextfont=JetBrainsMono Nerd Font 12
+
+# Mostra a data por extenso no topo
+show_top_buttons=true
+show_calendar=true
+show_weeknumbers=false
+
+# Comeca a semana no domingo (pt_BR). Use 1 p/ segunda.
+week_start_monday=false
+
+# Fecha ao perder o foco
+close_on_unfocus=true

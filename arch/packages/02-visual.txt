@@ -10,3 +10,4 @@ brightnessctl     # teclas de brilho
 playerctl         # teclas de midia (play/pause/next)
 wl-clipboard      # copiar/colar no Wayland (wl-copy/wl-paste)
 libnotify         # notify-send (enviar notificacoes via CLI/scripts)
+gsimplecal        # popup de calendario (clique no relogio da Waybar)

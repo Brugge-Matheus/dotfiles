@@ -1,83 +1,101 @@
-/* Waybar — tema Tokyo Night (dark) */
+/* Waybar — barra preta solida, compacta (estilo dev minimalista) */
 
 * {
   font-family: "JetBrainsMono Nerd Font", monospace;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
   min-height: 0;
+  margin: 0;
+  padding: 0;
 }
 
+/* barra solida de ponta a ponta */
 window#waybar {
-  background: transparent;
-  color: #c0caf5;
+  background: #0a0a0a;
+  border-bottom: 1px solid #161616;
+  color: #d4d4d4;
 }
 
-/* "ilhas" arredondadas */
+/* sem pilulas — containers transparentes */
 .modules-left,
 .modules-center,
 .modules-right {
-  background: #1a1b26;
-  border: 1px solid #292e42;
-  border-radius: 12px;
-  padding: 0 6px;
-}
-
-#workspaces button {
-  color: #565f89;
-  padding: 0 8px;
-  border-radius: 10px;
-  background: transparent;
-}
-#workspaces button.active {
-  color: #1a1b26;
-  background: #7aa2f7;
-}
-#workspaces button.urgent {
-  color: #1a1b26;
-  background: #f7768e;
-}
-#workspaces button:hover {
-  color: #c0caf5;
-  background: #292e42;
-}
-
-#window {
-  color: #7aa2f7;
-  padding: 0 10px;
-}
-window#waybar.empty #window {
   background: transparent;
   border: none;
 }
 
-#clock {
-  color: #bb9af7;
-  padding: 0 12px;
-}
-
+/* espacamento de cada modulo */
+#workspaces,
+#custom-spotify,
+#tray,
+#cpu,
+#memory,
+#temperature,
+#custom-weather,
 #backlight,
 #pulseaudio,
+#bluetooth,
 #network,
 #battery,
-#tray {
-  padding: 0 10px;
-  color: #c0caf5;
+#clock,
+#custom-power {
+  padding: 0 9px;
+  color: #d4d4d4;
 }
 
-#backlight   { color: #e0af68; }
-#pulseaudio  { color: #7dcfff; }
-#network     { color: #9ece6a; }
-#battery     { color: #c0caf5; }
+/* workspaces (numeros) */
+#workspaces { padding: 0 4px; }
+#workspaces button {
+  color: #555555;
+  padding: 0 7px;
+  margin: 3px 2px;
+  border-radius: 6px;
+  background: transparent;
+}
+#workspaces button.active {
+  color: #0a0a0a;
+  background: #d4d4d4;
+}
+#workspaces button.urgent {
+  color: #0a0a0a;
+  background: #e06c75;
+}
+#workspaces button:hover {
+  color: #ffffff;
+  background: #1c1c1c;
+}
 
-#battery.charging { color: #9ece6a; }
-#battery.warning:not(.charging)  { color: #e0af68; }
+/* widget do spotify */
+#custom-spotify         { color: #777777; }
+#custom-spotify.playing { color: #1db954; }   /* verde spotify quando tocando */
+#custom-spotify.paused  { color: #b0b0b0; }
+#custom-spotify.closed  { color: #555555; }
+
+/* apps em segundo plano (tray) */
+#tray { padding: 0 6px; }
+#tray menu { background: #0a0a0a; color: #d4d4d4; }
+
+/* sistema (centro) */
+#cpu, #memory, #temperature { color: #c8c8c8; }
+#temperature.critical { color: #e06c75; }
+
+/* direita */
+#custom-weather { color: #7aa2cf; }
+#backlight, #pulseaudio, #bluetooth, #network, #battery { color: #c8c8c8; }
+#clock { color: #ffffff; font-weight: 700; }
+
+#pulseaudio.muted,
+#network.disconnected,
+#bluetooth.disabled { color: #555555; }
+
+#battery.charging { color: #98c379; }
+#battery.warning:not(.charging)  { color: #e5c07b; }
 #battery.critical:not(.charging) {
-  color: #f7768e;
+  color: #e06c75;
   animation: blink 1s steps(2) infinite;
 }
+@keyframes blink { to { color: #0a0a0a; } }
 
-@keyframes blink {
-  to { color: #1a1b26; background: #f7768e; }
-}
-
-#pulseaudio.muted { color: #565f89; }
+/* power */
+#custom-power { color: #e06c75; padding-right: 12px; font-size: 12px; }
+#custom-power:hover { color: #ffffff; }
