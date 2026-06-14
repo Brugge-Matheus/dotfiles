@@ -1,0 +1,21 @@
+# Fase 4 — apps do dia a dia (oficiais) — Arch + Hyprland
+# Instalado por: arch/install/04-apps.sh
+
+# Arquivos
+yazi                 # gerenciador de arquivos no terminal (rapido, com preview)
+thunar               # gerenciador de arquivos GUI (leve)
+thunar-volman        # automount de drives no thunar
+gvfs                 # montagem/trash/rede p/ o thunar
+tumbler              # thumbnails no thunar
+ffmpegthumbnailer    # preview de video (yazi/tumbler)
+poppler              # preview de PDF (yazi)
+imagemagick          # preview/convert de imagens
+7zip                 # extrair/compactar (yazi)
+jq                   # usado por previews/scripts do yazi
+
+# Apps
+discord              # chat/voz
+obsidian             # notas markdown
+btop                 # monitor de sistema (clique na CPU da waybar)
+pavucontrol          # controle de audio (clique direito no volume)
+papirus-icon-theme   # icones dark (Papirus-Dark) p/ Thunar e apps GTK
