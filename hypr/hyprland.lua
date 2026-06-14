@@ -64,6 +64,9 @@ hl.on("hyprland.start", function ()
     hl.exec_cmd("swaync")
     -- Gerenciador de inatividade (dim/lock/dpms)
     hl.exec_cmd("hypridle")
+    -- Historico de clipboard (cliphist grava texto e imagens copiados)
+    hl.exec_cmd("wl-paste --type text  --watch cliphist store")
+    hl.exec_cmd("wl-paste --type image --watch cliphist store")
 end)
 
 
@@ -305,6 +308,14 @@ hl.bind(mainMod .. " + SHIFT + F", hl.dsp.exec_cmd("hyprctl dispatch fullscreen 
 hl.bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd("hyprctl reload"))                 -- recarregar config
 hl.bind(mainMod .. " + L",         hl.dsp.exec_cmd("loginctl lock-session"))          -- bloquear (hyprlock)
 hl.bind(mainMod .. " + N",         hl.dsp.exec_cmd("swaync-client -t -sw"))           -- central de notificacoes
+
+-- Extras (Fase 3)  — screenshots no esquema "P" (de Print), sem tecla Print fisica
+local S = "~/.config/waybar/scripts"
+hl.bind(mainMod .. " + SHIFT + P", hl.dsp.exec_cmd(S .. "/screenshot.sh region"))  -- print de regiao (+satty)
+hl.bind(mainMod .. " + CTRL + P",  hl.dsp.exec_cmd(S .. "/screenshot.sh full"))    -- tela cheia
+hl.bind(mainMod .. " + ALT + P",   hl.dsp.exec_cmd(S .. "/screenshot.sh window"))  -- janela ativa
+hl.bind(mainMod .. " + SHIFT + V", hl.dsp.exec_cmd(S .. "/clipboard.sh"))          -- historico de clipboard
+hl.bind(mainMod .. " + W",         hl.dsp.exec_cmd(S .. "/wallpaper.sh"))          -- trocar wallpaper
 
 -- Move focus with mainMod + arrow keys
 hl.bind(mainMod .. " + left",  hl.dsp.focus({ direction = "left" }))

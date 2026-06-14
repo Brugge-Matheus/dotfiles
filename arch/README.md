@@ -36,7 +36,7 @@ no boot. A config conhecida-boa (aplicada por `install/01-foundation.sh`):
 | **0 — Fundação** | Drivers (NVIDIA offload), polkit, portal, áudio, NetworkManager (instala) | ✅ feito |
 | **1 — Núcleo Hyprland** | `hyprland.lua`: monitor, input US-Intl, keybinds, regras, env GPU | ✅ feito |
 | **2 — Visual** | Walker, Waybar, wallpaper (awww), hyprlock/hypridle, SwayNC, tema Tokyo Night, rede → NetworkManager | ✅ feito |
-| **3 — Funcionalidades** | Screenshots, clipboard, teclas de mídia/brilho, power menu, emoji picker | 🔜 |
+| **3 — Funcionalidades** | Screenshots (grim+slurp+satty), clipboard (cliphist), trocador de wallpaper | ✅ feito |
 | **4 — Apps** | File manager, navegador, terminal definitivo, etc. | 🔜 |
 | **5 — Dotfiles dev** | zsh + tmux + LazyVim (via `../setup.sh`) | 🔜 |
 

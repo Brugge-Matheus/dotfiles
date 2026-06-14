@@ -1,0 +1,7 @@
+# Fase 3 — funcionalidades (oficiais) — Arch + Hyprland
+# Instalado por: arch/install/03-features.sh
+
+grim          # captura de tela (Wayland)
+slurp         # selecao de regiao na tela
+satty         # editor/anotacao de screenshot
+cliphist      # historico de clipboard
