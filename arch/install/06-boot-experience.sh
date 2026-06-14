@@ -57,10 +57,13 @@ EOF
 fi
 
 # ---------------------------------------------------------------------
-# 1. Plymouth: instala, hook no initramfs e tema dark
+# 1. Plymouth + uwsm: instala, hook no initramfs e tema dark
 # ---------------------------------------------------------------------
-log_info "Instalando Plymouth..."
-pacman -Syu --needed --noconfirm plymouth
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PKG_FILE="$SCRIPT_DIR/../packages/06-boot.txt"
+mapfile -t PKGS < <(grep -vE '^\s*#|^\s*$' "$PKG_FILE" | awk '{print $1}')
+log_info "Instalando: ${PKGS[*]}"
+pacman -Syu --needed --noconfirm "${PKGS[@]}"
 
 log_info "Adicionando o hook 'plymouth' ao initramfs..."
 if ! grep -qE '^HOOKS=.*\bplymouth\b' "$MKINIT"; then
@@ -89,7 +92,18 @@ for tok in $ADD; do
   grep -qE "(^|[[:space:]])${key}([=[:space:]]|$)" <<<"$CUR" || CUR="$CUR $tok"
 done
 echo "$CUR" > "$CMDLINE"
-log_ok "cmdline: $(cat "$CMDLINE")"
+log_ok "cmdline (UKI): $(cat "$CMDLINE")"
+
+# ---------------------------------------------------------------------
+# 2b. IMPORTANTE: o limine PASSA a sua propria 'cmdline:' (sobrepoe a do UKI).
+#     Sincroniza a 1a entrada do limine com a cmdline completa (com quiet).
+#     A entrada de resgate (2a cmdline:) fica intacta (sem quiet -> mostra logs).
+# ---------------------------------------------------------------------
+if [ -f "$LIMINE" ]; then
+  log_info "Sincronizando a cmdline da entrada principal do limine (com quiet)..."
+  sed -i "0,/^[[:space:]]*cmdline:/s|^\([[:space:]]*cmdline:\).*|\1 ${CUR}|" "$LIMINE"
+  log_ok "limine entrada principal: $(grep -m1 -E '^\s*cmdline:' "$LIMINE" | sed 's/^\s*cmdline:\s*//')"
+fi
 
 # ---------------------------------------------------------------------
 # 3. Autologin SO no tty1
