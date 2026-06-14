@@ -60,9 +60,8 @@ hl.on("hyprland.start", function ()
     -- Launcher walker: backend (elephant) + servico do frontend
     hl.exec_cmd("elephant")
     hl.exec_cmd("walker --gapplication-service")
-    -- Wallpaper (awww = swww): sobe o daemon e aplica a imagem padrao
-    hl.exec_cmd("awww-daemon")
-    hl.exec_cmd("sh -c 'sleep 1; awww img ~/Pictures/Wallpapers/default.png --transition-type any'")
+    -- Wallpaper: restaura o ULTIMO selecionado por monitor (default so no 1o boot)
+    hl.exec_cmd("~/.config/waybar/scripts/wallpaper-restore.sh")
     -- Barra de status
     hl.exec_cmd("waybar")
     -- Notificacoes (daemon + central)
