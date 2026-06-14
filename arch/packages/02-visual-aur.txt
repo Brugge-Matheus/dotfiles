@@ -1,0 +1,5 @@
+# Fase 2 — Camada visual (AUR, via yay) — Arch + Hyprland
+# Instalado com: yay -S --needed walker
+# (ou automaticamente por arch/install.sh, se o yay estiver presente)
+
+walker            # launcher de aplicativos (estilo omarchy)

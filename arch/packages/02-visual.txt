@@ -1,0 +1,12 @@
+# Fase 2 — Camada visual (oficiais) — Arch + Hyprland
+# Instalado por: arch/install/02-visual.sh
+
+waybar            # barra de status
+awww              # wallpaper com transicoes (= swww renomeado; Provides/Replaces swww)
+swaync            # notificacoes + central
+hyprlock          # lockscreen (oficial Hypr)
+hypridle          # idle daemon (oficial Hypr)
+brightnessctl     # teclas de brilho
+playerctl         # teclas de midia (play/pause/next)
+wl-clipboard      # copiar/colar no Wayland (wl-copy/wl-paste)
+libnotify         # notify-send (enviar notificacoes via CLI/scripts)
