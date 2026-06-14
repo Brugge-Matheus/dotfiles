@@ -42,7 +42,7 @@ fi
 # timeout >= 3 (NAO some o menu) e entrada de resgate apontando p/ o .bak
 if [ -f "$LIMINE" ]; then
   cp -n "$LIMINE" "${LIMINE}.bak" 2>/dev/null || true
-  sed -i 's/^timeout:.*/timeout: 3/' "$LIMINE"
+  sed -i 's/^timeout:.*/timeout: 1/' "$LIMINE"
   if ! grep -q "Arch Linux (resgate)" "$LIMINE"; then
     ORIG_CMDLINE="$(grep -m1 -E '^\s*cmdline:' "$LIMINE" | sed 's/^\s*cmdline:\s*//')"
     cat >> "$LIMINE" <<EOF
@@ -83,14 +83,13 @@ plymouth-set-default-theme "$THEME" >/dev/null 2>&1 && log_ok "Tema: $THEME" \
 # ---------------------------------------------------------------------
 # 2. quiet/splash no cmdline
 # ---------------------------------------------------------------------
-log_info "Acrescentando 'quiet splash ...' ao cmdline..."
+log_info "Montando cmdline (quiet/splash + anti-flicker)..."
 cp -n "$CMDLINE" "${CMDLINE}.bak" 2>/dev/null || true
-CUR="$(cat "$CMDLINE")"
-ADD="quiet splash loglevel=3 rd.udev.log_level=3 vt.global_cursor_default=0 systemd.show_status=auto"
-for tok in $ADD; do
-  key="${tok%%=*}"
-  grep -qE "(^|[[:space:]])${key}([=[:space:]]|$)" <<<"$CUR" || CUR="$CUR $tok"
-done
+# BASE = cmdline ORIGINAL (do backup) -> reconstrucao deterministica/idempotente
+BASE="$(cat "${CMDLINE}.bak")"
+# quiet/splash + silencia systemd + i915.fastboot (evita o reset de modo = piscar)
+ADD="quiet splash loglevel=3 rd.udev.log_level=3 vt.global_cursor_default=0 systemd.show_status=false rd.systemd.show_status=false i915.fastboot=1"
+CUR="$(echo "$BASE $ADD" | tr -s ' ' | sed 's/^ *//; s/ *$//')"
 echo "$CUR" > "$CMDLINE"
 log_ok "cmdline (UKI): $(cat "$CMDLINE")"
 
