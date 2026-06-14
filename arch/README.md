@@ -35,7 +35,7 @@ no boot. A config conhecida-boa (aplicada por `install/01-foundation.sh`):
 |---|---|---|
 | **0 — Fundação** | Drivers (NVIDIA offload), polkit, portal, áudio, NetworkManager (instala) | ✅ feito |
 | **1 — Núcleo Hyprland** | `hyprland.lua`: monitor, input US-Intl, keybinds, regras, env GPU | ✅ feito |
-| **2 — Visual** | Walker, Waybar, wallpaper (awww), hyprlock/hypridle, SwayNC, tema Tokyo Night | ✅ feito (rede p/ NetworkManager pendente) |
+| **2 — Visual** | Walker, Waybar, wallpaper (awww), hyprlock/hypridle, SwayNC, tema Tokyo Night, rede → NetworkManager | ✅ feito |
 | **3 — Funcionalidades** | Screenshots, clipboard, teclas de mídia/brilho, power menu, emoji picker | 🔜 |
 | **4 — Apps** | File manager, navegador, terminal definitivo, etc. | 🔜 |
 | **5 — Dotfiles dev** | zsh + tmux + LazyVim (via `../setup.sh`) | 🔜 |
@@ -86,8 +86,12 @@ prime-run <app>
 nvidia-smi
 ```
 
+## 🌐 Rede
+
+Migrado para **NetworkManager** com backend **iwd** (reaproveita o WiFi/credenciais do iwd).
+Migração feita por `install/switch-to-networkmanager.sh`. A Waybar mostra o WiFi e
+abre `nmtui` ao clicar. `systemd-networkd` foi desativado.
+
 ## 📌 Pendências conhecidas
 
-- **Rede:** ainda usando `iwd` + `systemd-networkd`. NetworkManager está instalado mas
-  desativado; a troca acontece na **Fase 2** (junto com o applet de rede na Waybar).
-- Apps a definir: launcher, file manager, navegador, terminal definitivo.
+- Apps a definir: file manager, navegador, terminal definitivo (Fase 4).
