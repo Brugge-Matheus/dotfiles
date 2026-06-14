@@ -1,0 +1,12 @@
+# Ativa o graphical-session.target quando o Hyprland e lancado do TTY
+# (sem display manager). O graphical-session.target tem RefuseManualStart=yes,
+# mas pode ser ativado como DEPENDENCIA — e e isso que este wrapper faz.
+#
+# Sem isso, xdg-desktop-portal (Requisite=graphical-session.target) e o polkit
+# nao iniciam, e apps GTK (ex.: walker) esperam timeout do D-Bus -> lentidao.
+#
+# Iniciado pelo autostart do Hyprland (hyprland.lua):
+#   systemctl --user start tty-graphical-session.target
+[Unit]
+Description=Wrapper p/ ativar graphical-session.target fora de um display manager
+Wants=graphical-session.target

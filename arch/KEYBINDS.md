@@ -38,7 +38,7 @@
 |---|---|---|
 | `SUPER + Q` | Terminal (kitty) | ✅ |
 | `SUPER + E` | Gerenciador de arquivos | ⏳ (app a definir — Fase 4) |
-| `SUPER + R` | Launcher de apps (walker) | ✅ |
+| `SUPER + Espaço` | Launcher de apps (walker) | ✅ |
 
 ## 🔊 Mídia & Hardware (teclas de função)
 
