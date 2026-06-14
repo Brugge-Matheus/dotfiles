@@ -24,7 +24,7 @@
     "bluetooth",
     "network",
     "battery",
-    "clock",
+    "custom/clock",
     "custom/power"
   ],
   "custom/distro": {
@@ -100,15 +100,9 @@
       "",
       "",
       ""
-    ]
-  },
-  "clock": {
-    "format": " {:%a, %d %b %Y  %H:%M}",
-    "format-alt": " {:%a %d/%m}",
-    "tooltip-format": "<tt><small>{calendar}</small></tt>",
-    "locale": "pt_BR.UTF-8",
-    "tooltip": false,
-    "on-click": "gsimplecal"
+    ],
+    "on-click": "~/.config/waybar/scripts/powerprofile.sh",
+    "tooltip-format": "{capacity}% ({time})\nClique: perfil de energia"
   },
   "custom/power": {
     "format": "",
@@ -133,5 +127,12 @@
     "return-type": "json",
     "interval": 900,
     "on-click": "~/.config/waybar/scripts/weather.sh"
+  },
+  "custom/clock": {
+    "exec": "~/.config/waybar/scripts/clock.sh",
+    "interval": 10,
+    "format": " {}",
+    "tooltip": false,
+    "on-click": "gsimplecal"
   }
 }
