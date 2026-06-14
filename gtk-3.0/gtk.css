@@ -50,3 +50,79 @@ calendar.week-number {
   color: #777777;
   font-size: 0.85em;
 }
+
+/* =====================================================================
+   File manager (Thunar) e apps GTK em geral — black minimalista
+   ===================================================================== */
+
+/* botoes com acao mantem o acento (nao virar preto) */
+button.suggested-action { background: #5e81ff; color: #0a0a0a; border-color: #5e81ff; }
+button.destructive-action { background: #e06c75; color: #0a0a0a; border-color: #e06c75; }
+button.flat { background: transparent; border-color: transparent; }
+button.flat:hover { background: #1c1c1c; }
+
+/* barra de titulo / toolbar / location bar */
+headerbar, .titlebar, toolbar {
+  background-color: #0a0a0a;
+  color: #d4d4d4;
+  border-bottom: 1px solid #161616;
+}
+
+/* campo de texto (caminho/busca) */
+entry {
+  background-color: #111111;
+  color: #d4d4d4;
+  border: 1px solid #1c1c1c;
+  border-radius: 8px;
+}
+entry:focus { border-color: #5e81ff; }
+
+/* lista de arquivos e visao em icones */
+treeview.view, .view, list, iconview, GtkTreeView {
+  background-color: #0a0a0a;
+  color: #d4d4d4;
+}
+treeview.view:selected, .view:selected, list row:selected,
+iconview:selected, *:selected {
+  background-color: #5e81ff;
+  color: #0a0a0a;
+}
+treeview.view:hover, .view:hover { background-color: #141414; }
+
+/* cabecalho das colunas (Nome, Tamanho, ...) */
+treeview header button {
+  background-color: #0d0d0d;
+  color: #9a9a9a;
+  border: none;
+  border-radius: 0;
+}
+
+/* sidebar de atalhos (Lugares) */
+.sidebar, .sidebar .view, .sidebar treeview.view, paned > separator {
+  background-color: #0d0d0d;
+  color: #b0b0b0;
+}
+
+/* menus de contexto */
+menu, .menu, popover, popover.background {
+  background-color: #0a0a0a;
+  color: #d4d4d4;
+  border: 1px solid #1c1c1c;
+}
+menuitem:hover, menu menuitem:hover, popover button:hover {
+  background-color: #1c1c1c;
+  color: #ffffff;
+}
+
+/* scrollbar fina */
+scrollbar { background: transparent; border: none; }
+scrollbar slider {
+  background: #2a2a2a;
+  border-radius: 8px;
+  min-width: 6px;
+  min-height: 6px;
+}
+scrollbar slider:hover { background: #3a3a3a; }
+
+/* barra de status (rodape do Thunar) */
+statusbar, .statusbar { background-color: #0a0a0a; color: #777777; }

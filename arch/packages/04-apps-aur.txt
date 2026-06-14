@@ -1,0 +1,3 @@
+# Fase 4 — apps (AUR, via yay)
+zen-browser-bin      # navegador (fork do Firefox, foco em design)
+spotify              # cliente Spotify (ativa o widget da waybar)
