@@ -296,7 +296,7 @@ install_linux_deps() {
     log_ok "Clipboard do sistema já disponível."
   fi
 
-  # Dependências para compilar linguagens via asdf (apenas apt por enquanto — dnf/pacman já têm os nomes certos)
+  # Dependências para compilar linguagens via asdf (Ruby, Python, PHP)
   if [ "$PKG_MANAGER" = "apt" ]; then
     log_info "Instalando dependências para asdf (Node.js, Python, Ruby)..."
     sudo apt-get install -y \
@@ -305,6 +305,13 @@ install_linux_deps() {
       liblzma-dev libncurses5-dev libgdbm-dev \
       libyaml-dev rustc || \
       ERRORS+=("Algumas dependências asdf falharam")
+  elif [ "$PKG_MANAGER" = "pacman" ]; then
+    log_info "Instalando dependências para asdf (Ruby, Python, PHP)..."
+    sudo pacman -S --noconfirm --needed \
+      libyaml rust re2c bison libxslt oniguruma \
+      libzip libsodium postgresql-libs gd icu \
+      libpng libjpeg-turbo freetype2 || \
+      ERRORS+=("Algumas dependências asdf (pacman) falharam")
   fi
 
   # bat (pode ser batcat no Ubuntu)
