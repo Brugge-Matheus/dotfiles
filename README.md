@@ -24,6 +24,10 @@ exec zsh -l
 - **asdf**: Gerenciador de versões para Node.js, Python, Ruby
 - **Git**: Configurações globais
 
+> 🐧 **Desktop Arch Linux + Hyprland:** a configuração do ambiente gráfico (Hyprland,
+> drivers NVIDIA Optimus, áudio, tema dark) vive em **[`arch/`](arch/README.md)** —
+> com os atalhos documentados em **[`arch/KEYBINDS.md`](arch/KEYBINDS.md)**.
+
 ## 🛠️ Ferramentas instaladas via asdf
 
 O script usa [asdf](https://asdf-vm.com/) para gerenciar as seguintes ferramentas:
