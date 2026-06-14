@@ -62,6 +62,8 @@ safe_link "$DOTFILES_DIR/hypr/hyprlock.conf" "$HOME/.config/hypr/hyprlock.conf"
 safe_link "$DOTFILES_DIR/hypr/hypridle.conf" "$HOME/.config/hypr/hypridle.conf"
 safe_link "$DOTFILES_DIR/waybar"             "$HOME/.config/waybar"
 safe_link "$DOTFILES_DIR/swaync"             "$HOME/.config/swaync"
+# Unit que ativa o graphical-session.target (portais/polkit no Hyprland do TTY)
+safe_link "$DOTFILES_DIR/systemd/user/tty-graphical-session.target" "$HOME/.config/systemd/user/tty-graphical-session.target"
 
 # Wallpaper padrao (gera se nao existir)
 if [ ! -f "$HOME/Pictures/Wallpapers/default.png" ]; then

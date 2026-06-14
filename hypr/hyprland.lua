@@ -47,8 +47,14 @@ local menu        = "walker"
 
 -- Autostart necessary processes (like notifications daemons, status bars, etc.)
 hl.on("hyprland.start", function ()
-    -- Agente de autenticacao grafica (polkit): pede senha p/ montar discos, etc.
-    hl.exec_cmd("systemctl --user start hyprpolkitagent.service")
+    -- Sessao systemd + portais: como o Hyprland e lancado do TTY (sem display
+    -- manager), o graphical-session.target nao sobe sozinho. Sem ele, os portais
+    -- (xdg-desktop-portal) e o polkit nao iniciam -> apps GTK (walker) ficam LENTOS.
+    -- tty-graphical-session.target (em ~/.config/systemd/user) ativa o target.
+    hl.exec_cmd("sh -c 'dbus-update-activation-environment --systemd --all; systemctl --user start tty-graphical-session.target; systemctl --user start xdg-desktop-portal.service hyprpolkitagent.service'")
+    -- Launcher walker: backend (elephant) + servico do frontend
+    hl.exec_cmd("elephant")
+    hl.exec_cmd("walker --gapplication-service")
     -- Wallpaper (awww = swww): sobe o daemon e aplica a imagem padrao
     hl.exec_cmd("awww-daemon")
     hl.exec_cmd("sh -c 'sleep 1; awww img ~/Pictures/Wallpapers/default.png --transition-type any'")
@@ -282,7 +288,7 @@ local closeWindowBind = hl.bind(mainMod .. " + C", hl.dsp.window.close())
 hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"))
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
 hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }))
-hl.bind(mainMod .. " + R", hl.dsp.exec_cmd(menu))
+hl.bind(mainMod .. " + space", hl.dsp.exec_cmd(menu))
 hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
 hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit"))    -- dwindle only
 
