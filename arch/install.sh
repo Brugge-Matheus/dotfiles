@@ -66,9 +66,14 @@ safe_link "$DOTFILES_DIR/swaync"             "$HOME/.config/swaync"
 safe_link "$DOTFILES_DIR/gsimplecal/config"  "$HOME/.config/gsimplecal/config"
 safe_link "$DOTFILES_DIR/gtk-3.0/gtk.css"    "$HOME/.config/gtk-3.0/gtk.css"
 safe_link "$DOTFILES_DIR/gtk-3.0/settings.ini" "$HOME/.config/gtk-3.0/settings.ini"
+safe_link "$DOTFILES_DIR/gtk-4.0/settings.ini" "$HOME/.config/gtk-4.0/settings.ini"
 safe_link "$DOTFILES_DIR/fuzzel/powermenu.ini" "$HOME/.config/fuzzel/powermenu.ini"
 # Unit que ativa o graphical-session.target (portais/polkit no Hyprland do TTY)
 safe_link "$DOTFILES_DIR/systemd/user/tty-graphical-session.target" "$HOME/.config/systemd/user/tty-graphical-session.target"
+
+# Tema de icones (Papirus-Dark) p/ apps GTK4/walker via gsettings
+gsettings set org.gnome.desktop.interface icon-theme 'Papirus-Dark' 2>/dev/null || true
+gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' 2>/dev/null || true
 
 # Ajustes minimalistas do Thunar (se instalado)
 command -v thunar >/dev/null 2>&1 && bash "$DOTFILES_DIR/arch/scripts/thunar-minimal.sh" || true
