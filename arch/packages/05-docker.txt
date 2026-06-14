@@ -1,0 +1,6 @@
+# Docker e ferramentas (oficiais) — Arch
+# Instalado por: arch/install/05-docker.sh
+docker            # engine + CLI
+docker-compose    # compose v2 (docker compose)
+docker-buildx     # builds avancados (buildx)
+lazydocker        # TUI p/ gerenciar containers/images (estilo lazygit)
