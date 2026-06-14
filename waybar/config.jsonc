@@ -39,7 +39,7 @@
   "cpu": {
     "interval": 2,
     "format": " {usage}%",
-    "on-click": "kitty -e btop"
+    "on-click": "ghostty -e btop"
   },
   "memory": {
     "interval": 3,
@@ -76,7 +76,7 @@
     "format-disabled": "",
     "format-connected": " {num_connections}",
     "tooltip-format": "{controller_alias}\n{num_connections} conectado(s)",
-    "on-click": "kitty -e bluetoothctl"
+    "on-click": "ghostty -e bluetoothctl"
   },
   "network": {
     "format-wifi": " {signalStrength}%",
@@ -84,7 +84,7 @@
     "format-disconnected": "",
     "tooltip-format-wifi": "{essid} ({signalStrength}%)\n{ipaddr}",
     "tooltip-format-disconnected": "Desconectado",
-    "on-click": "kitty -e nmtui"
+    "on-click": "ghostty -e nmtui"
   },
   "battery": {
     "states": {
