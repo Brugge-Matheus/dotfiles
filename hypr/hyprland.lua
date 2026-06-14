@@ -23,9 +23,9 @@
 -- See https://wiki.hypr.land/Configuring/Basics/Monitors/
 hl.monitor({
     output   = "",
-    mode     = "preferred",
+    mode     = "preferred",   -- 1920x1080@144
     position = "auto",
-    scale    = "auto",
+    scale    = 1.0,           -- 1.0 = resolucao nativa (tudo menor). Use 1.25 se ficar pequeno demais.
 })
 
 
@@ -80,6 +80,10 @@ hl.env("HYPRCURSOR_SIZE", "24")
 hl.env("MOZ_ENABLE_WAYLAND", "1")            -- Firefox/Thunderbird
 hl.env("ELECTRON_OZONE_PLATFORM_HINT", "auto") -- VSCode, Discord, etc.
 
+-- Cedilha (pt-BR no teclado US Internacional): faz ' + c => c-cedilha (e nao c-agudo)
+hl.env("GTK_IM_MODULE", "cedilla")
+hl.env("QT_IM_MODULE", "cedilla")
+
 -- GPU HIBRIDA (Optimus): a Intel dirige o compositor; a NVIDIA fica so para
 -- offload via "prime-run <app>". O Hyprland costuma escolher a Intel sozinho.
 -- SE algum dia der tela preta/lag (escolheu a GPU errada), descomente a linha:
@@ -112,8 +116,8 @@ hl.env("ELECTRON_OZONE_PLATFORM_HINT", "auto") -- VSCode, Discord, etc.
 -- Refer to https://wiki.hypr.land/Configuring/Basics/Variables/
 hl.config({
     general = {
-        gaps_in  = 5,
-        gaps_out = 20,
+        gaps_in  = 4,
+        gaps_out = 8,
 
         border_size = 2,
 
@@ -182,9 +186,9 @@ hl.animation({ leaf = "layersIn",      enabled = true,  speed = 4,    bezier = "
 hl.animation({ leaf = "layersOut",     enabled = true,  speed = 1.5,  bezier = "linear",       style = "fade" })
 hl.animation({ leaf = "fadeLayersIn",  enabled = true,  speed = 1.79, bezier = "almostLinear" })
 hl.animation({ leaf = "fadeLayersOut", enabled = true,  speed = 1.39, bezier = "almostLinear" })
-hl.animation({ leaf = "workspaces",    enabled = true,  speed = 1.94, bezier = "almostLinear", style = "fade" })
-hl.animation({ leaf = "workspacesIn",  enabled = true,  speed = 1.21, bezier = "almostLinear", style = "fade" })
-hl.animation({ leaf = "workspacesOut", enabled = true,  speed = 1.94, bezier = "almostLinear", style = "fade" })
+hl.animation({ leaf = "workspaces",    enabled = true,  speed = 6,    bezier = "easeOutQuint", style = "slide" })
+hl.animation({ leaf = "workspacesIn",  enabled = true,  speed = 6,    bezier = "easeOutQuint", style = "slide" })
+hl.animation({ leaf = "workspacesOut", enabled = true,  speed = 6,    bezier = "easeOutQuint", style = "slide" })
 hl.animation({ leaf = "zoomFactor",    enabled = true,  speed = 7,    bezier = "quick" })
 
 -- Ref https://wiki.hypr.land/Configuring/Basics/Workspace-Rules/
