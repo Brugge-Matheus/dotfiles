@@ -70,9 +70,9 @@ hl.on("hyprland.start", function ()
     hl.exec_cmd("walker --gapplication-service")
     -- Wallpaper: restaura o ULTIMO selecionado por monitor (default so no 1o boot)
     hl.exec_cmd("~/.config/waybar/scripts/wallpaper-restore.sh")
-    -- Barra de status
-    hl.exec_cmd("waybar")
-    -- Esconde a waybar quando ha janela em fullscreen (volta ao sair)
+    -- Barra de status: o script lanca uma Waybar POR MONITOR (fixada a sua
+    -- saida) e cuida do auto-hide em fullscreen + revelar-ao-hover de forma
+    -- independente por monitor. (Por isso NAO chamamos "waybar" direto aqui.)
     hl.exec_cmd("~/.config/waybar/scripts/waybar-fullscreen.sh")
     -- Notificacoes (daemon + central)
     hl.exec_cmd("swaync")
