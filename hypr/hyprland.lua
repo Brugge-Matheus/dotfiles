@@ -324,6 +324,7 @@ hl.bind(mainMod .. " + CTRL + P",  hl.dsp.exec_cmd(S .. "/screenshot.sh full")) 
 hl.bind(mainMod .. " + ALT + P",   hl.dsp.exec_cmd(S .. "/screenshot.sh window"))  -- janela ativa
 hl.bind(mainMod .. " + SHIFT + V", hl.dsp.exec_cmd(S .. "/clipboard.sh"))          -- historico de clipboard
 hl.bind(mainMod .. " + W",         hl.dsp.exec_cmd(S .. "/wallpaper.sh"))          -- trocar wallpaper
+hl.bind(mainMod .. " + comma",     hl.dsp.exec_cmd(S .. "/settings-menu.sh"))      -- painel de configuracoes
 
 -- Move focus with mainMod + arrow keys
 hl.bind(mainMod .. " + left",  hl.dsp.focus({ direction = "left" }))

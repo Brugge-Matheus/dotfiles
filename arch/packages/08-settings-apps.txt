@@ -1,0 +1,9 @@
+# Fase 8 — Apps de configuracao dedicados (oficiais) — Arch
+# Instalado por: arch/install/08-settings-apps.sh
+nwg-look              # aparencia: tema GTK, icones, cursor, fonte, dark mode
+nwg-displays          # monitores: posicao/resolucao/refresh (gera config Hyprland)
+blueman               # bluetooth (GUI + applet)
+system-config-printer # impressoras (GUI)
+cups                  # servidor de impressao
+cups-pdf              # impressora virtual "Imprimir em PDF"
+pavucontrol           # som (ja instalado; garante presenca)
