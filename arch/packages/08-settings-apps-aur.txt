@@ -1,2 +1,0 @@
-# Fase 8 — Apps de configuracao (AUR, via yay)
-overskride            # bluetooth moderno em libadwaita (dark, bonito)
