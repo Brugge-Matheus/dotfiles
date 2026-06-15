@@ -3,9 +3,8 @@
 #  FASE 8 — Apps de configuracao dedicados (control panel)
 #  Rodar com: sudo bash arch/install/08-settings-apps.sh
 #
-#  Instala apps bonitos (libadwaita/GTK) por area: aparencia, monitores,
-#  bluetooth, impressoras, som. O AUR (overskride) roda depois via yay.
-#  Habilita o CUPS (impressao).
+#  Instala apps (GTK) por area: aparencia, monitores, bluetooth (blueman),
+#  impressoras, som. Habilita CUPS e Bluetooth.
 # =====================================================================
 set -euo pipefail
 
@@ -27,9 +26,5 @@ log_info "Habilitando servicos (CUPS impressao + Bluetooth)..."
 systemctl enable --now cups.service 2>/dev/null && log_ok "CUPS ativo." || true
 systemctl enable --now bluetooth.service 2>/dev/null && log_ok "Bluetooth ativo." || true
 
-echo
-echo "Falta o app do AUR (como usuario):"
-echo "   yay -S --needed overskride"
-echo "ou: bash arch/install.sh"
 echo
 echo "Abra o painel de configuracoes com:  SUPER + ,"
