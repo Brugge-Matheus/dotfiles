@@ -313,17 +313,17 @@ local mainMod = "SUPER" -- Sets "Windows" key as main modifier
 hl.bind(mainMod .. " + Q", hl.dsp.exec_cmd(terminal))
 local closeWindowBind = hl.bind(mainMod .. " + C", hl.dsp.window.close())
 -- closeWindowBind:set_enabled(false)
-hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch 'hl.dsp.exit()'"))
+hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("uwsm stop"))                                -- encerra a sessao (uwsm)
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
-hl.bind(mainMod .. " + V", hl.dsp.exec_cmd("hyprctl dispatch fullscreen 0"))            -- tela cheia (preenche o monitor, na frente)
+hl.bind(mainMod .. " + V", hl.dsp.window.fullscreen({ mode = "fullscreen" }))           -- tela cheia (preenche o monitor, na frente)
 hl.bind(mainMod .. " + SHIFT + Space", hl.dsp.window.float({ action = "toggle" }))      -- alternar janela flutuante
 hl.bind(mainMod .. " + space", hl.dsp.exec_cmd(menu))
 hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
 hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit"))    -- dwindle only
 
 -- Extras (Fase 2)
-hl.bind(mainMod .. " + F",         hl.dsp.exec_cmd("hyprctl dispatch fullscreen 1"))  -- maximizar
-hl.bind(mainMod .. " + SHIFT + F", hl.dsp.exec_cmd("hyprctl dispatch fullscreen 0"))  -- tela cheia real
+hl.bind(mainMod .. " + F",         hl.dsp.window.fullscreen({ mode = "fullscreen" })) -- tela cheia
+hl.bind(mainMod .. " + SHIFT + F", hl.dsp.window.fullscreen({ mode = "fullscreen" })) -- tela cheia real
 hl.bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd("hyprctl reload"))                 -- recarregar config
 hl.bind(mainMod .. " + L",         hl.dsp.exec_cmd("loginctl lock-session"))          -- bloquear (hyprlock)
 hl.bind(mainMod .. " + N",         hl.dsp.exec_cmd("swaync-client -t -sw"))           -- central de notificacoes

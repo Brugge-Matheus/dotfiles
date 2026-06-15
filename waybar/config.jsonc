@@ -134,6 +134,5 @@
     "format": " {}",
     "tooltip": false,
     "on-click": "gsimplecal"
-  },
-  "mode": "hide"
+  }
 }
