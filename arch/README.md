@@ -31,15 +31,26 @@ no boot. A config conhecida-boa (aplicada por `install/01-foundation.sh`):
 
 ## 🗺️ Fases do setup
 
-| Fase | Escopo | Status |
+Cada fase de **sistema** é um script `install/NN-*.sh` (precisa de `sudo`) com sua lista
+de pacotes em `packages/NN-*.txt`. A parte de **usuário** (symlinks, AUR, serviços) é o
+`install.sh`.
+
+| Script | Escopo | Status |
 |---|---|---|
-| **0 — Fundação** | Drivers (NVIDIA offload), polkit, portal, áudio, NetworkManager (instala) | ✅ feito |
-| **1 — Núcleo Hyprland** | `hyprland.lua`: monitor, input US-Intl, keybinds, regras, env GPU | ✅ feito |
-| **2 — Visual** | Walker, Waybar, wallpaper (awww), hyprlock/hypridle, SwayNC, tema Tokyo Night, rede → NetworkManager | ✅ feito |
-| **3 — Funcionalidades** | Screenshots (grim+slurp+satty), clipboard (cliphist), trocador de wallpaper | ✅ feito |
-| **4 — Apps** | Zen, Thunar+yazi, Discord, Obsidian, Spotify, btop, pavucontrol | ✅ feito |
-| **6 — Boot elegante** | quiet + Plymouth + autologin (tty1) → Hyprland no hyprlock | ✅ feito |
-| **5 — Dotfiles dev** | zsh + tmux + LazyVim (via `../setup.sh`) | 🔜 |
+| `install/01-foundation.sh` | Drivers (NVIDIA offload), polkit, portal, áudio, base | ✅ |
+| `install/02-visual.sh` | Walker, Waybar, wallpaper (awww), hyprlock/hypridle, SwayNC | ✅ |
+| `install/03-features.sh` | Screenshots (grim+slurp+satty), clipboard (cliphist) | ✅ |
+| `install/04-apps.sh` | Zen, Thunar+yazi, Discord, Obsidian, Spotify, btop, pavucontrol | ✅ |
+| `install/05-docker.sh` | Docker + Docker Compose (adiciona o usuário ao grupo) | ✅ |
+| `install/06-boot-experience.sh` | quiet + Plymouth + autologin (tty1) → uwsm/Hyprland | ✅ |
+| `install/07-settings.sh` | Dark mode (GTK/Qt), tema black, fontes | ✅ |
+| `install/08-settings-apps.sh` | Apps de configuração (nwg-look, nwg-displays, blueman, etc.) | ✅ |
+| `install/switch-to-networkmanager.sh` | Migra rede para NetworkManager (backend iwd) | ✅ |
+| `install.sh` (usuário) | AUR + symlinks das configs + serviços (PipeWire) | ✅ |
+| `../setup.sh` | Ambiente dev: zsh + tmux + LazyVim + asdf | ✅ |
+
+> **Tema:** black minimalista com pegada dev (paleta `#0a0a0a`, ícones Papirus-Dark,
+> fonte JetBrainsMono Nerd Font). O *lockscreen* (`hyprlock`) herda um visual Tokyo Night.
 
 ## 🚀 Como usar (numa máquina nova)
 
@@ -51,11 +62,24 @@ cd ~/dotfiles
 sudo bash arch/install/01-foundation.sh
 sudo reboot   # NÃO edite a cmdline no menu do limine
 
-# 2) Configs de usuário (symlinks + serviços) — sem sudo
+# 2) Demais fases de sistema (sudo) — na ordem
+sudo bash arch/install/02-visual.sh
+sudo bash arch/install/03-features.sh
+sudo bash arch/install/04-apps.sh
+sudo bash arch/install/05-docker.sh
+sudo bash arch/install/06-boot-experience.sh
+sudo bash arch/install/07-settings.sh
+sudo bash arch/install/08-settings-apps.sh
+sudo bash arch/install/switch-to-networkmanager.sh   # opcional: rede via NetworkManager
+
+# 3) Configs de usuário (AUR + symlinks + serviços) — SEM sudo
 bash arch/install.sh
 
-# 3) Inicie o Hyprland
-Hyprland
+# 4) Ambiente dev (opcional) — SEM sudo
+bash setup.sh
+
+# 5) Reinicie: o autologin no tty1 inicia o Hyprland via uwsm
+sudo reboot
 ```
 
 ## 📁 Estrutura
@@ -63,15 +87,23 @@ Hyprland
 ```
 arch/
 ├── README.md                  # este arquivo
-├── KEYBINDS.md                # todos os atalhos do Hyprland (atuais + planejados)
-├── install.sh                 # orquestrador de usuário (symlinks + serviços)
+├── KEYBINDS.md                # todos os atalhos do Hyprland
+├── install.sh                 # orquestrador de usuário (AUR + symlinks + serviços)
 ├── install/
-│   └── 01-foundation.sh       # Fase 0: drivers + NVIDIA offload + initramfs (sudo)
-└── packages/
-    └── 01-foundation.txt      # lista de pacotes da fundação
+│   ├── 01-foundation.sh       # drivers + NVIDIA offload + initramfs (sudo)
+│   ├── 02-visual.sh           # walker, waybar, wallpaper, lock/idle, swaync
+│   ├── 03-features.sh         # screenshots, clipboard
+│   ├── 04-apps.sh             # navegador, file manager, apps do dia a dia
+│   ├── 05-docker.sh           # docker + compose
+│   ├── 06-boot-experience.sh  # quiet + plymouth + autologin
+│   ├── 07-settings.sh         # dark mode, tema, fontes
+│   ├── 08-settings-apps.sh    # apps de configuração
+│   └── switch-to-networkmanager.sh
+├── packages/                  # uma lista NN-*.txt (e NN-*-aur.txt) por fase
+└── scripts/                   # gen-default-wallpaper.py, thunar-minimal.sh
 
-hypr/
-└── hyprland.lua               # config do Hyprland (symlink -> ~/.config/hypr/)
+hypr/   → hyprland.lua, hyprlock.conf, hypridle.conf  (symlinks p/ ~/.config/hypr/)
+waybar/ → config.jsonc, style.css, scripts/           (uma instância por monitor)
 ```
 
 ## 🔧 Comandos úteis
@@ -93,6 +125,10 @@ Migrado para **NetworkManager** com backend **iwd** (reaproveita o WiFi/credenci
 Migração feita por `install/switch-to-networkmanager.sh`. A Waybar mostra o WiFi e
 abre `nmtui` ao clicar. `systemd-networkd` foi desativado.
 
-## 📌 Pendências conhecidas
+## 📌 Notas
 
-- Apps a definir: file manager, navegador, terminal definitivo (Fase 4).
+- **Terminal:** ghostty · **File manager:** Thunar (GUI) + yazi (terminal) · **Navegador:** Zen.
+- **Login:** autologin no tty1 → `.zprofile` → `uwsm start hyprland.desktop`. O `hyprlock`
+  cobre idle/suspensão/bloqueio manual (`SUPER+L`), mas **não** trava no boot — a sessão
+  abre direto no desktop. Se quiser bloquear já no boot, reative o `hyprlock` no autostart
+  do `hyprland.lua`.

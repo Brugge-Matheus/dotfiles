@@ -57,9 +57,11 @@ hl.on("hyprland.start", function ()
     -- uwsm: exporta o ambiente p/ o systemd e marca a sessao como pronta
     -- (inofensivo se o Hyprland nao foi iniciado via uwsm).
     hl.exec_cmd("sh -c 'command -v uwsm >/dev/null && uwsm finalize 2>/dev/null || true'")
-    -- (Antes travava com hyprlock no start, pois havia autologin. Agora o login
-    --  e feito no greetd/ReGreet, entao NAO travamos de novo aqui. O hyprlock
-    --  segue valendo para idle/suspender/bloquear manual via hypridle/powermenu.)
+    -- Login = autologin no tty1 -> .zprofile -> uwsm start hyprland. NAO travamos
+    -- com hyprlock no start (a sessao abre direto no desktop). O hyprlock segue
+    -- valendo p/ idle/suspender/bloquear manual via hypridle/powermenu/SUPER+L.
+    -- Para bloquear ja no boot, descomente a linha hl.exec_cmd("hyprlock") abaixo.
+    -- hl.exec_cmd("hyprlock")
     -- Sessao systemd + portais: como o Hyprland e lancado do TTY (sem display
     -- manager), o graphical-session.target nao sobe sozinho. Sem ele, os portais
     -- (xdg-desktop-portal) e o polkit nao iniciam -> apps GTK (walker) ficam LENTOS.

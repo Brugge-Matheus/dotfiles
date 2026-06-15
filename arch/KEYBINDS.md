@@ -12,7 +12,7 @@
 
 | Atalho | Ação | Status |
 |---|---|---|
-| `SUPER + Q` | Abrir terminal (kitty) | ✅ |
+| `SUPER + Q` | Abrir terminal (ghostty) | ✅ |
 | `SUPER + C` | Fechar janela ativa | ✅ |
 | `SUPER + V` | Tela cheia (fullscreen — preenche o monitor, na frente) | ✅ |
 | `SUPER + SHIFT + Space` | Alternar janela flutuante | ✅ |
@@ -37,9 +37,10 @@
 
 | Atalho | Ação | Status |
 |---|---|---|
-| `SUPER + Q` | Terminal (kitty) | ✅ |
-| `SUPER + E` | Gerenciador de arquivos | ⏳ (app a definir — Fase 4) |
+| `SUPER + Q` | Terminal (ghostty) | ✅ |
+| `SUPER + E` | Gerenciador de arquivos (thunar) | ✅ |
 | `SUPER + Espaço` | Launcher de apps (walker) | ✅ |
+| `SUPER + ,` | Painel de configurações (settings-menu) | ✅ |
 
 ## 🔊 Mídia & Hardware (teclas de função)
 
@@ -57,10 +58,10 @@
 |---|---|---|
 | `SUPER + L` | Bloquear a tela (hyprlock) | ✅ |
 | `SUPER + N` | Abrir/fechar central de notificações (SwayNC) | ✅ |
-| `SUPER + F` | Maximizar janela | ✅ |
-| `SUPER + SHIFT + F` | Tela cheia (real) | ✅ |
+| `SUPER + F` | Tela cheia (fullscreen — igual ao `SUPER + V`) | ✅ |
+| `SUPER + SHIFT + F` | Tela cheia (fullscreen — igual ao `SUPER + V`) | ✅ |
 | `SUPER + SHIFT + R` | Recarregar config do Hyprland | ✅ |
-| `SUPER + M` | Sair do Hyprland (volta ao TTY/login) | ✅ |
+| `SUPER + M` | Encerrar a sessão (uwsm stop → volta ao login) | ✅ |
 
 ## 📸 Capturas & utilitários
 

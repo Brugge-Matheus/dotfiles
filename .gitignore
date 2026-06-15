@@ -7,3 +7,7 @@ tmux/resurrect/
 
 # Neovim cache/state (gerado automaticamente)
 nvim/.lazy/
+
+# Python
+__pycache__/
+*.pyc

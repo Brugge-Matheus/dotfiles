@@ -45,8 +45,14 @@ systemctl disable --now systemd-networkd.service           2>/dev/null || true
 log_ok "systemd-networkd desativado."
 
 # 3) Liga o NetworkManager
+# Critico: ja desligamos o systemd-networkd acima. Se o NM nao subir, a maquina
+# fica SEM REDE -> abortamos com instrucao de reversao em vez de seguir mudo.
 log_info "Ativando NetworkManager..."
-systemctl enable --now NetworkManager.service
+if ! systemctl enable --now NetworkManager.service; then
+  log_err "Falha ao ativar o NetworkManager. Revertendo o systemd-networkd p/ nao ficar sem rede:"
+  log_err "  sudo systemctl enable --now systemd-networkd.service systemd-networkd.socket"
+  exit 1
+fi
 sleep 4
 
 # 4) Tenta (re)conectar ao WiFi
