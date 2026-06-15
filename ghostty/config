@@ -2,3 +2,8 @@ gtk-titlebar = false
 theme = Ayu
 macos-option-as-alt = true
 font-size = 12
+
+# O keyd traduz Alt+Backspace -> Ctrl+Backspace para TODO o sistema (apagar palavra).
+# Aqui garantimos que Ctrl+Backspace no terminal envie ESC+DEL (\e^?), que o zsh
+# ja mapeia para backward-kill-word — mantendo o apagar-palavra no terminal.
+keybind = ctrl+backspace=text:\x1b\x7f

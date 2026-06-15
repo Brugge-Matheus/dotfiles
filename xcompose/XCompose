@@ -1,0 +1,9 @@
+# ~/.XCompose — composicao de acentos (lido por GTK4/Qt/libxkbcommon).
+# Mantem todos os dead keys do locale (a' a~ a^ ...) e adiciona a CEDILHA
+# no estilo brasileiro: ' + c => ç (em vez do c-agudo padrao do US-Intl).
+
+include "%L"
+
+<dead_acute> <c>      : "ç"
+<dead_acute> <C>      : "Ç"
+<dead_acute> <Ccedilla> : "Ç"
