@@ -1,6 +1,9 @@
 // Waybar — barra solida dark (icones via codepoint)
 {
-  "layer": "top",
+  // "overlay": fica ACIMA de janelas em fullscreen (a camada "top" renderiza
+  // ATRAS do fullscreen no Hyprland -> a barra revelada no hover nao apareceria).
+  // Continua reservando 32px no uso normal, entao nao cobre as janelas tiladas.
+  "layer": "overlay",
   "position": "top",
   "height": 32,
   "spacing": 0,
