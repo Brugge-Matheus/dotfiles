@@ -31,7 +31,7 @@ chosen="$(printf '%s' "$menu" | fuzzel --dmenu \
 
 case "$chosen" in
   *Bloquear)  loginctl lock-session ;;
-  *Sair)      hyprctl dispatch exit ;;
+  *Sair)      uwsm stop ;;   # encerra a sessao Wayland e volta ao greeter (greetd/ReGreet)
   *Suspender)
       # Trava PRIMEIRO e espera o hyprlock desenhar; so entao suspende.
       # (Evita a corrida onde o lock acende a tela bem na hora de dormir.)
