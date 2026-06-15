@@ -21,15 +21,19 @@
 ------------------
 
 -- See https://wiki.hypr.land/Configuring/Basics/Monitors/
--- FALLBACK generico: o layout real (posicao/lado dos monitores) vem do
--- nwg-displays via ~/.config/hypr/monitors.conf, aplicado no autostart
--- (scripts/monitors-apply.sh). Use o app "Monitores" (SUPER+,) p/ mudar.
+-- 1) FALLBACK generico (vale em maquina nova / sem monitors.lua).
 hl.monitor({
     output   = "",
     mode     = "preferred",   -- 1920x1080@144
     position = "auto",
     scale    = 1.0,           -- 1.0 = resolucao nativa. Use 1.25 se ficar pequeno demais.
 })
+-- 2) LAYOUT REAL: carrega o monitors.lua gerado pelo nwg-displays (sobrepoe o
+--    fallback). Define posicao/lado dos monitores (e a direcao do mouse entre
+--    eles). Use o app "Monitores" (SUPER+,) p/ mudar e arrastar as telas.
+--    pcall: nao quebra se o arquivo ainda nao existir. NAO vai pro repo
+--    (e gerado por maquina; o ~/.config/hypr/ tem o symlink + este arquivo).
+pcall(dofile, os.getenv("HOME") .. "/.config/hypr/monitors.lua")
 
 
 ---------------------
@@ -53,9 +57,6 @@ hl.on("hyprland.start", function ()
     -- uwsm: exporta o ambiente p/ o systemd e marca a sessao como pronta
     -- (inofensivo se o Hyprland nao foi iniciado via uwsm).
     hl.exec_cmd("sh -c 'command -v uwsm >/dev/null && uwsm finalize 2>/dev/null || true'")
-    -- Aplica o layout de monitores do nwg-displays (~/.config/hypr/monitors.conf).
-    -- A config Lua nao da 'source' no .conf, entao aplicamos via hyprctl.
-    hl.exec_cmd("~/.config/waybar/scripts/monitors-apply.sh")
     -- Sobe JA travado na tela de bloqueio (boot -> autologin -> hyprlock).
     hl.exec_cmd("hyprlock")
     -- Sessao systemd + portais: como o Hyprland e lancado do TTY (sem display
