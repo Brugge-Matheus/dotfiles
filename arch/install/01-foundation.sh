@@ -63,7 +63,10 @@ log_ok "/etc/modprobe.d/nvidia.conf"
 
 log_info "Garantindo que NVIDIA NAO esta no early-KMS do initramfs..."
 if grep -qE '^MODULES=.*nvidia' /etc/mkinitcpio.conf; then
-  sed -i -E 's/^MODULES=\(.*\)/MODULES=()/' /etc/mkinitcpio.conf
+  cp -n /etc/mkinitcpio.conf /etc/mkinitcpio.conf.bak 2>/dev/null || true
+  # Remove APENAS os tokens nvidia* da linha MODULES, preservando os demais
+  # (ex.: i915), depois normaliza espacos. NAO zera a lista inteira.
+  sed -i -E '/^MODULES=/{ s/\bnvidia(_[a-z]+)?\b//g; s/\(\s+/(/; s/\s+\)/)/; s/[[:space:]]{2,}/ /g }' /etc/mkinitcpio.conf
   log_warn "Removido nvidia de MODULES (estava em early-KMS)."
 fi
 log_ok "MODULES: $(grep '^MODULES' /etc/mkinitcpio.conf)"

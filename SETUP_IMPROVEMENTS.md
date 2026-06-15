@@ -73,7 +73,7 @@ $ cat ~/.dotfiles-setup-state
 
 ### Cenário 1: Primeira Máquina (Novo Device)
 ```bash
-git clone https://github.com/seu-user/dotfiles.git ~/dotfiles
+git clone https://github.com/Brugge-Matheus/dotfiles.git ~/dotfiles
 cd ~/dotfiles
 bash setup.sh
 # → git pull (nada a fazer, acabou de clonar)
@@ -109,7 +109,7 @@ bash setup.sh
 
 ### Cenário 4: Segunda Máquina (Clone do Repositório)
 ```bash
-git clone https://github.com/seu-user/dotfiles.git ~/dotfiles
+git clone https://github.com/Brugge-Matheus/dotfiles.git ~/dotfiles
 cd ~/dotfiles
 bash setup.sh
 # → git pull (mais recente do remote)
@@ -132,7 +132,7 @@ bash setup.sh
 
 ### Primeira Vez em um Device
 ```bash
-git clone https://github.com/seu-usuario/dotfiles.git ~/dotfiles
+git clone https://github.com/Brugge-Matheus/dotfiles.git ~/dotfiles
 cd ~/dotfiles
 bash setup.sh
 exec zsh -l
