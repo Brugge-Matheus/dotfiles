@@ -1,31 +1,39 @@
 #!/usr/bin/env bash
-# Waybar auto-hide em FULLSCREEN, com revelar-ao-hover no topo.
+# Waybar por-monitor com auto-hide em FULLSCREEN e revelar-ao-hover no topo.
 #
-# Comportamento:
-#   - Sem janela em fullscreen: a Waybar fica normal (visivel, reserva 32px).
-#   - Com fullscreen no workspace ativo: a Waybar some. Encostar o mouse no
-#     TOPO do monitor a revela (overlay sobre a janela); descer o mouse a
-#     esconde de novo.
+# Por que uma instancia por monitor?
+#   A Waybar roda como UM processo com uma barra por saida, e o SIGUSR1 (toggle
+#   de visibilidade) atinge TODAS as barras de uma vez. Para esconder/revelar
+#   cada monitor de forma INDEPENDENTE, lancamos uma instancia separada por
+#   monitor, cada uma fixada a sua saida (wrapper que da "output" + include do
+#   config.jsonc compartilhado, em $XDG_RUNTIME_DIR/waybar/<saida>.jsonc).
 #
-# A visibilidade da Waybar e alternada via SIGUSR1 (toggle). Como toggle e
-# fragil (um sinal perdido inverteria tudo), NAO confiamos num estado interno:
-# antes de cada acao lemos o estado REAL (a reserva do monitor focado) e so
-# disparamos o sinal se precisar mudar -> auto-corrige sozinho.
+# Comportamento (por monitor, isolado):
+#   - Sem fullscreen naquele monitor: a barra dele fica normal (reserva 32px).
+#   - Com fullscreen naquele monitor: a barra dele some; encostar o mouse no
+#     TOPO *desse* monitor a revela (overlay), descer esconde. Os outros
+#     monitores nao sao afetados.
 #
-# Escuta os eventos do Hyprland (socket2) p/ saber quando ha fullscreen e so
-# faz polling do cursor enquanto estiver em fullscreen (zero custo fora dele).
-# Iniciado no autostart do Hyprland.
+# Robustez: a visibilidade e dirigida pelo estado REAL (reserva do monitor),
+# nao por um flag interno -> imune a dessincronia do toggle SIGUSR1.
+# Lanca as barras no inicio e reage a conexao/desconexao de monitores.
+# Iniciado no autostart do Hyprland (substitui o "waybar" direto).
 exec python3 <<'PY'
-import socket, os, json, subprocess, select, time
+import socket, os, json, subprocess, select, time, signal
 
-his = os.environ.get("HYPRLAND_INSTANCE_SIGNATURE", "")
-rt  = os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")
+HOME = os.environ["HOME"]
+his  = os.environ.get("HYPRLAND_INSTANCE_SIGNATURE", "")
+rt   = os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")
 sockpath = f"{rt}/hypr/{his}/.socket2.sock"
 
-REVEAL_AT  = 2     # cursor a <= 2px do topo -> revela
+RUNDIR      = f"{rt}/waybar"
+MAIN_CONFIG = f"{HOME}/.config/waybar/config.jsonc"
+STYLE       = f"{HOME}/.config/waybar/style.css"
+
+REVEAL_AT  = 2     # cursor a <= 2px do topo do monitor -> revela a barra dele
 HIDE_BELOW = 40    # cursor a >= 40px do topo -> esconde (histerese > altura da barra)
-POLL       = 0.10  # intervalo de polling do cursor (so em fullscreen)
-SETTLE     = 0.30  # apos um toggle, espera propagar antes da proxima decisao
+POLL       = 0.10  # polling do cursor enquanto algum monitor estiver em fullscreen
+SETTLE     = 0.25  # apos um toggle, espera propagar antes da proxima leitura
 
 def hctl(*args):
     try:
@@ -35,52 +43,132 @@ def hctl(*args):
     except Exception:
         return None
 
-def has_fullscreen():
-    d = hctl("activeworkspace")
-    return bool(d and d.get("hasfullscreen"))
+def monitors():        return hctl("monitors") or []
+def cursor():          return hctl("cursorpos") or {}
+def ws_fullscreen():   # id do workspace -> hasfullscreen
+    return {w["id"]: bool(w.get("hasfullscreen"))
+            for w in (hctl("workspaces") or [])}
 
-def is_visible():
-    """estado REAL da waybar: reserva de topo no monitor focado > 0."""
-    for m in (hctl("monitors") or []):
-        if m.get("focused"):
-            return m["reserved"][1] > 0
-    return True
+def wrapper(name):
+    return f"{RUNDIR}/{name}.jsonc"
 
-def want(visible):
-    """garante a visibilidade desejada lendo o estado real (idempotente)."""
-    if is_visible() != visible:
-        subprocess.run(["pkill", "-USR1", "-x", "waybar"])  # toggle
-        time.sleep(SETTLE)   # deixa o estado propagar p/ nao re-disparar
+def bars_by_output(mons):
+    """saida -> pid da instancia de waybar fixada nela (acha pelo config)."""
+    res = {}
+    try:
+        out = subprocess.run(["pgrep", "-a", "-x", "waybar"],
+                             capture_output=True, text=True).stdout
+    except Exception:
+        return res
+    for line in out.splitlines():
+        parts = line.split(None, 1)
+        if len(parts) < 2:
+            continue
+        pid, cmd = int(parts[0]), parts[1]
+        for m in mons:
+            if wrapper(m["name"]) in cmd:
+                res[m["name"]] = pid
+    return res
 
-def cursor_rel_y():
-    """y do cursor relativo ao topo do monitor onde ele esta (ou None)."""
-    c = hctl("cursorpos")
+def ensure_bars(mons):
+    """1 waybar por monitor conectado (idempotente). Mata barras orfas."""
+    os.makedirs(RUNDIR, exist_ok=True)
+    names = [m["name"] for m in mons]
+    running = bars_by_output(mons)
+    # mata barras de monitores que sumiram (hotplug-out)
+    for name, pid in running.items():
+        if name not in names:
+            try: os.kill(pid, signal.SIGKILL)
+            except Exception: pass
+    # mata qualquer waybar "solta" (sem nosso wrapper) p/ evitar duplicata
+    try:
+        out = subprocess.run(["pgrep", "-a", "-x", "waybar"],
+                             capture_output=True, text=True).stdout
+        for line in out.splitlines():
+            parts = line.split(None, 1)
+            if len(parts) == 2 and RUNDIR not in parts[1]:
+                try: os.kill(int(parts[0]), signal.SIGKILL)
+                except Exception: pass
+    except Exception:
+        pass
+    # lanca as que faltam
+    running = bars_by_output(mons)
+    launched = False
+    for name in names:
+        if name not in running:
+            with open(wrapper(name), "w") as f:
+                json.dump({"output": name, "include": [MAIN_CONFIG]}, f)
+            subprocess.Popen(["waybar", "-c", wrapper(name), "-s", STYLE],
+                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            launched = True
+    if launched:
+        time.sleep(0.6)
+
+def rel_y(m, c):
+    """y do cursor relativo ao topo do monitor m, ou None se nao estiver nele."""
     if not c:
         return None
     cx, cy = c.get("x"), c.get("y")
-    for m in (hctl("monitors") or []):
-        scale = m.get("scale", 1) or 1
-        lw, lh = m["width"] / scale, m["height"] / scale
-        mx, my = m["x"], m["y"]
-        if mx <= cx < mx + lw and my <= cy < my + lh:
-            return cy - my
+    scale = m.get("scale", 1) or 1
+    lw, lh = m["width"] / scale, m["height"] / scale
+    mx, my = m["x"], m["y"]
+    if mx <= cx < mx + lw and my <= cy < my + lh:
+        return cy - my
     return None
 
-# eventos que podem mudar o estado de fullscreen do workspace ativo
-WATCH = ("fullscreen", "workspace", "focusedmon", "activewindowv2",
-         "openwindow", "closewindow", "movewindow",
-         "monitoraddedv2", "monitorremoved")
+def is_visible(m):
+    return m["reserved"][1] > 0
+
+def reconcile():
+    """ajusta a visibilidade de cada barra ao estado desejado. Retorna True
+       se algum monitor esta em fullscreen (=> precisamos fazer polling)."""
+    mons   = monitors()
+    wsfs   = ws_fullscreen()
+    pidmap = bars_by_output(mons)
+    c      = cursor()
+    any_fs = False
+    toggled = False
+    for m in mons:
+        awid   = m.get("activeWorkspace", {}).get("id")
+        mon_fs = wsfs.get(awid, False)
+        if mon_fs:
+            any_fs = True
+            ry = rel_y(m, c)
+            if ry is None:                 # cursor noutro monitor -> esconde
+                desired = False
+            elif ry <= REVEAL_AT:          # encostou no topo -> revela
+                desired = True
+            elif ry >= HIDE_BELOW:         # desceu -> esconde
+                desired = False
+            else:                          # zona morta -> mantem
+                desired = is_visible(m)
+        else:
+            desired = True                 # sem fullscreen -> barra normal
+        pid = pidmap.get(m["name"])
+        if pid and is_visible(m) != desired:
+            try:
+                os.kill(pid, signal.SIGUSR1)
+                toggled = True
+            except Exception:
+                pass
+    if toggled:
+        time.sleep(SETTLE)
+    return any_fs
+
+# eventos que podem mudar fullscreen / layout
+WATCH    = ("fullscreen", "workspace", "focusedmon", "activewindowv2",
+            "openwindow", "closewindow", "movewindow")
+HOTPLUG  = ("monitoraddedv2", "monitoradded", "monitorremoved")
+
+ensure_bars(monitors())
+any_fs = reconcile()
 
 s = socket.socket(socket.AF_UNIX)
 s.connect(sockpath)
 s.setblocking(False)
-
-fs = has_fullscreen()
-want(not fs)
 buf = b""
 while True:
-    # so faz polling do cursor enquanto ha fullscreen; senao bloqueia no socket
-    timeout = POLL if fs else None
+    timeout = POLL if any_fs else None   # so faz polling em fullscreen
     r, _, _ = select.select([s], [], [], timeout)
     if r:
         try:
@@ -90,23 +178,18 @@ while True:
         if not data:
             break
         buf += data
-        changed = False
+        hotplug = changed = False
         while b"\n" in buf:
             line, buf = buf.split(b"\n", 1)
             ev = line.decode(errors="ignore").split(">>", 1)[0]
-            if ev in WATCH:
+            if ev in HOTPLUG:
+                hotplug = True
+            elif ev in WATCH:
                 changed = True
-        if changed:
-            new_fs = has_fullscreen()
-            if new_fs != fs:
-                fs = new_fs
-                want(not fs)   # entrou -> esconde; saiu -> mostra
-    elif fs:
-        # timeout em fullscreen: revela/esconde conforme o cursor no topo
-        ry = cursor_rel_y()
-        if ry is not None:
-            if ry <= REVEAL_AT:
-                want(True)
-            elif ry >= HIDE_BELOW:
-                want(False)
+        if hotplug:
+            ensure_bars(monitors())
+        if hotplug or changed:
+            any_fs = reconcile()
+    else:
+        any_fs = reconcile()
 PY
