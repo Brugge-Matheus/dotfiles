@@ -72,6 +72,8 @@ hl.on("hyprland.start", function ()
     hl.exec_cmd("~/.config/waybar/scripts/wallpaper-restore.sh")
     -- Barra de status
     hl.exec_cmd("waybar")
+    -- Esconde a waybar quando ha janela em fullscreen (volta ao sair)
+    hl.exec_cmd("~/.config/waybar/scripts/waybar-fullscreen.sh")
     -- Notificacoes (daemon + central)
     hl.exec_cmd("swaync")
     -- Gerenciador de inatividade (dim/lock/dpms)
