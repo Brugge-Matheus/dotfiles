@@ -12,7 +12,7 @@ import shutil
 items = [
     (0xF108, "Monitores",    "nwg-displays"),
     (0xF1FC, "Aparencia",    "nwg-look"),
-    (0xF294, "Bluetooth",    "overskride"),
+    (0xF294, "Bluetooth",    "blueman-manager"),
     (0xF028, "Som",          "pavucontrol"),
     (0xF1EB, "Rede",         "nm-connection-editor"),
     (0xF02F, "Impressoras",  "system-config-printer"),
