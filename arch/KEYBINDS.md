@@ -14,7 +14,8 @@
 |---|---|---|
 | `SUPER + Q` | Abrir terminal (kitty) | ✅ |
 | `SUPER + C` | Fechar janela ativa | ✅ |
-| `SUPER + V` | Alternar janela flutuante | ✅ |
+| `SUPER + V` | Tela cheia (fullscreen — preenche o monitor, na frente) | ✅ |
+| `SUPER + SHIFT + Space` | Alternar janela flutuante | ✅ |
 | `SUPER + P` | Pseudo-tile (dwindle) | ✅ |
 | `SUPER + J` | Alternar direção do split (dwindle) | ✅ |
 | `SUPER + ← ↑ ↓ →` | Mover foco entre janelas | ✅ |
