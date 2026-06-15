@@ -5,7 +5,7 @@ Configuração completa do ambiente de desenvolvimento com Zsh, Neovim, Tmux, St
 ## 🚀 Instalação Rápida
 
 ```bash
-git clone https://github.com/seu-usuario/dotfiles.git ~/dotfiles
+git clone https://github.com/Brugge-Matheus/dotfiles.git ~/dotfiles
 cd ~/dotfiles
 bash setup.sh
 ```

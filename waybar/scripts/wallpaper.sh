@@ -9,7 +9,10 @@ dir="$HOME/Pictures/Wallpapers"
 mkdir -p "$dir"
 CFG="$HOME/.config/fuzzel/powermenu.ini"
 
-pgrep -x awww-daemon >/dev/null || { awww-daemon & sleep 0.5; }
+if ! pgrep -x awww-daemon >/dev/null; then
+  awww-daemon &
+  for _ in $(seq 1 50); do awww query >/dev/null 2>&1 && break; sleep 0.1; done
+fi
 
 apply() {  # $1=imagem  $2=outputs (vazio = todos)
   local img="$1" out="${2:-}"

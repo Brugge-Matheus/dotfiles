@@ -42,7 +42,9 @@ fi
 # timeout >= 3 (NAO some o menu) e entrada de resgate apontando p/ o .bak
 if [ -f "$LIMINE" ]; then
   cp -n "$LIMINE" "${LIMINE}.bak" 2>/dev/null || true
-  sed -i 's/^timeout:.*/timeout: 1/' "$LIMINE"
+  # timeout 3s: rapido, mas mantem o menu acessivel p/ escolher a entrada de
+  # resgate caso o boot novo falhe (a rede de protecao perde sentido com 0/1s).
+  sed -i 's/^timeout:.*/timeout: 3/' "$LIMINE"
   if ! grep -q "Arch Linux (resgate)" "$LIMINE"; then
     ORIG_CMDLINE="$(grep -m1 -E '^\s*cmdline:' "$LIMINE" | sed 's/^\s*cmdline:\s*//')"
     cat >> "$LIMINE" <<EOF
