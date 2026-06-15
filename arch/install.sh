@@ -58,6 +58,7 @@ fi
 # ---------------------------------------------------------------------
 log_info "Criando symlinks das configs do desktop..."
 safe_link "$DOTFILES_DIR/zsh/.zprofile"      "$HOME/.zprofile"   # autostart do Hyprland no tty1
+safe_link "$DOTFILES_DIR/xcompose/XCompose" "$HOME/.XCompose"   # acentos/cedilha
 safe_link "$DOTFILES_DIR/hypr/hyprland.lua"  "$HOME/.config/hypr/hyprland.lua"
 safe_link "$DOTFILES_DIR/hypr/hyprlock.conf" "$HOME/.config/hypr/hyprlock.conf"
 safe_link "$DOTFILES_DIR/hypr/hypridle.conf" "$HOME/.config/hypr/hypridle.conf"

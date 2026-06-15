@@ -1,0 +1,13 @@
+# /etc/greetd/config.toml
+# greetd roda o greeter (ReGreet) dentro do cage (compositor Wayland minimo/kiosk)
+# no vt1. Ao logar, greetd executa a sessao escolhida COMO o seu usuario.
+
+[terminal]
+vt = 1
+
+[default_session]
+# Host: instancia minima do Hyprland (em vez do cage) para CONTROLAR os monitores
+# — espelha as telas (sem split) e aplica tema dark. Ele sobe o ReGreet.
+command = "Hyprland --config /etc/greetd/hyprland-greeter.conf"
+# No Arch o pacote greetd cria o usuario "greeter" (NAO "greetd").
+user = "greeter"

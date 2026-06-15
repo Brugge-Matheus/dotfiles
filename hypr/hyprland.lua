@@ -57,8 +57,9 @@ hl.on("hyprland.start", function ()
     -- uwsm: exporta o ambiente p/ o systemd e marca a sessao como pronta
     -- (inofensivo se o Hyprland nao foi iniciado via uwsm).
     hl.exec_cmd("sh -c 'command -v uwsm >/dev/null && uwsm finalize 2>/dev/null || true'")
-    -- Sobe JA travado na tela de bloqueio (boot -> autologin -> hyprlock).
-    hl.exec_cmd("hyprlock")
+    -- (Antes travava com hyprlock no start, pois havia autologin. Agora o login
+    --  e feito no greetd/ReGreet, entao NAO travamos de novo aqui. O hyprlock
+    --  segue valendo para idle/suspender/bloquear manual via hypridle/powermenu.)
     -- Sessao systemd + portais: como o Hyprland e lancado do TTY (sem display
     -- manager), o graphical-session.target nao sobe sozinho. Sem ele, os portais
     -- (xdg-desktop-portal) e o polkit nao iniciam -> apps GTK (walker) ficam LENTOS.
@@ -94,9 +95,11 @@ hl.env("HYPRCURSOR_SIZE", "24")
 hl.env("MOZ_ENABLE_WAYLAND", "1")            -- Firefox/Thunderbird
 hl.env("ELECTRON_OZONE_PLATFORM_HINT", "auto") -- VSCode, Discord, etc.
 
--- Cedilha (pt-BR no teclado US Internacional): faz ' + c => c-cedilha (e nao c-agudo)
-hl.env("GTK_IM_MODULE", "cedilla")
-hl.env("QT_IM_MODULE", "cedilla")
+-- Dead keys / acentos (US Internacional). NAO usar GTK_IM_MODULE=cedilla:
+-- e da era GTK3 e QUEBRA o compose no GTK4 (ghostty) -> nao digita acento.
+-- 'simple' restaura a composicao estilo X11 (til/circunflexo/agudo) e faz o
+-- GTK4 ler o ~/.XCompose, onde definimos ' + c => ç. Qt sem IM forcado.
+hl.env("GTK_IM_MODULE", "simple")
 
 -- Apps Qt seguem o tema do qt6ct (dark) em vez do padrao claro
 hl.env("QT_QPA_PLATFORMTHEME", "qt6ct")
@@ -422,4 +425,35 @@ hl.window_rule({
 
     move  = "20 monitor_h-120",
     float = true,
+})
+
+-- Pop-ups / dialogs NAO devem ficar presos no tiling (flutuam por padrao).
+-- Hyprland nao tem um "float em todo dialog" generico, entao cobrimos os dois
+-- casos que costumam ser tile-ados: os portais de selecao de arquivo (GTK/KDE)
+-- e os titulos de janela de dialogo mais comuns entre toolkits.
+hl.window_rule({
+    name  = "float-file-portals",
+    match = { class = "^(xdg-desktop-portal-gtk|xdg-desktop-portal-kde)$" },
+    float = true,
+})
+
+hl.window_rule({
+    name  = "float-common-dialogs",
+    match = {
+        title = "^(Open|Open File|Open Files|Open Folder|Save|Save As|Save File|"
+              .. "Select a File|Select Files?|Choose Files?|Choose a file|"
+              .. "All Files|File Upload|Library|Confirm to replace files?|"
+              .. "Authentication Required|Authenticate)(.*)$",
+    },
+    float = true,
+})
+
+-- Picture-in-Picture (Zen/Firefox): flutua e fica "pinada" sobre todas as
+-- workspaces, em vez de ficar presa/deformada no tiling. Permite arrastar e
+-- redimensionar livremente.
+hl.window_rule({
+    name  = "float-picture-in-picture",
+    match = { title = "^(Picture-in-Picture)$" },
+    float = true,
+    pin   = true,
 })
