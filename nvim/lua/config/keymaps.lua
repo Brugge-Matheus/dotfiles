@@ -32,3 +32,15 @@ end
 
 vim.keymap.set({ "n", "i" }, "<M-J>", duplicate_line_down, { desc = "Duplicate line down" })
 vim.keymap.set({ "n", "i" }, "<M-K>", duplicate_line_up, { desc = "Duplicate line up" })
+
+-- Importar namespace da classe sob o cursor (usa code action do LSP, ex: intelephense)
+vim.keymap.set("n", "<leader>ci", function()
+  vim.lsp.buf.code_action({
+    context = { only = { "quickfix", "source" }, diagnostics = {} },
+    filter = function(action)
+      local title = (action.title or ""):lower()
+      return title:match("import") or title:match("use ")
+    end,
+    apply = true,
+  })
+end, { desc = "Importar namespace da classe sob o cursor" })
