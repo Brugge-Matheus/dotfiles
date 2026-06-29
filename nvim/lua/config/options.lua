@@ -6,6 +6,8 @@ vim.g.autoformat = false           -- desabilita format on save (use <leader>cf 
 -- Centraliza swaps em diretório temp (// = nome único por caminho completo)
 vim.opt.directory = vim.fn.stdpath("state") .. "/swap//"
 
+vim.opt.ignorecase = true          -- busca case-insensitive por padrão
+vim.opt.smartcase = true           -- mas se digitar maiúscula, vira case-sensitive
 vim.opt.clipboard = "unnamedplus" -- yank/delete vai direto para o clipboard do sistema
 vim.opt.backupcopy = "yes"        -- evita que watchers (bun --watch, webpack) percam o arquivo ao salvar
 vim.opt.wrap = true               -- quebra linhas longas (sem scroll lateral)

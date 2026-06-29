@@ -1,3 +1,6 @@
+-- Use intelephense, não phpactor
+vim.g.lazyvim_php_lsp = "intelephense"
+
 return {
   {
     "neovim/nvim-lspconfig",
@@ -7,11 +10,9 @@ return {
           settings = {
             intelephense = {
               files = {
-                -- Reconhece .inc e .phtml como PHP
                 associations = { "*.php", "*.inc", "*.phtml", "*.blade.php" },
               },
               diagnostics = {
-                -- Desliga falsos positivos comuns em projetos legados sem namespaces/docblocks
                 undefinedTypes = false,
                 undefinedFunctions = false,
                 undefinedConstants = false,
@@ -27,7 +28,15 @@ return {
     },
   },
   {
-    -- Trata .inc como PHP no Neovim (treesitter, formatters, etc.)
+    "mfussenegger/nvim-lint",
+    optional = true,
+    opts = {
+      linters_by_ft = {
+        php = {}, -- desliga phpcs
+      },
+    },
+  },
+  {
     "nvim-treesitter/nvim-treesitter",
     opts = function(_, opts)
       opts.ensure_installed = opts.ensure_installed or {}

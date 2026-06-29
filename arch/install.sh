@@ -62,6 +62,7 @@ safe_link "$DOTFILES_DIR/xcompose/XCompose" "$HOME/.XCompose"   # acentos/cedilh
 safe_link "$DOTFILES_DIR/hypr/hyprland.lua"  "$HOME/.config/hypr/hyprland.lua"
 safe_link "$DOTFILES_DIR/hypr/hyprlock.conf" "$HOME/.config/hypr/hyprlock.conf"
 safe_link "$DOTFILES_DIR/hypr/hypridle.conf" "$HOME/.config/hypr/hypridle.conf"
+safe_link "$DOTFILES_DIR/hypr/scripts"       "$HOME/.config/hypr/scripts"   # lock.sh (guard resiliente)
 safe_link "$DOTFILES_DIR/waybar"             "$HOME/.config/waybar"
 safe_link "$DOTFILES_DIR/swaync"             "$HOME/.config/swaync"
 safe_link "$DOTFILES_DIR/gsimplecal/config"  "$HOME/.config/gsimplecal/config"

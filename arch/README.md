@@ -45,6 +45,7 @@ de pacotes em `packages/NN-*.txt`. A parte de **usuário** (symlinks, AUR, servi
 | `install/06-boot-experience.sh` | quiet + Plymouth + autologin (tty1) → uwsm/Hyprland | ✅ |
 | `install/07-settings.sh` | Dark mode (GTK/Qt), tema black, fontes | ✅ |
 | `install/08-settings-apps.sh` | Apps de configuração (nwg-look, nwg-displays, blueman, etc.) | ✅ |
+| `install/09-printing.sh` | Impressão (CUPS) + Xerox Phaser 3020 USB (driver AUR) | ✅ |
 | `install/switch-to-networkmanager.sh` | Migra rede para NetworkManager (backend iwd) | ✅ |
 | `install.sh` (usuário) | AUR + symlinks das configs + serviços (PipeWire) | ✅ |
 | `../setup.sh` | Ambiente dev: zsh + tmux + LazyVim + asdf | ✅ |
