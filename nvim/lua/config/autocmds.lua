@@ -7,6 +7,26 @@
 -- Or remove existing autocmds by their group name (which is prefixed with `lazyvim_` for the defaults)
 -- e.g. vim.api.nvim_del_augroup_by_name("lazyvim_wrap_spell")
 
+-- Encoding por projeto: força fileencodings antes da leitura do arquivo
+-- ~/svn usa Latin-1 (ISO-8859-1); demais projetos usam UTF-8
+local PROJECT_ENCODINGS = {
+  { path = vim.fn.expand("~/svn/"), encoding = "latin1" },
+}
+local DEFAULT_ENCODINGS = "ucs-bom,utf-8,default,latin1"
+
+vim.api.nvim_create_autocmd("BufReadPre", {
+  callback = function(ev)
+    local path = vim.fn.fnamemodify(ev.match, ":p")
+    for _, entry in ipairs(PROJECT_ENCODINGS) do
+      if path:sub(1, #entry.path) == entry.path then
+        vim.opt.fileencodings = entry.encoding
+        return
+      end
+    end
+    vim.opt.fileencodings = DEFAULT_ENCODINGS
+  end,
+})
+
 -- Apaga swap de processos mortos automaticamente (evita W325)
 vim.api.nvim_create_autocmd("SwapExists", {
   callback = function()
