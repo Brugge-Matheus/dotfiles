@@ -33,6 +33,17 @@ end
 vim.keymap.set({ "n", "i" }, "<M-J>", duplicate_line_down, { desc = "Duplicate line down" })
 vim.keymap.set({ "n", "i" }, "<M-K>", duplicate_line_up, { desc = "Duplicate line up" })
 
+-- Visual *: confirma busca pela seleção (multi-linha incluído) e permite n/N
+vim.keymap.set("x", "*", function()
+  vim.cmd('noau normal! "vy')
+  local text = vim.fn.getreg("v")
+  if text == "" then return end
+  vim.fn.setreg("/", "\\V" .. vim.fn.escape(text, "\\"):gsub("\n", "\\n"))
+  vim.opt.hlsearch = true
+  -- Volta para normal mode posicionado no início da seleção
+  vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>``", true, false, true), "n", false)
+end, { desc = "Buscar seleção visual + n/N para navegar" })
+
 -- Importar namespace da classe sob o cursor (usa code action do LSP, ex: intelephense)
 vim.keymap.set("n", "<leader>ci", function()
   vim.lsp.buf.code_action({
