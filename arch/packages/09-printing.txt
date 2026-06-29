@@ -1,0 +1,7 @@
+# Fase 9 — Impressao (CUPS) — pacotes do repo oficial
+cups                  # servidor de impressao
+cups-pdf              # impressora virtual "Imprimir em PDF"
+cups-filters          # filtros de conversao (PDF/PostScript -> raster)
+ghostscript           # rasterizacao PostScript/PDF
+usbutils              # lsusb (diagnostico de impressora USB)
+system-config-printer # GUI para adicionar/gerenciar impressoras
