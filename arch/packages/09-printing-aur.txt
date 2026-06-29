@@ -1,0 +1,4 @@
+# Fase 9 — Impressao — pacotes AUR (instalar com: yay -S <pkg>)
+# Driver do Xerox Phaser 3020 (Samsung SPL): filtro rastertospl + PPD.
+# Instala em /usr/lib/cups/filter/rastertospl e /usr/share/ppd/xerox/
+xerox-phaser-3020

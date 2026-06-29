@@ -57,11 +57,12 @@ hl.on("hyprland.start", function ()
     -- uwsm: exporta o ambiente p/ o systemd e marca a sessao como pronta
     -- (inofensivo se o Hyprland nao foi iniciado via uwsm).
     hl.exec_cmd("sh -c 'command -v uwsm >/dev/null && uwsm finalize 2>/dev/null || true'")
-    -- Login = autologin no tty1 -> .zprofile -> uwsm start hyprland. NAO travamos
-    -- com hyprlock no start (a sessao abre direto no desktop). O hyprlock segue
-    -- valendo p/ idle/suspender/bloquear manual via hypridle/powermenu/SUPER+L.
-    -- Para bloquear ja no boot, descomente a linha hl.exec_cmd("hyprlock") abaixo.
-    -- hl.exec_cmd("hyprlock")
+    -- Login = autologin no tty1 -> .zprofile -> uwsm start hyprland. Como o login
+    -- do tty1 e automatico (sem senha), TRAVAMOS a sessao no hyprlock ja no start
+    -- via lock.sh (guard RESILIENTE: relanca se o hyprlock morrer sem desbloquear,
+    -- p/ o desktop nunca ficar exposto). A sessao nasce na tela de senha a cada boot.
+    -- Para abrir direto no desktop (sem travar no boot), comente a linha abaixo.
+    hl.exec_cmd("~/.config/hypr/scripts/lock.sh")
     -- Sessao systemd + portais: como o Hyprland e lancado do TTY (sem display
     -- manager), o graphical-session.target nao sobe sozinho. Sem ele, os portais
     -- (xdg-desktop-portal) e o polkit nao iniciam -> apps GTK (walker) ficam LENTOS.
@@ -266,6 +267,11 @@ hl.config({
     misc = {
         force_default_wallpaper = -1,    -- Set to 0 or 1 to disable the anime mascot wallpapers
         disable_hyprland_logo   = false, -- If true disables the random hyprland logo / anime girl background. :(
+        -- DPMS: o hypridle apaga a tela aos 6min (dpms off). Por padrao o Hyprland
+        -- NAO reacende a tela com input -> ficava preta sem voltar. Estas duas
+        -- opcoes fazem QUALQUER tecla/movimento de mouse religar a tela na hora.
+        key_press_enables_dpms  = true,
+        mouse_move_enables_dpms = true,
     },
 })
 
@@ -276,8 +282,10 @@ hl.config({
 
 hl.config({
     input = {
-        kb_layout  = "us",
-        kb_variant = "intl",   -- US Internacional: acentos via dead keys (' + a = a', ' + c = c-cedilha)
+        -- Dois layouts: [0] US Internacional (padrao), [1] PT-BR ABNT2.
+        -- Troca pelo menu (SUPER+,) -> Teclado, que chama 'hyprctl switchxkblayout'.
+        kb_layout  = "us,br",
+        kb_variant = "intl,abnt2",   -- US intl: acentos via dead keys; ABNT2: layout fisico BR (tecla c-cedilha)
         kb_model   = "",
         kb_options = "",
         kb_rules   = "",

@@ -8,10 +8,12 @@ if pgrep -x fuzzel >/dev/null; then pkill -x fuzzel; exit 0; fi
 # (icone, label, comando)  — so lista o que estiver instalado
 build_menu() {
 python3 - <<'PY'
-import shutil
+import shutil, os
+kbd = os.path.expanduser("~/.config/waybar/scripts/keyboard-layout.sh")
 items = [
     (0xF108, "Monitores",    "nwg-displays"),
     (0xF1FC, "Aparencia",    "nwg-look"),
+    (0xF11C, "Teclado",      kbd),
     (0xF294, "Bluetooth",    "blueman-manager"),
     (0xF028, "Som",          "pavucontrol"),
     (0xF1EB, "Rede",         "nm-connection-editor"),
@@ -20,7 +22,7 @@ items = [
 ]
 for cp, label, cmd in items:
     exe = cmd.split()[0]
-    if shutil.which(exe):
+    if shutil.which(exe) or (os.path.sep in exe and os.access(exe, os.X_OK)):
         print(f"{chr(cp)}   {label}\t{cmd}")
 PY
 }
