@@ -5,10 +5,10 @@
 vim.keymap.set("i", "jj", "<Esc>", { desc = "Sair do insert mode" })
 vim.keymap.set("n", "<leader>/", "<cmd>noh<cr>", { desc = "Limpar highlight de busca" })
 
--- Navegação entre buffers
+-- Navegação entre buffers (segue a ordem visual do bufferline, não o número do buffer)
 pcall(vim.keymap.del, "n", "<leader>l")
-vim.keymap.set("n", "<leader>h", "<cmd>bprevious<cr>", { desc = "Buffer anterior" })
-vim.keymap.set("n", "<leader>l", "<cmd>bnext<cr>", { desc = "Próximo buffer" })
+vim.keymap.set("n", "<leader>h", "<cmd>BufferLineCyclePrev<cr>", { desc = "Buffer anterior" })
+vim.keymap.set("n", "<leader>l", "<cmd>BufferLineCycleNext<cr>", { desc = "Próximo buffer" })
 
 -- Reordenar buffers na tabline
 pcall(vim.keymap.del, "n", "[B")
