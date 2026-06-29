@@ -27,6 +27,31 @@ vim.api.nvim_create_autocmd("BufReadPre", {
   end,
 })
 
+-- Highlight em tempo real de todas as ocorrências da seleção visual (como VSCode)
+-- Funciona para seleções de linha única com 2+ caracteres
+vim.api.nvim_create_augroup("VisualHighlight", { clear = true })
+vim.api.nvim_create_autocmd("CursorMoved", {
+  group = "VisualHighlight",
+  callback = function()
+    if vim.fn.mode() ~= "v" then return end
+
+    local vs = vim.fn.getpos("v")
+    local vc = vim.fn.getpos(".")
+    local sl, sc = vs[2], vs[3]
+    local el, ec = vc[2], vc[3]
+
+    if sl ~= el then return end             -- ignora seleção multi-linha
+    if sc > ec then sc, ec = ec, sc end
+
+    local line = vim.api.nvim_buf_get_lines(0, sl - 1, sl, false)[1] or ""
+    local text = line:sub(sc, ec)
+    if #text < 2 then return end            -- mínimo 2 chars para não poluir
+
+    vim.fn.setreg("/", "\\V" .. vim.fn.escape(text, "\\"))
+    vim.opt.hlsearch = true
+  end,
+})
+
 -- Apaga swap de processos mortos automaticamente (evita W325)
 vim.api.nvim_create_autocmd("SwapExists", {
   callback = function()
