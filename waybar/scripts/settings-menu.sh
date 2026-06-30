@@ -10,13 +10,14 @@ build_menu() {
 python3 - <<'PY'
 import shutil, os
 kbd = os.path.expanduser("~/.config/waybar/scripts/keyboard-layout.sh")
+wifi = os.path.expanduser("~/.config/waybar/scripts/wifi-menu.sh")
 items = [
     (0xF108, "Monitores",    "nwg-displays"),
     (0xF1FC, "Aparencia",    "nwg-look"),
     (0xF11C, "Teclado",      kbd),
     (0xF294, "Bluetooth",    "blueman-manager"),
     (0xF028, "Som",          "pavucontrol"),
-    (0xF1EB, "Rede",         "nm-connection-editor"),
+    (0xF1EB, "Rede",         wifi),
     (0xF02F, "Impressoras",  "system-config-printer"),
     (0xF013, "Sistema",      "xfce4-settings-manager"),
 ]

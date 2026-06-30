@@ -77,6 +77,10 @@ hl.on("hyprland.start", function ()
     -- saida) e cuida do auto-hide em fullscreen + revelar-ao-hover de forma
     -- independente por monitor. (Por isso NAO chamamos "waybar" direto aqui.)
     hl.exec_cmd("~/.config/waybar/scripts/waybar-fullscreen.sh")
+    -- Atualiza os botoes de workspace (custom/ws*) ao trocar/abrir/fechar janela.
+    -- Necessario porque o clique nativo do waybar quebra na config Lua (bug upstream);
+    -- usamos botoes custom que chamam hl.dsp.focus, e este daemon os mantem ao vivo.
+    hl.exec_cmd("~/.config/waybar/scripts/ws-watch.sh")
     -- Notificacoes (daemon + central)
     hl.exec_cmd("swaync")
     -- Gerenciador de inatividade (dim/lock/dpms)
@@ -298,6 +302,23 @@ hl.config({
             natural_scroll      = true,   -- rolagem "natural" (como no celular/macbook)
             disable_while_typing = true,  -- evita toques acidentais ao digitar
         },
+    },
+})
+
+----------------
+---- CURSOR ----
+----------------
+
+hl.config({
+    cursor = {
+        -- Ao trocar de workspace (clicando no botao da waybar OU pelo teclado),
+        -- leva o cursor para a ultima janela focada daquele workspace. Como o
+        -- follow_mouse=1, o foco vai junto -> "o mouse vai com foco pra la".
+        --   0 = desligado | 1 = leva ate a janela | 2 = sempre (centraliza mesmo vazio)
+        -- Deixado em 0 DE PROPOSITO: a troca por TECLADO (SUPER+num) NAO deve mover
+        -- o cursor (comportamento original). O "levar o mouse junto" fica restrito ao
+        -- CLIQUE nos botoes da waybar, feito explicitamente pelo ws-focus.sh.
+        warp_on_change_workspace = 0,
     },
 })
 

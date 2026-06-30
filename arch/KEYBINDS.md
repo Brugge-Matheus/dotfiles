@@ -82,16 +82,34 @@
 
 | Onde | Ação |
 |---|---|
-| Workspace (número) | Vai para o workspace |
+| Workspace (número) | Vai para o workspace **e leva o cursor junto** (só no clique; o teclado não move o mouse) |
+| App aberto (ícone, centro) | Foca a janela (vai para o workspace dela) · (botão do meio) fecha |
 | Spotify | Abre/foca o Spotify · (botão direito) play/pause |
 | CPU | Abre `btop` |
 | Volume | Mutar · (botão direito) `pavucontrol` · scroll = volume |
 | Brilho | Scroll = ajusta brilho |
 | Bluetooth | Abre `bluetoothctl` |
-| Rede | Abre `nmtui` |
+| Rede | Abre `nmtui` (config detalhada) · troca rápida no menu `SUPER + ,` |
 | Clima | Atualiza · (hover) min/máx/sensação |
-| Bateria | Menu de perfis de energia (Performance/Equilibrado/Economia) |
+| Bateria | (hover) %, perfil de energia e tempo restante · (clique) menu de perfis (Performance/Equilibrado/Economia) |
 | Relógio | Abre o calendário (gsimplecal) |
 | Power () | Menu: bloquear/sair/suspender/reiniciar/desligar |
 
 > Os menus (power/bateria) fecham com `Esc`, ao escolher, ou clicando no mesmo botão.
+
+## 🎛️ Painel de configurações (`SUPER + ,`)
+
+Menu único (fuzzel) que abre o app/ação de cada área — só lista o que está instalado:
+
+| Item | Abre |
+|---|---|
+| Monitores | `nwg-displays` |
+| Aparência | `nwg-look` |
+| Teclado | Sub-menu: troca o layout (US Internacional ⇄ PT-BR ABNT2) em runtime |
+| Bluetooth | `blueman-manager` |
+| Som | `pavucontrol` |
+| Rede | Menu Wi-Fi (fuzzel): lista redes, conecta, pede senha; liga/desliga o rádio |
+| Impressoras | `system-config-printer` |
+| Sistema | `xfce4-settings-manager` |
+
+> A troca de layout do teclado vale por sessão (volta a US Internacional ao reiniciar o Hyprland).

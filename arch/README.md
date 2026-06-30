@@ -129,7 +129,30 @@ abre `nmtui` ao clicar. `systemd-networkd` foi desativado.
 ## 📌 Notas
 
 - **Terminal:** ghostty · **File manager:** Thunar (GUI) + yazi (terminal) · **Navegador:** Zen.
-- **Login:** autologin no tty1 → `.zprofile` → `uwsm start hyprland.desktop`. O `hyprlock`
-  cobre idle/suspensão/bloqueio manual (`SUPER+L`), mas **não** trava no boot — a sessão
-  abre direto no desktop. Se quiser bloquear já no boot, reative o `hyprlock` no autostart
-  do `hyprland.lua`.
+- **Login:** autologin no tty1 → `.zprofile` → `uwsm start hyprland.desktop`. A sessão
+  **trava no boot** via `hypr/scripts/lock.sh` (guard resiliente: relança o `hyprlock` se
+  ele morrer sem desbloquear), funcionando como tela de login. O mesmo `hyprlock` cobre
+  idle/suspensão/bloqueio manual (`SUPER+L`).
+- **Suspend/idle:** `cursor:warp_on_change_workspace` da NVIDIA + serviços
+  `nvidia-suspend/resume/hibernate` (em `01-foundation.sh`) evitam tela preta ao acordar.
+  O `hypridle` faz dim → lock; **não** faz `dpms off` com a sessão travada (o hyprlock não
+  lida com o display sumindo — issue hyprwm/hyprlock#953).
+
+## 📊 Waybar — funcionalidades
+
+Uma instância **por monitor** (daemon `waybar/scripts/waybar-fullscreen.sh`: auto-hide em
+fullscreen + revelar-ao-hover, por monitor). ⚠️ **Não recarregue com `SIGUSR2`** (crasha);
+para aplicar mudanças, reinicie esse daemon.
+
+- **Workspaces (`custom/ws1..10`):** botões dinâmicos (só ocupados + o ativo). Reconstruídos
+  como módulos custom porque o clique do módulo nativo `hyprland/workspaces` **quebra** na
+  config Lua do Hyprland 0.55+ (manda `dispatch workspace N` por IPC, que o interpretador
+  Lua rejeita — bug upstream waybar#5008/#5035). O clique chama `ws-focus.sh` →
+  `hl.dsp.focus({workspace=N})` (troca) **+ leva o cursor** para a janela focada. Atualização
+  instantânea via `ws-watch.sh` (escuta o socket2 e sinaliza `SIGRTMIN+9`).
+- **Taskbar (`wlr/taskbar`):** uma caixa por janela aberta (ícone do app); clique foca a
+  janela, botão do meio fecha.
+- **Bateria (`custom/battery`):** tooltip com %, perfil de energia (power-profiles-daemon via
+  D-Bus) e tempo restante (upower); clique abre o menu de perfis.
+- **Settings (`SUPER + ,`):** menu fuzzel com troca de **layout de teclado** e **menu Wi-Fi**
+  (nmcli) embutidos — ver [`KEYBINDS.md`](KEYBINDS.md).

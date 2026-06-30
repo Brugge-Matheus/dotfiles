@@ -61,6 +61,20 @@ options nvidia_drm modeset=1
 EOF
 log_ok "/etc/modprobe.d/nvidia.conf"
 
+# Suspend/resume da NVIDIA: sem isto, ao resumir de suspend a GPU fica em estado
+# invalido -> TELA PRETA que nao acorda (mesmo em Optimus offload). Precisa de:
+#   1) NVreg_PreserveVideoMemoryAllocations=1 (preserva a VRAM no suspend)
+#   2) os servicos nvidia-suspend/resume/hibernate habilitados
+log_info "Configurando suspend/resume da NVIDIA (anti tela-preta ao acordar)..."
+cat > /etc/modprobe.d/nvidia-power.conf <<'EOF'
+# Preserva as alocacoes de video memory ao suspender (evita tela preta no resume).
+options nvidia NVreg_PreserveVideoMemoryAllocations=1
+EOF
+log_ok "/etc/modprobe.d/nvidia-power.conf"
+systemctl enable nvidia-suspend.service nvidia-resume.service nvidia-hibernate.service 2>/dev/null \
+  && log_ok "servicos nvidia-suspend/resume/hibernate habilitados." \
+  || log_warn "nao consegui habilitar os servicos nvidia-*.service (verifique o pacote nvidia-utils)."
+
 log_info "Garantindo que NVIDIA NAO esta no early-KMS do initramfs..."
 if grep -qE '^MODULES=.*nvidia' /etc/mkinitcpio.conf; then
   cp -n /etc/mkinitcpio.conf /etc/mkinitcpio.conf.bak 2>/dev/null || true
