@@ -37,7 +37,7 @@ de pacotes em `packages/NN-*.txt`. A parte de **usuário** (symlinks, AUR, servi
 
 | Script | Escopo | Status |
 |---|---|---|
-| `install/01-foundation.sh` | Drivers (NVIDIA offload), polkit, portal, áudio, base | ✅ |
+| `install/01-foundation.sh` | Drivers (NVIDIA offload + Intel VA-API), polkit, portal, áudio, base | ✅ |
 | `install/02-visual.sh` | Walker, Waybar, wallpaper (awww), hyprlock/hypridle, SwayNC | ✅ |
 | `install/03-features.sh` | Screenshots (grim+slurp+satty), clipboard (cliphist) | ✅ |
 | `install/04-apps.sh` | Zen, Thunar+yazi, Discord, Obsidian, Spotify, btop, pavucontrol | ✅ |
@@ -137,6 +137,12 @@ abre `nmtui` ao clicar. `systemd-networkd` foi desativado.
   `nvidia-suspend/resume/hibernate` (em `01-foundation.sh`) evitam tela preta ao acordar.
   O `hypridle` faz dim → lock; **não** faz `dpms off` com a sessão travada (o hyprlock não
   lida com o display sumindo — issue hyprwm/hyprlock#953).
+- **Vídeo por hardware (VA-API):** a **iGPU Intel** (que dirige a tela) decodifica VP9/AV1/H264
+  em hardware → YouTube 1440p sem travar e sem torrar a CPU. `intel-media-driver` (iHD) é
+  instalado no `01-foundation.sh`; o `install.sh` linka `zen/user.js` no perfil do Zen para
+  ligar o decode acelerado. Conferir: `vainfo` (perfis de decode) e `intel_gpu_top` (engine
+  `Video` subindo com um vídeo rodando). Em Optimus o decode vai pela Intel de propósito
+  (a NVIDIA fica só para offload de render/compute via `prime-run`).
 
 ## 📊 Waybar — funcionalidades
 

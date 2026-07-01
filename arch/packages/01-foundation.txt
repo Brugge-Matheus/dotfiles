@@ -11,6 +11,13 @@ egl-wayland
 linux-headers         # necessario p/ dkms compilar
 dkms
 
+# --- Intel: decode de video por hardware (VA-API / iHD) ---
+# A iGPU (que dirige a tela) decodifica VP9/AV1/H264 em HW -> YouTube 1440p
+# sem travar e sem torrar a CPU. O Zen/Firefox usa isso via user.js (install.sh).
+intel-media-driver    # backend VA-API iHD (Gen8+/Raptor Lake) — ESSENCIAL p/ decode HW
+libva-utils           # `vainfo` — conferir perfis de decode (VP9/AV1/...)
+intel-gpu-tools       # `intel_gpu_top` — ver a engine Video trabalhando
+
 # --- Sessao grafica: portais e autenticacao ---
 hyprpolkitagent           # agente polkit (pede senha p/ montar discos, etc.)
 xdg-desktop-portal-hyprland   # screenshare, file pickers (backend Hyprland)

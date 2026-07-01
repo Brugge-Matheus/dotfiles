@@ -87,6 +87,17 @@ if [ ! -f "$HOME/Pictures/Wallpapers/default.png" ]; then
   python3 "$DOTFILES_DIR/arch/scripts/gen-default-wallpaper.py" || log_warn "Falha ao gerar wallpaper"
 fi
 
+# user.js do Zen: liga aceleracao de video por HW (VA-API/iHD). O nome do perfil
+# tem hash variavel, entao descobrimos o perfil "Default" em runtime e linkamos.
+# So funciona se o Zen ja rodou uma vez (o perfil precisa existir).
+ZEN_PROFILE="$(find "$HOME/.config/zen" -maxdepth 1 -type d -name '*Default*' 2>/dev/null | head -1)"
+if [ -n "$ZEN_PROFILE" ]; then
+  safe_link "$DOTFILES_DIR/zen/user.js" "$ZEN_PROFILE/user.js"
+  log_ok "Zen VA-API user.js aplicado (reinicie o Zen p/ valer)"
+else
+  log_warn "Perfil do Zen nao encontrado — abra o Zen uma vez e rode este script de novo p/ o user.js (aceleracao de video)"
+fi
+
 # ---------------------------------------------------------------------
 # 2. Servicos de usuario
 # ---------------------------------------------------------------------
