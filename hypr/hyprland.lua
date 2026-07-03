@@ -43,7 +43,7 @@ pcall(dofile, os.getenv("HOME") .. "/.config/hypr/monitors.lua")
 -- Set programs that you use
 local terminal    = "ghostty"
 local fileManager = "thunar"   -- GUI; yazi (terminal) disponivel via `yazi` no ghostty
-local menu        = "walker"
+local menu        = "rofi -show drun"
 
 
 -------------------
@@ -65,12 +65,11 @@ hl.on("hyprland.start", function ()
     hl.exec_cmd("~/.config/hypr/scripts/lock.sh")
     -- Sessao systemd + portais: como o Hyprland e lancado do TTY (sem display
     -- manager), o graphical-session.target nao sobe sozinho. Sem ele, os portais
-    -- (xdg-desktop-portal) e o polkit nao iniciam -> apps GTK (walker) ficam LENTOS.
+    -- (xdg-desktop-portal) e o polkit nao iniciam -> apps GTK ficam LENTOS.
     -- tty-graphical-session.target (em ~/.config/systemd/user) ativa o target.
     hl.exec_cmd("sh -c 'dbus-update-activation-environment --systemd --all; systemctl --user start tty-graphical-session.target; systemctl --user start xdg-desktop-portal.service hyprpolkitagent.service'")
-    -- Launcher walker: backend (elephant) + servico do frontend
-    hl.exec_cmd("elephant")
-    hl.exec_cmd("walker --gapplication-service")
+    -- Launcher = rofi (SUPER+Espaco). Nativo Wayland, abre instantaneo a frio,
+    -- sem daemon (nao precisa de servico residente como o antigo walker/elephant).
     -- Wallpaper: restaura o ULTIMO selecionado por monitor (default so no 1o boot)
     hl.exec_cmd("~/.config/waybar/scripts/wallpaper-restore.sh")
     -- Barra de status: o script lanca uma Waybar POR MONITOR (fixada a sua
@@ -351,6 +350,10 @@ hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
 hl.bind(mainMod .. " + V", hl.dsp.window.fullscreen({ mode = "fullscreen" }))           -- tela cheia (preenche o monitor, na frente)
 hl.bind(mainMod .. " + SHIFT + Space", hl.dsp.window.float({ action = "toggle" }))      -- alternar janela flutuante
 hl.bind(mainMod .. " + space", hl.dsp.exec_cmd(menu))
+-- Extensoes do rofi (ver arch/ROFI.md). O rofi-ext.sh resolve os caminhos.
+hl.bind(mainMod .. " + equal",     hl.dsp.exec_cmd("~/.config/rofi/scripts/rofi-ext.sh calc"))   -- calculadora
+hl.bind(mainMod .. " + T",         hl.dsp.exec_cmd("~/.config/rofi/scripts/rofi-ext.sh trans"))  -- tradutor (EN/PT)
+hl.bind(mainMod .. " + SHIFT + E", hl.dsp.exec_cmd("~/.config/rofi/scripts/rofi-ext.sh files"))  -- navegar arquivos
 hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
 hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit"))    -- dwindle only
 

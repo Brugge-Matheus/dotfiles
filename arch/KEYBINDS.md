@@ -39,8 +39,13 @@
 |---|---|---|
 | `SUPER + Q` | Terminal (ghostty) | ✅ |
 | `SUPER + E` | Gerenciador de arquivos (thunar) | ✅ |
-| `SUPER + Espaço` | Launcher de apps (walker) | ✅ |
+| `SUPER + Espaço` | Launcher de apps (rofi — busca com ícones) | ✅ |
+| `SUPER + =` | Calculadora (rofi-calc: cálculo + conversão de unidade/moeda) | ✅ |
+| `SUPER + T` | Tradutor (rofi + translate-shell: PT↔EN, copia) | ✅ |
+| `SUPER + SHIFT + E` | Navegar arquivos pelo teclado (rofi-file-browser) | ✅ |
 | `SUPER + ,` | Painel de configurações (settings-menu) | ✅ |
+
+> Extensões do rofi documentadas em [`ROFI.md`](ROFI.md) (instalação, config e como usar).
 
 ## 🔊 Mídia & Hardware (teclas de função)
 

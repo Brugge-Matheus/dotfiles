@@ -71,6 +71,7 @@ safe_link "$DOTFILES_DIR/gtk-3.0/settings.ini" "$HOME/.config/gtk-3.0/settings.i
 safe_link "$DOTFILES_DIR/gtk-4.0/settings.ini" "$HOME/.config/gtk-4.0/settings.ini"
 safe_link "$DOTFILES_DIR/qt6ct/qt6ct.conf" "$HOME/.config/qt6ct/qt6ct.conf"
 safe_link "$DOTFILES_DIR/fuzzel/powermenu.ini" "$HOME/.config/fuzzel/powermenu.ini"
+safe_link "$DOTFILES_DIR/rofi"               "$HOME/.config/rofi"   # launcher (config.rasi + temas de cor)
 # Unit que ativa o graphical-session.target (portais/polkit no Hyprland do TTY)
 safe_link "$DOTFILES_DIR/systemd/user/tty-graphical-session.target" "$HOME/.config/systemd/user/tty-graphical-session.target"
 

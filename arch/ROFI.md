@@ -1,0 +1,136 @@
+# 🚀 Rofi — launcher + extensões
+
+O **rofi** é o launcher principal do desktop (`SUPER + Espaço`). Substituiu o walker
+(que iniciava frio/lento e dependia de um daemon). O rofi 2.0+ roda **nativo no Wayland**,
+abre instantâneo **sem daemon**, e é totalmente temável via `.rasi`.
+
+> Config em [`../rofi/`](../rofi/) — symlinkada para `~/.config/rofi/` pelo `arch/install.sh`
+> (a pasta **inteira**, então temas e scripts vão junto).
+
+---
+
+## 🎨 Tema
+
+```
+rofi/
+├── config.rasi          # layout (quadrado, 30% largura, 6 linhas) + @import da paleta
+├── colors-ayu.rasi      # paleta ayu-dark (mesma do LazyVim) — ATIVA
+├── colors-black.rasi    # paleta black minimalista
+└── scripts/
+    ├── rofi-ext.sh          # lançador das extensões (chamado pelos binds)
+    └── rofi-translate.sh    # tradutor (modo script do rofi)
+```
+
+**Trocar de tema = 1 linha** no topo do `config.rasi`:
+```rasi
+@import "colors-ayu.rasi"     /* paleta do LazyVim (ayu-dark) */
+@import "colors-black.rasi"   /* black minimalista */
+```
+
+As cores ficam **isoladas** nos `colors-*.rasi` (variáveis `bg`, `fg`, `accent`, `sel`,
+`sel-fg`, `urgent`, `border-c`). O `config.rasi` só cuida do layout e referencia essas
+variáveis — então dá pra criar novos temas copiando um `colors-*.rasi` e ajustando os hex.
+
+- **Fonte:** JetBrainsMono Nerd Font · **Ícones:** Papirus-Dark.
+- Realce (`sel`) da paleta ayu usa o **laranja translúcido** (`#FF8F40` a ~40%).
+  Intensidade = 2 últimos dígitos do hex (`40`≈25% · `66`≈40% · `99`≈60%).
+
+---
+
+## 🧩 Extensões
+
+| Extensão | Atalho | Pacote | Origem |
+|---|---|---|---|
+| **Calculadora** (rofi-calc) | `SUPER + =` | `rofi-calc` | oficial |
+| **Tradutor** (translate-shell) | `SUPER + T` | `translate-shell` | oficial |
+| **Navegador de arquivos** | `SUPER + SHIFT + E` | `rofi-file-browser-extended` | AUR |
+
+Todos são disparados pelo `rofi/scripts/rofi-ext.sh` (que os binds do Hyprland chamam).
+
+### Instalação
+```bash
+# oficiais
+sudo pacman -S rofi-calc translate-shell
+# AUR
+yay -S rofi-file-browser-extended
+```
+(Numa máquina nova, o `arch/install/02-visual.sh` + `arch/install.sh` já instalam tudo —
+os pacotes estão em `packages/02-visual.txt` e `packages/02-visual-aur.txt`.)
+
+---
+
+### 🧮 Calculadora — `SUPER + =`
+Usa o **libqalculate** (mesmo motor do Qalculate!). Abre já no modo cálculo; digite a
+expressão e o resultado aparece. `Enter` copia o resultado pro clipboard.
+
+**Exemplos:**
+```
+2 + 2 * 10
+sqrt(2)
+15% of 200
+100 USD to BRL          # conversão de moeda (precisa de internet p/ cotação)
+2 GiB to MB             # conversão de unidade
+sin(pi/4)
+```
+Invocação por trás: `rofi -show calc -modi calc`.
+
+---
+
+### 🌐 Tradutor — `SUPER + T`
+Extensão nossa (`rofi/scripts/rofi-translate.sh`) sobre o **translate-shell** (`trans`).
+Digite o texto, `Enter` → aparecem **duas traduções**: para **PT-BR** e para **EN**
+(não precisa escolher direção). `Enter` numa delas **copia** pro clipboard (`wl-copy`).
+
+```
+┌───────────────────────────────
+│ Traduzir  hello world
+│ Enter copia a tradução
+│   pt   olá mundo
+│   en   hello world
+└───────────────────────────────
+```
+Requer internet (o `trans` consulta a API). Ajustes no script: mude os `-t pt`/`-t en`
+para outros idiomas, ou adicione mais linhas de idioma.
+
+---
+
+### 📁 Navegador de arquivos — `SUPER + SHIFT + E`
+`rofi-file-browser-extended`: navega o sistema de arquivos pelo teclado e abre o item
+selecionado no app padrão (`xdg-open`). Complementa o `SUPER + E` (Thunar, GUI).
+
+- Digite para filtrar; `Enter` entra na pasta / abre o arquivo; `..` volta.
+- Config opcional em `~/.config/rofi/file-browser` (veja `man rofi-file-browser-extended`);
+  por padrão começa na home e abre com o app associado.
+
+Invocação por trás: `rofi -show file-browser-extended -modi file-browser-extended`.
+
+---
+
+## ➕ Criar suas próprias extensões
+O rofi tem o **script mode**: qualquer script vira um "modo". O rofi chama o script,
+ele imprime as opções (uma por linha); ao selecionar, o rofi chama de novo passando o
+texto. Variáveis: `ROFI_RETV` (0=inicial, 1=selecionou), `ROFI_INFO` (metadado da linha).
+Diretivas: `\0prompt\x1f...`, `\0message\x1f...`, `texto\0info\x1fVALOR`, `\0icon\x1f...`.
+
+O `rofi-translate.sh` é um exemplo completo e comentado — use como molde. Depois é só:
+1. pôr o script em `rofi/scripts/` (executável);
+2. adicionar um `case` no `rofi-ext.sh`;
+3. criar o bind no `hypr/hyprland.lua`.
+
+---
+
+## 🔧 Alternar modos DENTRO do rofi
+Todos os modos estão ativos no launcher principal, então dá pra acessar as extensões
+sem sair do `SUPER + Espaço`:
+
+- **`Ctrl + Tab`** → próximo modo · **`Ctrl + Shift + Tab`** → modo anterior
+- ou **clique nas abas** no rodapé (Apps / Calc / Files / Traduzir / Run / Win)
+- ou abra direto num modo: `rofi -show calc`, `rofi -show trans`, etc.
+
+A lista de modos e as abas ficam no `config.rasi` (`modes:` + widget `mode-switcher`).
+Os atalhos dedicados (`SUPER+=`, `SUPER+T`, `SUPER+SHIFT+E`) continuam abrindo direto
+no modo certo — são só um atalho pro que o `Ctrl+Tab` também alcança.
+
+> ⚠️ Como os modos `calc` e `file-browser-extended` são **plugins**, o launcher só
+> funciona depois que os pacotes estiverem instalados (`rofi-calc`,
+> `rofi-file-browser-extended`). Antes disso o rofi reclama de "mode not found".

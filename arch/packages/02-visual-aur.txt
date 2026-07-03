@@ -2,14 +2,9 @@
 # Instalado com: yay -S --needed <pacotes>
 # (ou automaticamente por arch/install.sh, se o yay estiver presente)
 
-walker                          # launcher (frontend, estilo omarchy)
+rofi-file-browser-extended   # extensao do rofi: navegar/abrir arquivos (SUPER+SHIFT+E)
 
-# Backend do walker (elephant) + provedores. Variantes -bin = pre-compiladas.
-elephant-bin                    # core (daemon de dados)
-elephant-desktopapplications-bin # busca/abertura de apps (essencial p/ o launcher)
-elephant-calc-bin               # calculadora inline
-elephant-runner-bin             # rodar comandos
-elephant-files-bin              # busca de arquivos
-elephant-menus-bin              # menus customizados (ex.: power menu)
-elephant-clipboard-bin          # historico de clipboard
-
+# Nota: o launcher e o rofi (repo OFICIAL — ver 02-visual.txt), Wayland nativo.
+# O antigo walker + elephant foi aposentado: iniciava frio/lento e dependia de
+# um daemon (elephant) + servico residente do frontend. rofi 2.0 abre
+# instantaneo, sem daemon.

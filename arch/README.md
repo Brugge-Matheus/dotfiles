@@ -38,7 +38,7 @@ de pacotes em `packages/NN-*.txt`. A parte de **usuário** (symlinks, AUR, servi
 | Script | Escopo | Status |
 |---|---|---|
 | `install/01-foundation.sh` | Drivers (NVIDIA offload + Intel VA-API), polkit, portal, áudio, base | ✅ |
-| `install/02-visual.sh` | Walker, Waybar, wallpaper (awww), hyprlock/hypridle, SwayNC | ✅ |
+| `install/02-visual.sh` | Rofi (launcher), Waybar, wallpaper (awww), hyprlock/hypridle, SwayNC | ✅ |
 | `install/03-features.sh` | Screenshots (grim+slurp+satty), clipboard (cliphist) | ✅ |
 | `install/04-apps.sh` | Zen, Thunar+yazi, Discord, Obsidian, Spotify, btop, pavucontrol | ✅ |
 | `install/05-docker.sh` | Docker + Docker Compose (adiciona o usuário ao grupo) | ✅ |
@@ -89,10 +89,11 @@ sudo reboot
 arch/
 ├── README.md                  # este arquivo
 ├── KEYBINDS.md                # todos os atalhos do Hyprland
+├── ROFI.md                    # launcher rofi: tema + extensoes (calc, tradutor, files)
 ├── install.sh                 # orquestrador de usuário (AUR + symlinks + serviços)
 ├── install/
 │   ├── 01-foundation.sh       # drivers + NVIDIA offload + initramfs (sudo)
-│   ├── 02-visual.sh           # walker, waybar, wallpaper, lock/idle, swaync
+│   ├── 02-visual.sh           # rofi, waybar, wallpaper, lock/idle, swaync
 │   ├── 03-features.sh         # screenshots, clipboard
 │   ├── 04-apps.sh             # navegador, file manager, apps do dia a dia
 │   ├── 05-docker.sh           # docker + compose
@@ -105,6 +106,7 @@ arch/
 
 hypr/   → hyprland.lua, hyprlock.conf, hypridle.conf  (symlinks p/ ~/.config/hypr/)
 waybar/ → config.jsonc, style.css, scripts/           (uma instância por monitor)
+rofi/   → config.rasi, colors-*.rasi, scripts/        (launcher + extensões — ver ROFI.md)
 ```
 
 ## 🔧 Comandos úteis
@@ -128,15 +130,18 @@ abre `nmtui` ao clicar. `systemd-networkd` foi desativado.
 
 ## 📌 Notas
 
-- **Terminal:** ghostty · **File manager:** Thunar (GUI) + yazi (terminal) · **Navegador:** Zen.
+- **Terminal:** ghostty · **File manager:** Thunar (GUI) + yazi (terminal) · **Navegador:** Zen
+  · **Launcher:** rofi (`SUPER+Espaço`, tema black em `rofi/config.rasi`).
 - **Login:** autologin no tty1 → `.zprofile` → `uwsm start hyprland.desktop`. A sessão
   **trava no boot** via `hypr/scripts/lock.sh` (guard resiliente: relança o `hyprlock` se
   ele morrer sem desbloquear), funcionando como tela de login. O mesmo `hyprlock` cobre
   idle/suspensão/bloqueio manual (`SUPER+L`).
-- **Suspend/idle:** `cursor:warp_on_change_workspace` da NVIDIA + serviços
-  `nvidia-suspend/resume/hibernate` (em `01-foundation.sh`) evitam tela preta ao acordar.
-  O `hypridle` faz dim → lock; **não** faz `dpms off` com a sessão travada (o hyprlock não
-  lida com o display sumindo — issue hyprwm/hyprlock#953).
+- **Suspend/idle:** serviços `nvidia-suspend/resume/hibernate` (em `01-foundation.sh`) +
+  `i915.enable_psr=0` na cmdline (em `06-boot-experience.sh`) evitam **tela preta ao acordar**.
+  O PSR (Panel Self Refresh) do i915 causava tela-preta **intermitente** no resume de suspend
+  longo (o painel Intel não refazia o link training); desligá-lo resolveu. O `hypridle` faz
+  dim → lock; **não** faz `dpms off` com a sessão travada (o hyprlock não lida com o display
+  sumindo — issue hyprwm/hyprlock#953).
 - **Vídeo por hardware (VA-API):** a **iGPU Intel** (que dirige a tela) decodifica VP9/AV1/H264
   em hardware → YouTube 1440p sem travar e sem torrar a CPU. `intel-media-driver` (iHD) é
   instalado no `01-foundation.sh`; o `install.sh` linka `zen/user.js` no perfil do Zen para

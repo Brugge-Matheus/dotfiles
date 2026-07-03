@@ -1,0 +1,134 @@
+/* =====================================================================
+ *  rofi — launcher principal (SUPER + Espaço)
+ *  Layout minimalista/quadrado · JetBrainsMono Nerd Font · ícones Papirus.
+ *  rofi 2.0+ roda nativo no Wayland. Modo: drun (apps).
+ *
+ *  PALETA (troque a linha @import abaixo p/ mudar de tema):
+ *    @import "colors-ayu.rasi"     -> mesma paleta do LazyVim (ayu-dark)  [ATIVA]
+ *    @import "colors-black.rasi"   -> black minimalista
+ * ===================================================================== */
+@import "colors-ayu.rasi"
+
+configuration {
+    /* Modos ativos: alterne com Ctrl+Tab / Ctrl+Shift+Tab ou clicando nas abas.
+     * calc e file-browser-extended sao plugins; trans e o nosso script. */
+    modes:                       "drun,calc,file-browser-extended,trans:~/.config/rofi/scripts/rofi-translate.sh,run,window";
+    font:                        "JetBrainsMono Nerd Font 11";
+    show-icons:                  true;
+    icon-theme:                  "Papirus-Dark";
+    drun-display-format:         "{name}";
+    /* Abas = so o icone (glifo Nerd Font; a barra mode-switcher mostra estes rotulos) */
+    display-drun:                "";
+    display-calc:                "";
+    display-file-browser-extended: "";
+    display-trans:               "";
+    display-run:                 "";
+    display-window:              "";
+    terminal:                    "ghostty";
+    hover-select:                true;
+}
+
+/* As cores (bg, fg, accent, sel, ...) vem do @import la em cima. */
+* {
+    background-color: transparent;
+    text-color:       @fg;
+}
+
+window {
+    transparency:     "real";
+    location:         center;
+    anchor:           center;
+    width:            30%;
+    border:           1px;
+    border-color:     @border-c;
+    border-radius:    0px;
+    background-color: @bg;
+    padding:          0;
+}
+
+mainbox {
+    padding:  14px;
+    spacing:  12px;
+    children: [ "inputbar", "listview", "mode-switcher" ];
+}
+
+/* Barra de abas dos modos = pequenos icones (Apps/Calc/Files/Traduzir/...).
+ * expand:false faz cada botao encolher pro tamanho do icone (nao estica). */
+mode-switcher {
+    expand:       false;
+    spacing:      4px;
+    margin:       10px 0px 0px 0px;
+    padding:      10px 0px 0px 0px;
+    border:       1px 0px 0px 0px;
+    border-color: @border-c;
+}
+button {
+    expand:           false;
+    padding:          12px 12px;   /* > limiar de corte (~10px) p/ o glifo aparecer inteiro */
+    border-radius:    0px;
+    background-color: transparent;
+    text-color:       @fg-dim;     /* icone inativo: cinza apagado */
+    horizontal-align: 0.5;
+    vertical-align:   0.5;
+    cursor:           pointer;
+}
+/* Aba ativa = icone ACESO (ambar do ayu), sem caixa de fundo -> nada pra
+ * (des)centralizar; o glifo so muda de cor. */
+button selected {
+    background-color: transparent;
+    text-color:       @accent;
+}
+
+inputbar {
+    spacing:          10px;
+    padding:          12px 14px;   /* sem icone de prompt; folga define a altura da busca */
+    border-radius:    0px;
+    background-color: @bg-alt;
+    children:         [ "entry" ];
+}
+
+entry {
+    text-color:        #ffffff;    /* texto digitado branco, igual as entradas */
+    placeholder:       "Buscar…";
+    placeholder-color: @fg-dim;
+    cursor:            text;
+    vertical-align:    0.5;
+}
+
+listview {
+    lines:          6;
+    columns:        1;
+    fixed-height:   true;    /* sempre 8 linhas: janela nao muda de tamanho */
+    scrollbar:      false;
+    spacing:        2px;
+    dynamic:        false;   /* nao encolhe ao filtrar -> sem animacao de compactar */
+    border:         0px;     /* remove a borda tracejada do tema default do rofi */
+}
+
+element {
+    padding:          9px 12px;
+    spacing:          12px;
+    border-radius:    0px;
+    background-color: transparent;
+    text-color:       @fg;
+}
+
+/* Fundo fixado explicitamente em CADA estado — senao o tema default do rofi
+ * vence e pinta as linhas normais de claro (texto claro sobre claro = ilegivel). */
+element normal.normal    { background-color: transparent; text-color: @fg;     }
+element alternate.normal { background-color: transparent; text-color: @fg;     }
+element normal.active    { background-color: transparent; text-color: @accent; }
+element normal.urgent    { background-color: transparent; text-color: @urgent; }
+element selected.normal  { background-color: @sel;         text-color: @sel-fg; }
+element selected.active  { background-color: @sel;         text-color: @sel-fg; }
+element selected.urgent  { background-color: @urgent;     text-color: #ffffff; }
+
+element-icon {
+    size:             24px;
+    vertical-align:   0.5;
+}
+
+element-text {
+    vertical-align:   0.5;
+    text-color:       inherit;
+}
