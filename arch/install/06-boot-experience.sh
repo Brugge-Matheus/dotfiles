@@ -90,7 +90,9 @@ cp -n "$CMDLINE" "${CMDLINE}.bak" 2>/dev/null || true
 # BASE = cmdline ORIGINAL (do backup) -> reconstrucao deterministica/idempotente
 BASE="$(cat "${CMDLINE}.bak")"
 # quiet/splash + silencia systemd + i915.fastboot (evita o reset de modo = piscar)
-ADD="quiet splash loglevel=3 rd.udev.log_level=3 vt.global_cursor_default=0 systemd.show_status=false rd.systemd.show_status=false i915.fastboot=1"
+# i915.enable_psr=0: desliga o Panel Self Refresh -> corrige TELA PRETA intermitente
+# ao acordar de suspend longo (o painel Intel nao refaz o link training no resume).
+ADD="quiet splash loglevel=3 rd.udev.log_level=3 vt.global_cursor_default=0 systemd.show_status=false rd.systemd.show_status=false i915.fastboot=1 i915.enable_psr=0"
 CUR="$(echo "$BASE $ADD" | tr -s ' ' | sed 's/^ *//; s/ *$//')"
 echo "$CUR" > "$CMDLINE"
 log_ok "cmdline (UKI): $(cat "$CMDLINE")"
