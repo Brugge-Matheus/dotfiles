@@ -35,10 +35,22 @@ subst(){
   printf '%s' "$expr"
 }
 
-# avalia via qalc (terse, decimal, sem cor); vazio se falhar
+# avalia via qalc (terse, decimal, sem cor). Retorna vazio se a expressao for
+# INVALIDA ou tiver identificador indefinido (ex.: variavel apagada). Sinais de
+# "nao avaliou": o qalc devolve a coisa simbolica -> contem ( ) ou "  (base(),
+# base("* 2")), ou o resultado e identico a uma palavra nao-numerica (xyz => xyz).
 evalq(){
   local e out; e=$(subst "$1")
   out=$(qalc -t --set "inbase 10" "$e" 2>/dev/null | strip_ansi | tr -d '\n' | sed 's/^ *//; s/ *$//')
+  [ -z "$out" ] && return
+  case "$out" in
+    *\(*|*\)*|*\"*) return ;;                 # funcao/var simbolica nao avaliada
+  esac
+  # resultado == entrada e nao-numerico -> palavra indefinida (ex.: xyz)
+  local a b
+  a=$(printf '%s' "$e"   | tr -d ' ')
+  b=$(printf '%s' "$out" | tr -d ' ')
+  if [ "$a" = "$b" ] && ! printf '%s' "$b" | grep -qE '^-?[0-9.]+$'; then return; fi
   printf '%s' "$out"
 }
 
@@ -123,7 +135,7 @@ case "${ROFI_RETV:-0}" in
           printf '%s => %s\n' "$sel" "$res" >> "$HIST"
           printf '%s' "$res" | wl-copy          # auto-copia o resultado
           emit_msg "= $res   (copiado)"
-        else emit_msg "expressao invalida: $sel"; fi
+        else emit_msg "invalida: '$sel' (variavel nao definida? veja :vars)"; fi
         ;;
     esac
     refresh; exit 0
