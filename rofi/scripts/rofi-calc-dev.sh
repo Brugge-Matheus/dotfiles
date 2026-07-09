@@ -65,7 +65,7 @@ refresh(){
   printf '  — digite uma conta ou  nome = expr\0nonselectable\x1ftrue\n'
 }
 
-msg_default="conta · nome = expr · round(x,2) · Ctrl+Enter copia · Ctrl+Del apaga · :clear :clearhist :del nome"
+msg_default="conta · nome = expr · round(x,2) · rm nome · Ctrl+Enter copia · Ctrl+Del apaga · :clear :clearhist"
 
 case "${ROFI_RETV:-0}" in
   0)
@@ -95,9 +95,16 @@ case "${ROFI_RETV:-0}" in
       :clear)     : > "$VARS"; emit_msg "variaveis limpas" ;;
       :clearhist) : > "$HIST"; emit_msg "historico limpo" ;;
       :vars)      emit_msg "$msg_default" ;;
-      :del\ *)
-        n=$(printf '%s' "${sel#:del }" | sed 's/[^A-Za-z0-9_].*//')
-        sed -i -E "/^${n}=/d" "$VARS"; emit_msg "apagada: $n" ;;
+      rm\ \*|rm\ all|:del\ \*)   # rm *  -> remove TODAS as variaveis
+        : > "$VARS"; emit_msg "todas as variaveis removidas" ;;
+      rm\ *|:del\ *)             # rm nome [nome2 ...]  -> remove variavel(is)
+        args="${sel#rm }"; args="${args#:del }"; done_list=""
+        for n in $args; do
+          n=$(printf '%s' "$n" | sed 's/[^A-Za-z0-9_].*//')
+          [ -z "$n" ] && continue
+          sed -i -E "/^${n}=/d" "$VARS"; done_list="$done_list $n"
+        done
+        emit_msg "removida(s):$done_list" ;;
       *=*)
         name=$(printf '%s' "$sel" | sed -E 's/^[[:space:]]*([A-Za-z_][A-Za-z0-9_]*)[[:space:]]*=.*/\1/')
         rhs=$(printf '%s' "$sel"  | sed -E 's/^[^=]*=[[:space:]]*//')
