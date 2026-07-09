@@ -55,31 +55,45 @@ list_hist(){
     printf '  %s\0info\x1fhis:%s\n' "$line" "$line"
   done
 }
-refresh(){ emit_prompt "Calc"; list_vars; list_hist; }
+# IMPORTANTE: se o script imprime NADA, o rofi FECHA. Entao SEMPRE terminamos
+# imprimindo linhas (refresh) e NUNCA usamos 'exit' no meio -> a janela fica aberta.
+refresh(){
+  emit_prompt "Calc"
+  list_vars
+  list_hist
+  # linha-ancora sempre presente: garante saida nao-vazia (senao o rofi fecharia)
+  printf '  — digite uma conta ou  nome = expr\0nonselectable\x1ftrue\n'
+}
+
+msg_default="conta · nome = expr · round(x,2) · Ctrl+Enter copia · Ctrl+Del apaga · :clear :clearhist :del nome"
 
 case "${ROFI_RETV:-0}" in
   0)
     emit_prompt "Calc"
-    emit_msg "conta · nome = expr · round(x,2) · Ctrl+Del apaga · :clear :clearhist :del nome"
+    emit_msg "$msg_default"
     list_vars
     list_hist
+    printf '  — digite uma conta ou  nome = expr\0nonselectable\x1ftrue\n'
     ;;
   1)
-    sel="$1"; info="${ROFI_INFO:-}"
-    # Enter numa linha existente -> copia o valor
+    sel="${1:-}"; info="${ROFI_INFO:-}"
+    # Ctrl+Enter numa linha existente (accept-entry) -> COPIA o valor e continua aberto
     if [ -n "$info" ]; then
       case "$info" in
-        var:*) name="${info#var:}"; val=$(grep -E "^${name}=" "$VARS" | head -1 | cut -d= -f2-); printf '%s' "$val" | wl-copy ;;
-        his:*) line="${info#his:}"; printf '%s' "${line##* => }" | wl-copy ;;
+        var:*) name="${info#var:}"; val=$(grep -E "^${name}=" "$VARS" | head -1 | cut -d= -f2-); printf '%s' "$val" | wl-copy; emit_msg "copiado: $val" ;;
+        his:*) line="${info#his:}"; r="${line##* => }"; printf '%s' "$r" | wl-copy; emit_msg "copiado: $r" ;;
+        *)     emit_msg "$msg_default" ;;
       esac
-      exit 0
+      refresh; exit 0
     fi
-    [ -z "$sel" ] && { refresh; exit 0; }
+    # texto digitado (accept-custom)
+    if [ -z "$sel" ]; then emit_msg "$msg_default"; refresh; exit 0; fi
+    sel="$(printf '%s' "$sel" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')"
 
     case "$sel" in
       :clear)     : > "$VARS"; emit_msg "variaveis limpas" ;;
       :clearhist) : > "$HIST"; emit_msg "historico limpo" ;;
-      :vars)      emit_msg "variaveis atuais" ;;
+      :vars)      emit_msg "$msg_default" ;;
       :del\ *)
         n=$(printf '%s' "${sel#:del }" | sed 's/[^A-Za-z0-9_].*//')
         sed -i -E "/^${n}=/d" "$VARS"; emit_msg "apagada: $n" ;;
@@ -91,7 +105,7 @@ case "${ROFI_RETV:-0}" in
           if [ -n "$res" ]; then
             sed -i -E "/^${name}=/d" "$VARS"
             printf '%s=%s\n' "$name" "$res" >> "$VARS"
-            emit_msg "$name = $res"
+            emit_msg "$name = $res   (definida)"
           else emit_msg "erro: nao consegui avaliar '$rhs'"; fi
         else emit_msg "nome de variavel invalido"; fi
         ;;
@@ -99,12 +113,12 @@ case "${ROFI_RETV:-0}" in
         res=$(evalq "$sel")
         if [ -n "$res" ]; then
           printf '%s => %s\n' "$sel" "$res" >> "$HIST"
-          emit_msg "= $res   (Enter copia)"
-          printf '  %s = %s\0info\x1fhis:%s => %s\n' "$sel" "$res" "$sel" "$res"
-        else emit_msg "expressao invalida"; fi
+          printf '%s' "$res" | wl-copy          # auto-copia o resultado
+          emit_msg "= $res   (copiado)"
+        else emit_msg "expressao invalida: $sel"; fi
         ;;
     esac
-    refresh
+    refresh; exit 0
     ;;
   10)  # kb-custom-1 (Control+Delete): apaga a entrada selecionada
     info="${ROFI_INFO:-}"
@@ -113,7 +127,6 @@ case "${ROFI_RETV:-0}" in
       his:*) line="${info#his:}"; grep -vxF "$line" "$HIST" > "$HIST.tmp" 2>/dev/null && mv "$HIST.tmp" "$HIST"; emit_msg "entrada apagada" ;;
       *)     emit_msg "selecione uma variavel/entrada p/ apagar" ;;
     esac
-    list_vars
-    list_hist
+    refresh; exit 0
     ;;
 esac

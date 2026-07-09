@@ -88,12 +88,19 @@ hex(255) · sin(pi/4) · 2^10
 **Comandos e teclas:**
 | Ação | Como |
 |---|---|
-| Copiar resultado/variável | `Enter` na linha |
-| **Apagar** uma variável/entrada do histórico | `Control + Delete` na linha |
+| Avaliar a conta digitada (e **auto-copiar** o resultado) | `Enter` |
+| Definir variável | digitar `nome = expr` + `Enter` |
+| Copiar o valor de uma linha selecionada | `Control + Enter` |
+| **Apagar** a variável/entrada selecionada | `Control + Delete` |
 | Listar variáveis | `:vars` |
 | Limpar todas as variáveis | `:clear` |
 | Limpar o histórico | `:clearhist` |
 | Apagar uma variável por nome | `:del nome` |
+
+> **Como funciona a tela:** você digita e dá `Enter` — a janela **fica aberta** (é um
+> REPL), mostrando o resultado (já copiado) e o histórico/variáveis abaixo. Para fechar,
+> `Esc`. (`Enter` sempre avalia o que você **digitou**; para copiar uma linha antiga use
+> `Ctrl+Enter`.)
 
 As variáveis são **momentâneas** (ficam em `~/.cache/rofi-calc-dev/`, some com `:clear`).
 Por baixo: as variáveis são substituídas pelos valores antes de ir pro `qalc` (evita

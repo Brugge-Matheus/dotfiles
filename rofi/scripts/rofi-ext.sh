@@ -14,8 +14,12 @@ DIR="$(cd "$(dirname "$0")" && pwd)"
 case "${1:-}" in
   calc)
     # calculadora "dev": variaveis de sessao + round() + funcoes qalc.
-    # Control+Delete (kb-custom-1) apaga a entrada selecionada.
-    exec rofi -show calcd -modi "calcd:$DIR/rofi-calc-dev.sh" -kb-custom-1 "Control+Delete"
+    # Enter = avalia o texto DIGITADO (accept-custom); Ctrl+Enter = copia a
+    # linha selecionada (accept-entry); Ctrl+Delete apaga a entrada.
+    exec rofi -show calcd -modi "calcd:$DIR/rofi-calc-dev.sh" \
+      -kb-custom-1 "Control+Delete" \
+      -kb-accept-custom "Return,KP_Enter" \
+      -kb-accept-entry "Control+Return,Control+j,Control+m"
     ;;
   trans)
     exec rofi -show trans -modi "trans:$DIR/rofi-translate.sh"
