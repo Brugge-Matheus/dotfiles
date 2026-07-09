@@ -156,16 +156,17 @@ O `rofi-translate.sh` é um exemplo completo e comentado — use como molde. Dep
 ---
 
 ## 🔧 Alternar modos DENTRO do rofi
-Todos os modos estão ativos no launcher principal, então dá pra acessar as extensões
-sem sair do `SUPER + Espaço`:
+No launcher principal (`SUPER + Espaço`) as abas do rodapé alternam entre
+**Apps / Files / Run / Win**:
 
 - **`Ctrl + Tab`** → próximo modo · **`Ctrl + Shift + Tab`** → modo anterior
-- ou **clique nas abas** no rodapé (Apps / Calc / Files / Traduzir / Run / Win)
-- ou abra direto num modo: `rofi -show calcd -modi calcd:...`, `rofi -show trans`, etc.
+- ou **clique nas abas** no rodapé
 
-A lista de modos e as abas ficam no `config.rasi` (`modes:` + widget `mode-switcher`).
-Os atalhos dedicados (`SUPER+=`, `SUPER+T`, `SUPER+SHIFT+E`) continuam abrindo direto
-no modo certo — são só um atalho pro que o `Ctrl+Tab` também alcança.
+**Calc e Tradutor NÃO ficam nas abas** — só abrem pelos atalhos dedicados
+(`SUPER + =` e `SUPER + T`). Motivo: são modos "script" e precisam do
+`Enter = accept-custom` (avaliar o texto digitado). Na barra comum o `Enter` é
+`accept-entry` (aceitar linha selecionada) e o modo **fecharia** ao digitar uma conta.
+Os atalhos dedicados lançam o rofi com os keybinds corretos (ver `rofi/scripts/rofi-ext.sh`).
 
 > ⚠️ O modo `file-browser-extended` é um **plugin**; o launcher só funciona depois que
 > `rofi-file-browser-extended` estiver instalado (senão o rofi reclama de "mode not found").

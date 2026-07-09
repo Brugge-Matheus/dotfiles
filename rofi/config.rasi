@@ -10,18 +10,18 @@
 @import "colors-ayu.rasi"
 
 configuration {
-    /* Modos ativos: alterne com Ctrl+Tab / Ctrl+Shift+Tab ou clicando nas abas.
-     * file-browser-extended e plugin; calcd e trans sao nossos scripts. */
-    modes:                       "drun,calcd:~/.config/rofi/scripts/rofi-calc-dev.sh,file-browser-extended,trans:~/.config/rofi/scripts/rofi-translate.sh,run,window";
+    /* Modos das ABAS. calcd (calc) e trans NAO ficam aqui de proposito: sao
+     * modos "script" que precisam do Enter = accept-custom (avaliar o texto
+     * digitado). Na barra comum o Enter e accept-entry e o modo fecharia.
+     * Eles abrem so pelos atalhos dedicados SUPER+= e SUPER+T (ver rofi-ext.sh). */
+    modes:                       "drun,file-browser-extended,run,window";
     font:                        "JetBrainsMono Nerd Font 11";
     show-icons:                  true;
     icon-theme:                  "Papirus-Dark";
     drun-display-format:         "{name}";
     /* Abas = so o icone (glifo Nerd Font; a barra mode-switcher mostra estes rotulos) */
     display-drun:                "";
-    display-calcd:                "";
     display-file-browser-extended: "";
-    display-trans:               "";
     display-run:                 "";
     display-window:              "";
     terminal:                    "ghostty";
