@@ -75,9 +75,10 @@ case "${ROFI_RETV:-0}" in
     list_hist
     printf '  — digite uma conta ou  nome = expr\0nonselectable\x1ftrue\n'
     ;;
-  1)
+  1|2)
+    # RETV=1 (accept-entry, Ctrl+Enter): linha selecionada -> COPIA (tem ROFI_INFO)
+    # RETV=2 (accept-custom, Enter):      texto digitado    -> AVALIA (sem ROFI_INFO)
     sel="${1:-}"; info="${ROFI_INFO:-}"
-    # Ctrl+Enter numa linha existente (accept-entry) -> COPIA o valor e continua aberto
     if [ -n "$info" ]; then
       case "$info" in
         var:*) name="${info#var:}"; val=$(grep -E "^${name}=" "$VARS" | head -1 | cut -d= -f2-); printf '%s' "$val" | wl-copy; emit_msg "copiado: $val" ;;
