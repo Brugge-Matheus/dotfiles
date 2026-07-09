@@ -41,7 +41,7 @@ variáveis — então dá pra criar novos temas copiando um `colors-*.rasi` e aj
 
 | Extensão | Atalho | Pacote | Origem |
 |---|---|---|---|
-| **Calculadora** (rofi-calc) | `SUPER + =` | `rofi-calc` | oficial |
+| **Calculadora "dev"** (variáveis+round) | `SUPER + =` | `libqalculate` (`qalc`) | oficial |
 | **Tradutor** (translate-shell) | `SUPER + T` | `translate-shell` | oficial |
 | **Navegador de arquivos** | `SUPER + SHIFT + E` | `rofi-file-browser-extended` | AUR |
 
@@ -59,20 +59,49 @@ os pacotes estão em `packages/02-visual.txt` e `packages/02-visual-aur.txt`.)
 
 ---
 
-### 🧮 Calculadora — `SUPER + =`
-Usa o **libqalculate** (mesmo motor do Qalculate!). Abre já no modo cálculo; digite a
-expressão e o resultado aparece. `Enter` copia o resultado pro clipboard.
+### 🧮 Calculadora "dev" — `SUPER + =`
+Extensão **nossa** (`rofi/scripts/rofi-calc-dev.sh`) sobre o **libqalculate** (`qalc`).
+Vai além da calculadora simples: **variáveis de sessão**, funções e arredondamento.
+Digite a conta e `Enter`; `Enter` numa linha (resultado ou variável) **copia** o valor.
 
-**Exemplos:**
+**Variáveis de sessão** (o grande diferencial):
+```
+base = 10 - 2            → define base = 8
+base * 10 / 100          → 0.8   (reusa a variável)
+round(base * 10 / 100, 2) → 0.8  (arredonda p/ 2 casas)
+preco = 100
+desc = 15
+round(preco * (1 - desc/100), 2) → 85
+```
+
+**Funções e conversões (tudo do qalc):**
 ```
 2 + 2 * 10
+round(3.14159, 2)        → 3.14
 sqrt(2)
-15% of 200
-100 USD to BRL          # conversão de moeda (precisa de internet p/ cotação)
-2 GiB to MB             # conversão de unidade
-sin(pi/4)
+200 * 15%                → 30    (porcentagem: use "Y * X%", não "X% of Y")
+100 USD to BRL           # conversão de moeda (precisa de internet)
+2 GiB to MB              # conversão de unidade
+hex(255) · sin(pi/4) · 2^10
 ```
-Invocação por trás: `rofi -show calc -modi calc`.
+
+**Comandos e teclas:**
+| Ação | Como |
+|---|---|
+| Copiar resultado/variável | `Enter` na linha |
+| **Apagar** uma variável/entrada do histórico | `Control + Delete` na linha |
+| Listar variáveis | `:vars` |
+| Limpar todas as variáveis | `:clear` |
+| Limpar o histórico | `:clearhist` |
+| Apagar uma variável por nome | `:del nome` |
+
+As variáveis são **momentâneas** (ficam em `~/.cache/rofi-calc-dev/`, some com `:clear`).
+Por baixo: as variáveis são substituídas pelos valores antes de ir pro `qalc` (evita
+colisão com palavras reservadas, ex.: `base`), e o `qalc` roda em base decimal fixa.
+
+> **Nota:** o `rofi-calc` (plugin, `SUPER+= antigo`) continua instalado como alternativa
+> "live" (calcula enquanto digita), mas o launcher usa a versão dev acima. No rofi-calc,
+> `Shift+Delete` apaga uma entrada do histórico e `round(x,2)` também funciona.
 
 ---
 
@@ -125,12 +154,13 @@ sem sair do `SUPER + Espaço`:
 
 - **`Ctrl + Tab`** → próximo modo · **`Ctrl + Shift + Tab`** → modo anterior
 - ou **clique nas abas** no rodapé (Apps / Calc / Files / Traduzir / Run / Win)
-- ou abra direto num modo: `rofi -show calc`, `rofi -show trans`, etc.
+- ou abra direto num modo: `rofi -show calcd -modi calcd:...`, `rofi -show trans`, etc.
 
 A lista de modos e as abas ficam no `config.rasi` (`modes:` + widget `mode-switcher`).
 Os atalhos dedicados (`SUPER+=`, `SUPER+T`, `SUPER+SHIFT+E`) continuam abrindo direto
 no modo certo — são só um atalho pro que o `Ctrl+Tab` também alcança.
 
-> ⚠️ Como os modos `calc` e `file-browser-extended` são **plugins**, o launcher só
-> funciona depois que os pacotes estiverem instalados (`rofi-calc`,
-> `rofi-file-browser-extended`). Antes disso o rofi reclama de "mode not found".
+> ⚠️ O modo `file-browser-extended` é um **plugin**; o launcher só funciona depois que
+> `rofi-file-browser-extended` estiver instalado (senão o rofi reclama de "mode not found").
+> Os modos `calcd` e `trans` são scripts nossos (precisam de `qalc`/`libqalculate` e
+> `translate-shell`, respectivamente).

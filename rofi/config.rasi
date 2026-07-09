@@ -11,21 +11,22 @@
 
 configuration {
     /* Modos ativos: alterne com Ctrl+Tab / Ctrl+Shift+Tab ou clicando nas abas.
-     * calc e file-browser-extended sao plugins; trans e o nosso script. */
-    modes:                       "drun,calc,file-browser-extended,trans:~/.config/rofi/scripts/rofi-translate.sh,run,window";
+     * file-browser-extended e plugin; calcd e trans sao nossos scripts. */
+    modes:                       "drun,calcd:~/.config/rofi/scripts/rofi-calc-dev.sh,file-browser-extended,trans:~/.config/rofi/scripts/rofi-translate.sh,run,window";
     font:                        "JetBrainsMono Nerd Font 11";
     show-icons:                  true;
     icon-theme:                  "Papirus-Dark";
     drun-display-format:         "{name}";
     /* Abas = so o icone (glifo Nerd Font; a barra mode-switcher mostra estes rotulos) */
     display-drun:                "";
-    display-calc:                "";
+    display-calcd:                "";
     display-file-browser-extended: "";
     display-trans:               "";
     display-run:                 "";
     display-window:              "";
     terminal:                    "ghostty";
     hover-select:                true;
+    kb-custom-1:               "Control+Delete";
 }
 
 /* As cores (bg, fg, accent, sel, ...) vem do @import la em cima. */

@@ -13,7 +13,9 @@ DIR="$(cd "$(dirname "$0")" && pwd)"
 
 case "${1:-}" in
   calc)
-    exec rofi -show calc -modi calc
+    # calculadora "dev": variaveis de sessao + round() + funcoes qalc.
+    # Control+Delete (kb-custom-1) apaga a entrada selecionada.
+    exec rofi -show calcd -modi "calcd:$DIR/rofi-calc-dev.sh" -kb-custom-1 "Control+Delete"
     ;;
   trans)
     exec rofi -show trans -modi "trans:$DIR/rofi-translate.sh"

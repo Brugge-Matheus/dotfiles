@@ -40,7 +40,7 @@
 | `SUPER + Q` | Terminal (ghostty) | ✅ |
 | `SUPER + E` | Gerenciador de arquivos (thunar) | ✅ |
 | `SUPER + Espaço` | Launcher de apps (rofi — busca com ícones) | ✅ |
-| `SUPER + =` | Calculadora (rofi-calc: cálculo + conversão de unidade/moeda) | ✅ |
+| `SUPER + =` | Calculadora dev (variáveis de sessão, round(), qalc; Ctrl+Del apaga) | ✅ |
 | `SUPER + T` | Tradutor (rofi + translate-shell: PT↔EN, copia) | ✅ |
 | `SUPER + SHIFT + E` | Navegar arquivos pelo teclado (rofi-file-browser) | ✅ |
 | `SUPER + ,` | Painel de configurações (settings-menu) | ✅ |
