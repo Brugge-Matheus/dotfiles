@@ -92,10 +92,10 @@ hex(255) · sin(pi/4) · 2^10
 | Definir variável | digitar `nome = expr` + `Enter` |
 | Copiar o valor de uma linha selecionada | `Control + Enter` |
 | **Apagar** a variável/entrada selecionada | `Control + Delete` |
+| **Limpar todo o histórico** | `Control + Shift + Delete` (ou `:clearhist`) |
 | Remover variável(is) por nome | `rm nome` · `rm a b c` |
 | Remover todas as variáveis | `rm *` (ou `:clear`) |
 | Listar variáveis | `:vars` |
-| Limpar o histórico | `:clearhist` |
 
 > **Como funciona a tela:** você digita e dá `Enter` — a janela **fica aberta** (é um
 > REPL), mostrando o resultado (já copiado) e o histórico/variáveis abaixo. Para fechar,

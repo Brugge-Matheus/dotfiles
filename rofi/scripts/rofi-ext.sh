@@ -18,6 +18,7 @@ case "${1:-}" in
     # linha selecionada (accept-entry); Ctrl+Delete apaga a entrada.
     exec rofi -show calcd -modi "calcd:$DIR/rofi-calc-dev.sh" \
       -kb-custom-1 "Control+Delete" \
+      -kb-custom-2 "Control+Shift+Delete" \
       -kb-accept-custom "Return,KP_Enter" \
       -kb-accept-entry "Control+Return,Control+j,Control+m"
     ;;

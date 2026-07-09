@@ -77,7 +77,7 @@ refresh(){
   printf '  — digite uma conta ou  nome = expr\0nonselectable\x1ftrue\n'
 }
 
-msg_default="conta · nome = expr · round(x,2) · rm nome · Ctrl+Enter copia · Ctrl+Del apaga · :clear :clearhist"
+msg_default="conta · nome = expr · rm nome · Ctrl+Enter copia · Ctrl+Del apaga · Ctrl+Shift+Del limpa historico"
 
 case "${ROFI_RETV:-0}" in
   0)
@@ -147,6 +147,10 @@ case "${ROFI_RETV:-0}" in
       his:*) line="${info#his:}"; grep -vxF "$line" "$HIST" > "$HIST.tmp" 2>/dev/null && mv "$HIST.tmp" "$HIST"; emit_msg "entrada apagada" ;;
       *)     emit_msg "selecione uma variavel/entrada p/ apagar" ;;
     esac
+    refresh; exit 0
+    ;;
+  11)  # kb-custom-2 (Control+Shift+Delete): limpa TODO o historico
+    : > "$HIST"; emit_msg "historico limpo"
     refresh; exit 0
     ;;
 esac
