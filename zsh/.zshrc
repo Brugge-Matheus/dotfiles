@@ -132,9 +132,9 @@ unset __conda_setup
 # <<< conda initialize <<<
 
 # Acesse Docker Config
-alias acesse-shell='docker compose -f ~/svn/docker/docker-compose.yml exec web bash'
-alias acesse-logs='docker compose -f ~/svn/docker/docker-compose.yml logs -f web'
-alias acesse-up='docker compose -f ~/svn/docker/docker-compose.yml up -d'
-alias acesse-down='docker compose -f ~/svn/docker/docker-compose.yml down'
-alias acesse-rebuild='docker compose -f ~/svn/docker/docker-compose.yml build web && docker compose -f ~/svn/docker/docker compose.yml up -d'
-alias acesse-erros='docker compose -f ~/svn/docker/docker-compose.yml exec web tail -f /var/log/apache2/php_errors.log'
+alias acesse-shell='docker compose -f ~/svn/docker/erp/docker-compose.yml exec web bash'
+alias acesse-logs='docker compose -f ~/svn/docker/erp/docker-compose.yml logs -f web'
+alias acesse-up='docker compose -f ~/svn/docker/erp/docker-compose.yml up -d'
+alias acesse-down='docker compose -f ~/svn/docker/erp/docker-compose.yml down'
+alias acesse-rebuild='docker compose -f ~/svn/docker/erp/docker-compose.yml build web && docker compose -f ~/svn/docker/erp/docker compose.yml up -d'
+alias acesse-erros='docker compose -f ~/svn/docker/erp/docker-compose.yml exec web tail -f /var/log/apache2/php_errors.log'
