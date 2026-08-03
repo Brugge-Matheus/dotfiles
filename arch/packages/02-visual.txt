@@ -18,3 +18,12 @@ rofi-calc         # calculadora "live" alternativa (plugin); tambem puxa a libqa
 translate-shell   # extensao: tradutor (o `trans`, usado pelo rofi-translate.sh, SUPER+T)
 power-profiles-daemon  # perfis de energia (controle pelo botao da bateria)
 upower            # estado/tempo da bateria (tooltip do modulo custom/battery)
+
+# --- Video ---
+mpv               # player principal (minimalista, hwdec VA-API; config em mpv/mpv.conf)
+vlc               # player "canivete": abre tudo, converte, grava, filtros, streams
+yt-dlp            # deixa o mpv tocar links do YouTube/etc direto (mpv <url>)
+
+# --- Imagem ---
+# qimgv (AUR, ver 02-visual-aur.txt) = visualizador rapido + edicao leve (crop/rotate/resize)
+gimp              # editor "pesado": camadas, retoque, filtros. Hook 'e' do qimgv abre nele

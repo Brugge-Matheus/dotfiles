@@ -3,6 +3,7 @@
 # (ou automaticamente por arch/install.sh, se o yay estiver presente)
 
 rofi-file-browser-extended   # extensao do rofi: navegar/abrir arquivos (SUPER+SHIFT+E)
+qimgv                        # visualizador de imagens Qt6 (rapido) + edicao (crop/rotate/flip/resize) e webm
 
 # Nota: o launcher e o rofi (repo OFICIAL — ver 02-visual.txt), Wayland nativo.
 # O antigo walker + elephant foi aposentado: iniciava frio/lento e dependia de

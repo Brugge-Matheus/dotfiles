@@ -14,7 +14,7 @@ Dotfiles de **instalação e configuração** do ambiente desktop: Arch Linux co
 | **Notebook** | Avell (`avell-brugge`) |
 | **CPU** | Intel Core i5-13420H (Raptor Lake) |
 | **GPU** | Híbrida **Optimus**: Intel UHD (iGPU) + **NVIDIA RTX 3050 6GB** (dGPU) |
-| **Boot** | `limine` + **UKI** (`/boot/EFI/Linux/arch-linux.efi`), cmdline em `/etc/kernel/cmdline` |
+| **Boot** | `limine` + **UKI** (`/boot/EFI/Linux/arch-linux.efi`). ⚠️ O cmdline que **vale** é o `cmdline:` do `/boot/limine/limine.conf` (o limine **sobrepõe** o embutido na UKI / `/etc/kernel/cmdline`) |
 | **FS** | Btrfs (subvol `@`) sobre LVM |
 | **Compositor** | Hyprland (config em **Lua**, `hyprland.lua` — formato v0.55+) |
 | **Teclado** | US Internacional (acentos via dead keys) |
@@ -139,7 +139,13 @@ abre `nmtui` ao clicar. `systemd-networkd` foi desativado.
 - **Suspend/idle:** serviços `nvidia-suspend/resume/hibernate` (em `01-foundation.sh`) +
   `i915.enable_psr=0` na cmdline (em `06-boot-experience.sh`) evitam **tela preta ao acordar**.
   O PSR (Panel Self Refresh) do i915 causava tela-preta **intermitente** no resume de suspend
-  longo (o painel Intel não refazia o link training); desligá-lo resolveu. O `hypridle` faz
+  longo (o painel Intel — `card1-eDP-1`, driver **i915** — não refazia o link training);
+  desligá-lo resolveu. ⚠️ **Pegadinha:** o flag só vale se estiver no `cmdline:` do
+  `/boot/limine/limine.conf` (não basta o `/etc/kernel/cmdline`). Se editar o cmdline à mão,
+  edite a **1ª** entrada do `limine.conf` (a 2ª é a de resgate) e **reinicie**. O
+  `06-boot-experience.sh` já sincroniza isso (passo 2b); rode-o de novo se o cmdline divergir.
+  A NVIDIA já preserva a VRAM (`PreserveVideoMemoryAllocations`, serviços `nvidia-*`) — não é
+  ela a causa. O `hypridle` faz
   dim → lock; **não** faz `dpms off` com a sessão travada (o hyprlock não lida com o display
   sumindo — issue hyprwm/hyprlock#953).
 - **Vídeo por hardware (VA-API):** a **iGPU Intel** (que dirige a tela) decodifica VP9/AV1/H264
@@ -148,6 +154,18 @@ abre `nmtui` ao clicar. `systemd-networkd` foi desativado.
   ligar o decode acelerado. Conferir: `vainfo` (perfis de decode) e `intel_gpu_top` (engine
   `Video` subindo com um vídeo rodando). Em Optimus o decode vai pela Intel de propósito
   (a NVIDIA fica só para offload de render/compute via `prime-run`).
+- **Players de vídeo:** **mpv** (padrão do dia a dia — minimalista, `hwdec=auto-safe` usa a
+  VA-API acima, tema ayu, config em `mpv/mpv.conf` + `mpv/input.conf`) e **vlc** (o "canivete":
+  abre tudo, converte, grava, filtros, streams). `yt-dlp` deixa o mpv tocar links direto
+  (`mpv <url>`, limitado a 1440p no `ytdl-format`). Pacotes em `packages/02-visual.txt`.
+  No mpv: `i` mostra stats (confirma `hwdec: vaapi`), `S` tira print do frame limpo.
+- **Imagem:** **qimgv** (AUR) — visualizador rápido, é o **padrão** de imagem (definido por
+  `xdg-mime` no `install.sh`, então o Thunar abre nele). Tema ayu em `qimgv/theme.conf`
+  (symlink; só persiste com o tema em **Custom** nas Settings — em preset o qimgv sobrescreve
+  o arquivo). Edição leve embutida: `X` crop · `R` resize · `Ctrl+R`/`Ctrl+L` girar · `H`/`V`
+  flip. **`G` abre a imagem no GIMP** (script `gimp %file%`, ver `[Scripts]`/`[Controls]` no
+  `qimgv/qimgv.conf` — versionado por **cópia**, não symlink, pois o qimgv reescreve via
+  QSettings). Editor pesado = **gimp** (`packages/02-visual.txt`).
 
 ## 📊 Waybar — funcionalidades
 

@@ -29,6 +29,7 @@ pipewire-pulse
 pipewire-alsa
 pipewire-jack
 wireplumber
+libfdk-aac        # codec AAC do A2DP (fone BT em alta qualidade; sem ele cai p/ SBC). Config: wireplumber/51-bluez-headset.conf
 
 # --- Rede ---
 networkmanager        # instalado aqui; a TROCA do iwd ocorre na Fase 2
