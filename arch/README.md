@@ -14,7 +14,7 @@ Dotfiles de **instalação e configuração** do ambiente desktop: Arch Linux co
 | **Notebook** | Avell (`avell-brugge`) |
 | **CPU** | Intel Core i5-13420H (Raptor Lake) |
 | **GPU** | Híbrida **Optimus**: Intel UHD (iGPU) + **NVIDIA RTX 3050 6GB** (dGPU) |
-| **Boot** | `limine` + **UKI** (`/boot/EFI/Linux/arch-linux.efi`), cmdline em `/etc/kernel/cmdline` |
+| **Boot** | `limine` + **UKI** (`/boot/EFI/Linux/arch-linux.efi`). ⚠️ O cmdline que **vale** é o `cmdline:` do `/boot/limine/limine.conf` (o limine **sobrepõe** o embutido na UKI / `/etc/kernel/cmdline`) |
 | **FS** | Btrfs (subvol `@`) sobre LVM |
 | **Compositor** | Hyprland (config em **Lua**, `hyprland.lua` — formato v0.55+) |
 | **Teclado** | US Internacional (acentos via dead keys) |
@@ -37,8 +37,8 @@ de pacotes em `packages/NN-*.txt`. A parte de **usuário** (symlinks, AUR, servi
 
 | Script | Escopo | Status |
 |---|---|---|
-| `install/01-foundation.sh` | Drivers (NVIDIA offload), polkit, portal, áudio, base | ✅ |
-| `install/02-visual.sh` | Walker, Waybar, wallpaper (awww), hyprlock/hypridle, SwayNC | ✅ |
+| `install/01-foundation.sh` | Drivers (NVIDIA offload + Intel VA-API), polkit, portal, áudio, base | ✅ |
+| `install/02-visual.sh` | Rofi (launcher), Waybar, wallpaper (awww), hyprlock/hypridle, SwayNC | ✅ |
 | `install/03-features.sh` | Screenshots (grim+slurp+satty), clipboard (cliphist) | ✅ |
 | `install/04-apps.sh` | Zen, Thunar+yazi, Discord, Obsidian, Spotify, btop, pavucontrol | ✅ |
 | `install/05-docker.sh` | Docker + Docker Compose (adiciona o usuário ao grupo) | ✅ |
@@ -89,10 +89,11 @@ sudo reboot
 arch/
 ├── README.md                  # este arquivo
 ├── KEYBINDS.md                # todos os atalhos do Hyprland
+├── ROFI.md                    # launcher rofi: tema + extensoes (calc, tradutor, files)
 ├── install.sh                 # orquestrador de usuário (AUR + symlinks + serviços)
 ├── install/
 │   ├── 01-foundation.sh       # drivers + NVIDIA offload + initramfs (sudo)
-│   ├── 02-visual.sh           # walker, waybar, wallpaper, lock/idle, swaync
+│   ├── 02-visual.sh           # rofi, waybar, wallpaper, lock/idle, swaync
 │   ├── 03-features.sh         # screenshots, clipboard
 │   ├── 04-apps.sh             # navegador, file manager, apps do dia a dia
 │   ├── 05-docker.sh           # docker + compose
@@ -105,6 +106,7 @@ arch/
 
 hypr/   → hyprland.lua, hyprlock.conf, hypridle.conf  (symlinks p/ ~/.config/hypr/)
 waybar/ → config.jsonc, style.css, scripts/           (uma instância por monitor)
+rofi/   → config.rasi, colors-*.rasi, scripts/        (launcher + extensões — ver ROFI.md)
 ```
 
 ## 🔧 Comandos úteis
@@ -128,8 +130,58 @@ abre `nmtui` ao clicar. `systemd-networkd` foi desativado.
 
 ## 📌 Notas
 
-- **Terminal:** ghostty · **File manager:** Thunar (GUI) + yazi (terminal) · **Navegador:** Zen.
-- **Login:** autologin no tty1 → `.zprofile` → `uwsm start hyprland.desktop`. O `hyprlock`
-  cobre idle/suspensão/bloqueio manual (`SUPER+L`), mas **não** trava no boot — a sessão
-  abre direto no desktop. Se quiser bloquear já no boot, reative o `hyprlock` no autostart
-  do `hyprland.lua`.
+- **Terminal:** ghostty · **File manager:** Thunar (GUI) + yazi (terminal) · **Navegador:** Zen
+  · **Launcher:** rofi (`SUPER+Espaço`, tema black em `rofi/config.rasi`).
+- **Login:** autologin no tty1 → `.zprofile` → `uwsm start hyprland.desktop`. A sessão
+  **trava no boot** via `hypr/scripts/lock.sh` (guard resiliente: relança o `hyprlock` se
+  ele morrer sem desbloquear), funcionando como tela de login. O mesmo `hyprlock` cobre
+  idle/suspensão/bloqueio manual (`SUPER+L`).
+- **Suspend/idle:** serviços `nvidia-suspend/resume/hibernate` (em `01-foundation.sh`) +
+  `i915.enable_psr=0` na cmdline (em `06-boot-experience.sh`) evitam **tela preta ao acordar**.
+  O PSR (Panel Self Refresh) do i915 causava tela-preta **intermitente** no resume de suspend
+  longo (o painel Intel — `card1-eDP-1`, driver **i915** — não refazia o link training);
+  desligá-lo resolveu. ⚠️ **Pegadinha:** o flag só vale se estiver no `cmdline:` do
+  `/boot/limine/limine.conf` (não basta o `/etc/kernel/cmdline`). Se editar o cmdline à mão,
+  edite a **1ª** entrada do `limine.conf` (a 2ª é a de resgate) e **reinicie**. O
+  `06-boot-experience.sh` já sincroniza isso (passo 2b); rode-o de novo se o cmdline divergir.
+  A NVIDIA já preserva a VRAM (`PreserveVideoMemoryAllocations`, serviços `nvidia-*`) — não é
+  ela a causa. O `hypridle` faz
+  dim → lock; **não** faz `dpms off` com a sessão travada (o hyprlock não lida com o display
+  sumindo — issue hyprwm/hyprlock#953).
+- **Vídeo por hardware (VA-API):** a **iGPU Intel** (que dirige a tela) decodifica VP9/AV1/H264
+  em hardware → YouTube 1440p sem travar e sem torrar a CPU. `intel-media-driver` (iHD) é
+  instalado no `01-foundation.sh`; o `install.sh` linka `zen/user.js` no perfil do Zen para
+  ligar o decode acelerado. Conferir: `vainfo` (perfis de decode) e `intel_gpu_top` (engine
+  `Video` subindo com um vídeo rodando). Em Optimus o decode vai pela Intel de propósito
+  (a NVIDIA fica só para offload de render/compute via `prime-run`).
+- **Players de vídeo:** **mpv** (padrão do dia a dia — minimalista, `hwdec=auto-safe` usa a
+  VA-API acima, tema ayu, config em `mpv/mpv.conf` + `mpv/input.conf`) e **vlc** (o "canivete":
+  abre tudo, converte, grava, filtros, streams). `yt-dlp` deixa o mpv tocar links direto
+  (`mpv <url>`, limitado a 1440p no `ytdl-format`). Pacotes em `packages/02-visual.txt`.
+  No mpv: `i` mostra stats (confirma `hwdec: vaapi`), `S` tira print do frame limpo.
+- **Imagem:** **qimgv** (AUR) — visualizador rápido, é o **padrão** de imagem (definido por
+  `xdg-mime` no `install.sh`, então o Thunar abre nele). Tema ayu em `qimgv/theme.conf`
+  (symlink; só persiste com o tema em **Custom** nas Settings — em preset o qimgv sobrescreve
+  o arquivo). Edição leve embutida: `X` crop · `R` resize · `Ctrl+R`/`Ctrl+L` girar · `H`/`V`
+  flip. **`G` abre a imagem no GIMP** (script `gimp %file%`, ver `[Scripts]`/`[Controls]` no
+  `qimgv/qimgv.conf` — versionado por **cópia**, não symlink, pois o qimgv reescreve via
+  QSettings). Editor pesado = **gimp** (`packages/02-visual.txt`).
+
+## 📊 Waybar — funcionalidades
+
+Uma instância **por monitor** (daemon `waybar/scripts/waybar-fullscreen.sh`: auto-hide em
+fullscreen + revelar-ao-hover, por monitor). ⚠️ **Não recarregue com `SIGUSR2`** (crasha);
+para aplicar mudanças, reinicie esse daemon.
+
+- **Workspaces (`custom/ws1..10`):** botões dinâmicos (só ocupados + o ativo). Reconstruídos
+  como módulos custom porque o clique do módulo nativo `hyprland/workspaces` **quebra** na
+  config Lua do Hyprland 0.55+ (manda `dispatch workspace N` por IPC, que o interpretador
+  Lua rejeita — bug upstream waybar#5008/#5035). O clique chama `ws-focus.sh` →
+  `hl.dsp.focus({workspace=N})` (troca) **+ leva o cursor** para a janela focada. Atualização
+  instantânea via `ws-watch.sh` (escuta o socket2 e sinaliza `SIGRTMIN+9`).
+- **Taskbar (`wlr/taskbar`):** uma caixa por janela aberta (ícone do app); clique foca a
+  janela, botão do meio fecha.
+- **Bateria (`custom/battery`):** tooltip com %, perfil de energia (power-profiles-daemon via
+  D-Bus) e tempo restante (upower); clique abre o menu de perfis.
+- **Settings (`SUPER + ,`):** menu fuzzel com troca de **layout de teclado** e **menu Wi-Fi**
+  (nmcli) embutidos — ver [`KEYBINDS.md`](KEYBINDS.md).

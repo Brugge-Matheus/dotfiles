@@ -35,3 +35,6 @@ case "$chosen" in
 esac
 
 notify-send -t 1500 "Energia" "Perfil: $(ppd_get)"
+
+# atualiza o modulo custom/battery na waybar na hora (signal: 8)
+pkill -RTMIN+8 waybar 2>/dev/null || true

@@ -43,7 +43,7 @@ pcall(dofile, os.getenv("HOME") .. "/.config/hypr/monitors.lua")
 -- Set programs that you use
 local terminal    = "ghostty"
 local fileManager = "thunar"   -- GUI; yazi (terminal) disponivel via `yazi` no ghostty
-local menu        = "walker"
+local menu        = "rofi -show drun"
 
 
 -------------------
@@ -65,18 +65,21 @@ hl.on("hyprland.start", function ()
     hl.exec_cmd("~/.config/hypr/scripts/lock.sh")
     -- Sessao systemd + portais: como o Hyprland e lancado do TTY (sem display
     -- manager), o graphical-session.target nao sobe sozinho. Sem ele, os portais
-    -- (xdg-desktop-portal) e o polkit nao iniciam -> apps GTK (walker) ficam LENTOS.
+    -- (xdg-desktop-portal) e o polkit nao iniciam -> apps GTK ficam LENTOS.
     -- tty-graphical-session.target (em ~/.config/systemd/user) ativa o target.
     hl.exec_cmd("sh -c 'dbus-update-activation-environment --systemd --all; systemctl --user start tty-graphical-session.target; systemctl --user start xdg-desktop-portal.service hyprpolkitagent.service'")
-    -- Launcher walker: backend (elephant) + servico do frontend
-    hl.exec_cmd("elephant")
-    hl.exec_cmd("walker --gapplication-service")
+    -- Launcher = rofi (SUPER+Espaco). Nativo Wayland, abre instantaneo a frio,
+    -- sem daemon (nao precisa de servico residente como o antigo walker/elephant).
     -- Wallpaper: restaura o ULTIMO selecionado por monitor (default so no 1o boot)
     hl.exec_cmd("~/.config/waybar/scripts/wallpaper-restore.sh")
     -- Barra de status: o script lanca uma Waybar POR MONITOR (fixada a sua
     -- saida) e cuida do auto-hide em fullscreen + revelar-ao-hover de forma
     -- independente por monitor. (Por isso NAO chamamos "waybar" direto aqui.)
     hl.exec_cmd("~/.config/waybar/scripts/waybar-fullscreen.sh")
+    -- Atualiza os botoes de workspace (custom/ws*) ao trocar/abrir/fechar janela.
+    -- Necessario porque o clique nativo do waybar quebra na config Lua (bug upstream);
+    -- usamos botoes custom que chamam hl.dsp.focus, e este daemon os mantem ao vivo.
+    hl.exec_cmd("~/.config/waybar/scripts/ws-watch.sh")
     -- Notificacoes (daemon + central)
     hl.exec_cmd("swaync")
     -- Gerenciador de inatividade (dim/lock/dpms)
@@ -301,6 +304,23 @@ hl.config({
     },
 })
 
+----------------
+---- CURSOR ----
+----------------
+
+hl.config({
+    cursor = {
+        -- Ao trocar de workspace (clicando no botao da waybar OU pelo teclado),
+        -- leva o cursor para a ultima janela focada daquele workspace. Como o
+        -- follow_mouse=1, o foco vai junto -> "o mouse vai com foco pra la".
+        --   0 = desligado | 1 = leva ate a janela | 2 = sempre (centraliza mesmo vazio)
+        -- Deixado em 0 DE PROPOSITO: a troca por TECLADO (SUPER+num) NAO deve mover
+        -- o cursor (comportamento original). O "levar o mouse junto" fica restrito ao
+        -- CLIQUE nos botoes da waybar, feito explicitamente pelo ws-focus.sh.
+        warp_on_change_workspace = 0,
+    },
+})
+
 hl.gesture({
     fingers = 3,
     direction = "horizontal",
@@ -330,6 +350,10 @@ hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
 hl.bind(mainMod .. " + V", hl.dsp.window.fullscreen({ mode = "fullscreen" }))           -- tela cheia (preenche o monitor, na frente)
 hl.bind(mainMod .. " + SHIFT + Space", hl.dsp.window.float({ action = "toggle" }))      -- alternar janela flutuante
 hl.bind(mainMod .. " + space", hl.dsp.exec_cmd(menu))
+-- Extensoes do rofi (ver arch/ROFI.md). O rofi-ext.sh resolve os caminhos.
+hl.bind(mainMod .. " + equal",     hl.dsp.exec_cmd("~/.config/rofi/scripts/rofi-ext.sh calc"))   -- calculadora
+hl.bind(mainMod .. " + T",         hl.dsp.exec_cmd("~/.config/rofi/scripts/rofi-ext.sh trans"))  -- tradutor (EN/PT)
+hl.bind(mainMod .. " + SHIFT + E", hl.dsp.exec_cmd("~/.config/rofi/scripts/rofi-ext.sh files"))  -- navegar arquivos
 hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
 hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit"))    -- dwindle only
 

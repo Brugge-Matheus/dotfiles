@@ -71,6 +71,19 @@ safe_link "$DOTFILES_DIR/gtk-3.0/settings.ini" "$HOME/.config/gtk-3.0/settings.i
 safe_link "$DOTFILES_DIR/gtk-4.0/settings.ini" "$HOME/.config/gtk-4.0/settings.ini"
 safe_link "$DOTFILES_DIR/qt6ct/qt6ct.conf" "$HOME/.config/qt6ct/qt6ct.conf"
 safe_link "$DOTFILES_DIR/fuzzel/powermenu.ini" "$HOME/.config/fuzzel/powermenu.ini"
+safe_link "$DOTFILES_DIR/rofi"               "$HOME/.config/rofi"   # launcher (config.rasi + temas de cor)
+safe_link "$DOTFILES_DIR/mpv/mpv.conf"       "$HOME/.config/mpv/mpv.conf"     # player (hwdec VA-API + tema ayu)
+safe_link "$DOTFILES_DIR/mpv/input.conf"     "$HOME/.config/mpv/input.conf"   # atalhos extras do mpv
+safe_link "$DOTFILES_DIR/qimgv/theme.conf"   "$HOME/.config/qimgv/theme.conf" # visualizador de imagem: tema ayu (Custom)
+safe_link "$DOTFILES_DIR/wireplumber/51-bluez-headset.conf" "$HOME/.config/wireplumber/wireplumber.conf.d/51-bluez-headset.conf" # BT: A2DP alta qualidade (AAC/SBC-XQ)
+# qimgv.conf (settings + script GIMP no 'g') vai por COPIA, nao symlink: o qimgv
+# usa QSettings e reescreve o arquivo -> um symlink poderia ser trocado por
+# arquivo comum (write atomico). Copia so se ainda nao existir (nao pisa em ajustes locais).
+if [ -f "$DOTFILES_DIR/qimgv/qimgv.conf" ] && [ ! -e "$HOME/.config/qimgv/qimgv.conf" ]; then
+  mkdir -p "$HOME/.config/qimgv"
+  cp "$DOTFILES_DIR/qimgv/qimgv.conf" "$HOME/.config/qimgv/qimgv.conf"
+  log_ok "qimgv.conf aplicado (script GIMP no 'g' + settings)"
+fi
 # Unit que ativa o graphical-session.target (portais/polkit no Hyprland do TTY)
 safe_link "$DOTFILES_DIR/systemd/user/tty-graphical-session.target" "$HOME/.config/systemd/user/tty-graphical-session.target"
 
@@ -81,10 +94,33 @@ gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' 2>/dev/null
 # Ajustes minimalistas do Thunar (se instalado)
 command -v thunar >/dev/null 2>&1 && bash "$DOTFILES_DIR/arch/scripts/thunar-minimal.sh" || true
 
+# qimgv = app PADRAO de imagem (double-clique no Thunar abre nele). Nivel de
+# usuario (~/.config/mimeapps.list). Cada mime como argumento LITERAL: no zsh
+# uma variavel nao sofre word-split e o xdg-mime gravaria uma chave invalida.
+if command -v qimgv >/dev/null 2>&1; then
+  xdg-mime default qimgv.desktop \
+    image/png image/jpeg image/gif image/webp image/bmp image/tiff \
+    image/x-icon image/vnd.microsoft.icon image/svg+xml image/avif \
+    image/heic image/jxl image/x-xpixmap image/x-portable-pixmap image/x-tga \
+    2>/dev/null && log_ok "qimgv definido como visualizador de imagem padrao" \
+    || log_warn "Falha ao definir o qimgv como padrao de imagem"
+fi
+
 # Wallpaper padrao (gera se nao existir)
 if [ ! -f "$HOME/Pictures/Wallpapers/default.png" ]; then
   log_info "Gerando wallpaper padrao..."
   python3 "$DOTFILES_DIR/arch/scripts/gen-default-wallpaper.py" || log_warn "Falha ao gerar wallpaper"
+fi
+
+# user.js do Zen: liga aceleracao de video por HW (VA-API/iHD). O nome do perfil
+# tem hash variavel, entao descobrimos o perfil "Default" em runtime e linkamos.
+# So funciona se o Zen ja rodou uma vez (o perfil precisa existir).
+ZEN_PROFILE="$(find "$HOME/.config/zen" -maxdepth 1 -type d -name '*Default*' 2>/dev/null | head -1)"
+if [ -n "$ZEN_PROFILE" ]; then
+  safe_link "$DOTFILES_DIR/zen/user.js" "$ZEN_PROFILE/user.js"
+  log_ok "Zen VA-API user.js aplicado (reinicie o Zen p/ valer)"
+else
+  log_warn "Perfil do Zen nao encontrado — abra o Zen uma vez e rode este script de novo p/ o user.js (aceleracao de video)"
 fi
 
 # ---------------------------------------------------------------------

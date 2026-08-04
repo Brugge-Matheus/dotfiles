@@ -1,0 +1,16 @@
+/* =====================================================================
+ *  Paleta: BLACK (minimalista) — a que vinhamos usando no rofi.
+ *  Casa com waybar / fuzzel / hyprlock.
+ *  Para ativar: no config.rasi use  @import "colors-black.rasi"
+ * ===================================================================== */
+* {
+    bg:        #0a0a0a;   /* fundo da janela */
+    bg-alt:    #141414;   /* fundo da barra de busca */
+    fg:        #e5e5e5;   /* texto */
+    fg-dim:    #7a7a7a;   /* placeholder / detalhes apagados */
+    accent:    #d4d4d4;   /* prompt / detalhes */
+    sel:       #262626;   /* realce da linha selecionada (escuro p/ nao sumir icone) */
+    sel-fg:    #ffffff;   /* texto branco sobre o realce escuro */
+    urgent:    #d16969;   /* erro / urgente */
+    border-c:  #262626;   /* borda externa */
+}

@@ -11,11 +11,21 @@
   "margin-left": 0,
   "margin-right": 0,
   "modules-left": [
-    "hyprland/workspaces",
+    "custom/ws1",
+    "custom/ws2",
+    "custom/ws3",
+    "custom/ws4",
+    "custom/ws5",
+    "custom/ws6",
+    "custom/ws7",
+    "custom/ws8",
+    "custom/ws9",
+    "custom/ws10",
     "custom/spotify",
     "tray"
   ],
   "modules-center": [
+    "wlr/taskbar",
     "cpu",
     "memory",
     "temperature"
@@ -26,7 +36,7 @@
     "pulseaudio",
     "bluetooth",
     "network",
-    "battery",
+    "custom/battery",
     "custom/clock",
     "custom/power"
   ],
@@ -35,9 +45,23 @@
     "tooltip": false,
     "on-click": "walker"
   },
-  "hyprland/workspaces": {
-    "format": "{id}",
-    "on-click": "activate"
+  "custom/ws1": { "exec": "~/.config/waybar/scripts/ws-button.sh 1", "return-type": "json", "interval": 5, "signal": 9, "format": "{}", "on-click": "~/.config/waybar/scripts/ws-focus.sh 1" },
+  "custom/ws2": { "exec": "~/.config/waybar/scripts/ws-button.sh 2", "return-type": "json", "interval": 5, "signal": 9, "format": "{}", "on-click": "~/.config/waybar/scripts/ws-focus.sh 2" },
+  "custom/ws3": { "exec": "~/.config/waybar/scripts/ws-button.sh 3", "return-type": "json", "interval": 5, "signal": 9, "format": "{}", "on-click": "~/.config/waybar/scripts/ws-focus.sh 3" },
+  "custom/ws4": { "exec": "~/.config/waybar/scripts/ws-button.sh 4", "return-type": "json", "interval": 5, "signal": 9, "format": "{}", "on-click": "~/.config/waybar/scripts/ws-focus.sh 4" },
+  "custom/ws5": { "exec": "~/.config/waybar/scripts/ws-button.sh 5", "return-type": "json", "interval": 5, "signal": 9, "format": "{}", "on-click": "~/.config/waybar/scripts/ws-focus.sh 5" },
+  "custom/ws6": { "exec": "~/.config/waybar/scripts/ws-button.sh 6", "return-type": "json", "interval": 5, "signal": 9, "format": "{}", "on-click": "~/.config/waybar/scripts/ws-focus.sh 6" },
+  "custom/ws7": { "exec": "~/.config/waybar/scripts/ws-button.sh 7", "return-type": "json", "interval": 5, "signal": 9, "format": "{}", "on-click": "~/.config/waybar/scripts/ws-focus.sh 7" },
+  "custom/ws8": { "exec": "~/.config/waybar/scripts/ws-button.sh 8", "return-type": "json", "interval": 5, "signal": 9, "format": "{}", "on-click": "~/.config/waybar/scripts/ws-focus.sh 8" },
+  "custom/ws9": { "exec": "~/.config/waybar/scripts/ws-button.sh 9", "return-type": "json", "interval": 5, "signal": 9, "format": "{}", "on-click": "~/.config/waybar/scripts/ws-focus.sh 9" },
+  "custom/ws10": { "exec": "~/.config/waybar/scripts/ws-button.sh 10", "return-type": "json", "interval": 5, "signal": 9, "format": "{}", "on-click": "~/.config/waybar/scripts/ws-focus.sh 10" },
+  "wlr/taskbar": {
+    "format": "{icon}",
+    "icon-size": 16,
+    "all-outputs": true,
+    "tooltip-format": "{title}",
+    "on-click": "activate",
+    "on-click-middle": "close"
   },
   "cpu": {
     "interval": 2,
@@ -89,23 +113,12 @@
     "tooltip-format-disconnected": "Desconectado",
     "on-click": "ghostty -e nmtui"
   },
-  "battery": {
-    "states": {
-      "warning": 30,
-      "critical": 15
-    },
-    "format": "{icon} {capacity}%",
-    "format-charging": " {capacity}%",
-    "format-plugged": " {capacity}%",
-    "format-icons": [
-      "",
-      "",
-      "",
-      "",
-      ""
-    ],
-    "on-click": "~/.config/waybar/scripts/powerprofile.sh",
-    "tooltip-format": "{capacity}% ({time})\nClique: perfil de energia"
+  "custom/battery": {
+    "exec": "~/.config/waybar/scripts/battery-status.sh",
+    "return-type": "json",
+    "interval": 15,
+    "signal": 8,
+    "on-click": "~/.config/waybar/scripts/powerprofile.sh"
   },
   "custom/power": {
     "format": "",
