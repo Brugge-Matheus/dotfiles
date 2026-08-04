@@ -1,6 +1,21 @@
 return {
   "nvim-lualine/lualine.nvim",
   opts = function(_, opts)
+    -- Cores exatas do statusBar do Min Darker Theme
+    local bg  = "#070707" -- statusBar.background
+    local fg  = "#7E7E7E" -- statusBar.foreground
+    local sel = "#303030" -- list.activeSelectionBackground (usado no bloco "a")
+
+    opts.options = opts.options or {}
+    opts.options.theme = {
+      normal   = { a = { bg = sel, fg = "#FAFAFA", gui = "bold" }, b = { bg = bg, fg = fg }, c = { bg = bg, fg = fg } },
+      insert   = { a = { bg = "#c74e39", fg = "#FAFAFA", gui = "bold" }, b = { bg = bg, fg = fg } },
+      visual   = { a = { bg = "#b392f0", fg = "#0C0C0C", gui = "bold" }, b = { bg = bg, fg = fg } },
+      replace  = { a = { bg = "#FF9800", fg = "#0C0C0C", gui = "bold" }, b = { bg = bg, fg = fg } },
+      command  = { a = { bg = "#81b88b", fg = "#0C0C0C", gui = "bold" }, b = { bg = bg, fg = fg } },
+      inactive = { a = { bg = bg, fg = fg }, b = { bg = bg, fg = fg }, c = { bg = bg, fg = fg } },
+    }
+
     -- Indicador de encoding no canto inferior direito
     -- Aparece sempre; destaca em amarelo quando não é UTF-8
     local encoding_component = {

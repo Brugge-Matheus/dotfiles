@@ -37,33 +37,47 @@ window#waybar {
 #bluetooth,
 #network,
 #battery,
+#custom-battery,
 #custom-clock,
 #custom-power {
   padding: 0 11px;
   color: #d4d4d4;
 }
 
-/* workspaces (numeros) */
-#workspaces { padding: 0 5px; }
-#workspaces button {
+/* workspaces (botoes custom/wsN — clique via hl.dsp.focus; vazios colapsam) */
+#custom-ws1, #custom-ws2, #custom-ws3, #custom-ws4, #custom-ws5, #custom-ws6, #custom-ws7, #custom-ws8, #custom-ws9, #custom-ws10 {
   color: #555555;
   padding: 0 9px;
   margin: 4px 2px;
   border-radius: 6px;
   background: transparent;
 }
-#workspaces button.active {
+#custom-ws1.active, #custom-ws2.active, #custom-ws3.active, #custom-ws4.active, #custom-ws5.active, #custom-ws6.active, #custom-ws7.active, #custom-ws8.active, #custom-ws9.active, #custom-ws10.active {
   color: #0a0a0a;
   background: #d4d4d4;
 }
-#workspaces button.urgent {
-  color: #0a0a0a;
-  background: #e06c75;
-}
-#workspaces button:hover {
+#custom-ws1:hover, #custom-ws2:hover, #custom-ws3:hover, #custom-ws4:hover, #custom-ws5:hover, #custom-ws6:hover, #custom-ws7:hover, #custom-ws8:hover, #custom-ws9:hover, #custom-ws10:hover {
   color: #ffffff;
   background: #1c1c1c;
 }
+/* workspace vazio/inativo: some (sem largura) */
+#custom-ws1.empty, #custom-ws2.empty, #custom-ws3.empty, #custom-ws4.empty, #custom-ws5.empty, #custom-ws6.empty, #custom-ws7.empty, #custom-ws8.empty, #custom-ws9.empty, #custom-ws10.empty {
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  background: transparent;
+}
+
+/* taskbar: uma caixa por app aberto (estilo workspaces) */
+#taskbar { margin-right: 16px; }          /* separa levemente do cpu/mem/temp */
+#taskbar button {
+  padding: 0 8px;
+  margin: 4px 2px;
+  border-radius: 6px;
+  background: transparent;
+}
+#taskbar button.active { background: #d4d4d4; }   /* janela em foco */
+#taskbar button:hover  { background: #1c1c1c; }
 
 /* widget do spotify */
 #custom-spotify         { color: #777777; }
@@ -81,16 +95,16 @@ window#waybar {
 
 /* direita */
 #custom-weather { color: #7aa2cf; }
-#backlight, #pulseaudio, #bluetooth, #network, #battery { color: #c8c8c8; }
+#backlight, #pulseaudio, #bluetooth, #network, #battery, #custom-battery { color: #c8c8c8; }
 #custom-clock { color: #ffffff; font-weight: 700; }
 
 #pulseaudio.muted,
 #network.disconnected,
 #bluetooth.disabled { color: #555555; }
 
-#battery.charging { color: #98c379; }
-#battery.warning:not(.charging)  { color: #e5c07b; }
-#battery.critical:not(.charging) {
+#battery.charging, #custom-battery.charging { color: #98c379; }
+#battery.warning:not(.charging),  #custom-battery.warning:not(.charging)  { color: #e5c07b; }
+#battery.critical:not(.charging), #custom-battery.critical:not(.charging) {
   color: #e06c75;
   animation: blink 1s steps(2) infinite;
 }

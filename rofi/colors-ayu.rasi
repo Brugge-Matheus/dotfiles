@@ -1,0 +1,17 @@
+/* =====================================================================
+ *  Paleta: AYU-DARK — mesma do tema do LazyVim (colorscheme = "ayu",
+ *  mirage = false). Cores extraidas do plugin (lua/ayu/colors.lua).
+ *  Acento ambar (#E6B450) e selecao azul (#1B3A5B) — a cara do ayu.
+ *  Para ativar: no config.rasi use  @import "colors-ayu.rasi"
+ * ===================================================================== */
+* {
+    bg:        #0B0E14;   /* ayu bg        — fundo da janela */
+    bg-alt:    #0F131A;   /* ayu panel_bg  — fundo da barra de busca */
+    fg:        #BFBDB6;   /* ayu fg        — texto */
+    fg-dim:    #636A72;   /* ayu comment   — placeholder / detalhes */
+    accent:    #E6B450;   /* ayu accent    — ambar (prompt/detalhes) */
+    sel:       #FF8F4066;  /* ayu keyword translucido (~40%) — realce laranja suave */
+    sel-fg:    #FFFFFF;    /* texto claro sobre o realce sutil */
+    urgent:    #D95757;   /* ayu error     — erro / urgente */
+    border-c:  #1E222A;   /* ayu guide     — borda externa */
+}

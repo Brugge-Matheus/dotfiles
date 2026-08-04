@@ -28,4 +28,15 @@ return {
     "nvim-tree/nvim-web-devicons",
     opts = {},
   },
+
+  -- Cursorline inteligente: aparece só quando cursor está parado
+  -- (word highlight já é feito pelo snacks.words via LSP)
+  {
+    "yamatsum/nvim-cursorline",
+    event = "BufReadPost",
+    opts = {
+      cursorline = { enable = true, timeout = 500, number = false },
+      cursorword = { enable = false }, -- snacks.words já faz isso
+    },
+  },
 }
