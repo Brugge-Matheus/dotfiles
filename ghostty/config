@@ -7,3 +7,19 @@ font-size = 12
 # Aqui garantimos que Ctrl+Backspace no terminal envie ESC+DEL (\e^?), que o zsh
 # ja mapeia para backward-kill-word — mantendo o apagar-palavra no terminal.
 keybind = ctrl+backspace=text:\x1b\x7f
+
+# =====================================================================
+#  Aparencia do fundo — transparencia   (facil de ajustar)
+#  IMPORTANTE: o Ghostty NAO aceita comentario na mesma linha do valor;
+#  os comentarios ficam sempre ACIMA da opcao.
+#  Depois de mudar algo aqui: recarregue com Ctrl+Shift+, (ou abra outra
+#  janela).
+# =====================================================================
+
+# Nivel de transparencia do fundo (0.0 = invisivel .. 1.0 = opaco).
+# Referencia:  0.95 quase solido  |  0.90 sutil  |  0.82 medio  |  0.70 bem transparente.
+# 0.82 = transparencia visivel o suficiente pro blur aparecer, sem perder leitura.
+background-opacity = 0.82
+# Desfoca o que esta atras da janela (desktop/janelas): raio do blur.
+# true = raio padrao; numero maior = mais "fosco". 20 = frosted glass equilibrado.
+background-blur = 20
