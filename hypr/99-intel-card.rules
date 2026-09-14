@@ -1,0 +1,11 @@
+# Symlink estavel p/ a GPU Intel (que dirige o compositor no Optimus).
+# Instala em /etc/udev/rules.d/99-intel-card.rules
+#
+# POR QUE: o Hyprland/aquamarine deve usar SO a Intel (a NVIDIA nao dirige tela
+# nenhuma neste notebook). Mas nao da p/ apontar o AQ_DRM_DEVICES por:
+#   - /dev/dri/card1  -> numeracao card0/card1 NAO e estavel entre boots
+#   - by-path         -> o caminho tem ":" e o AQ_DRM_DEVICES usa ":" como
+#                        separador de lista -> quebra o parsing -> backend morre
+# Solucao: um symlink SEM ":" criado por udev, casando pelo endereco PCI da
+# Intel (0000:00:02.0), que e fixo. O hyprland.lua aponta p/ /dev/dri/intel-gpu.
+SUBSYSTEM=="drm", KERNEL=="card[0-9]*", KERNELS=="0000:00:02.0", SYMLINK+="dri/intel-gpu"

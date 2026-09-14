@@ -115,10 +115,28 @@ hl.env("QT_QPA_PLATFORMTHEME", "qt6ct")
 -- Datas/horas em portugues (Waybar, hyprlock, etc.) sem mudar o idioma do sistema
 hl.env("LC_TIME", "pt_BR.UTF-8")
 
--- GPU HIBRIDA (Optimus): a Intel dirige o compositor; a NVIDIA fica so para
--- offload via "prime-run <app>". O Hyprland costuma escolher a Intel sozinho.
--- SE algum dia der tela preta/lag (escolheu a GPU errada), descomente a linha:
--- hl.env("AQ_DRM_DEVICES", "/dev/dri/by-path/pci-0000:00:02.0-card:/dev/dri/by-path/pci-0000:01:00.0-card")
+-- GPU HIBRIDA (Optimus): a Intel (card1) dirige TODAS as telas conectadas
+-- (eDP-1 = painel, HDMI-A-1 = monitor externo). A NVIDIA (card0) NAO controla
+-- nenhuma saida conectada — so serve p/ offload via "prime-run <app>".
+-- Por isso restringimos o aquamarine/Hyprland a APENAS a Intel: assim o
+-- compositor nunca gerencia o DRM da NVIDIA.
+--
+-- POR QUE (crash no resume): ao acordar de um suspend LONGO (S3 deep), o
+-- aquamarine reinicializava o DRM da NVIDIA (que nao desenha nada) e o
+-- compositor caia -> tela do "Hyprland crashou". Sem a NVIDIA na lista, nao ha
+-- o que reinicializar e o resume fica estavel. Config da NVIDIA (Preserve=2,
+-- servicos suspend/resume, VRAM em /var/tmp) ja estava correta; ver [[arch-suspend-dpms]].
+--
+-- prime-run continua funcionando (usa o render node renderD129 + libs da NVIDIA,
+-- nao a lista de scanout).
+--
+-- PEGADINHA (nao repetir): o AQ_DRM_DEVICES usa ":" como SEPARADOR de lista, e o
+-- caminho by-path CONTEM ":" (pci-0000:00:02.0). Se usar by-path aqui, o aquamarine
+-- picota o caminho, nao acha GPU e o backend MORRE no boot ("CBackend::create()
+-- failed!", cai no tty). Por isso NAO da p/ usar by-path. Solucao robusta: um
+-- symlink SEM ":" criado por udev apontando p/ a Intel (ver 99-intel-card.rules),
+-- e apontar aqui p/ esse symlink. Ativado abaixo:
+hl.env("AQ_DRM_DEVICES", "/dev/dri/intel-gpu")
 
 
 -----------------------
@@ -183,10 +201,11 @@ hl.config({
 
         blur = {
             enabled           = true,
-            size              = 2,
-            passes            = 1,
+            size              = 6,       -- raio do blur (2=imperceptivel, 6=equilibrado, 8=forte)
+            passes            = 3,       -- nº de passadas: o que MAIS define a forca do "vidro fosco" (1=nada, 3=meio, 4=forte)
             vibrancy          = 0.1696,
             new_optimizations = true,   -- reduz o custo do blur na iGPU
+            xray              = false,  -- true = borra so o wallpaper (ignora janelas atras); troque se preferir
         },
     },
 
