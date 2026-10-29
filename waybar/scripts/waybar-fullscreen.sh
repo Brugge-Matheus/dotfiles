@@ -17,6 +17,10 @@
 # Robustez: a visibilidade e dirigida pelo estado REAL (reserva do monitor),
 # nao por um flag interno -> imune a dessincronia do toggle SIGUSR1.
 # Lanca as barras no inicio e reage a conexao/desconexao de monitores.
+# Auto-cura: depois de suspend/resume o monitor externo pode ser religado (novo
+# modeset) e o processo da waybar sobrevive SEM surface (barra some, processo
+# vivo). Por isso verificamos a layer-surface real (hyprctl layers) e relancamos
+# a instancia daquele monitor se ela nao tiver barra desenhada.
 # Iniciado no autostart do Hyprland (substitui o "waybar" direto).
 exec python3 <<'PY'
 import socket, os, json, subprocess, select, time, signal
@@ -34,6 +38,8 @@ REVEAL_AT  = 2     # cursor a <= 2px do topo do monitor -> revela a barra dele
 HIDE_BELOW = 40    # cursor a >= 40px do topo -> esconde (histerese > altura da barra)
 POLL       = 0.10  # polling do cursor enquanto algum monitor estiver em fullscreen
 SETTLE     = 0.25  # apos um toggle, espera propagar antes da proxima leitura
+HEALTH_EVERY = 3.0 # checagem periodica das barras (mesmo sem eventos)
+BAR_GRACE    = 4.0 # tempo p/ uma barra recem-lancada criar a surface antes de ser julgada
 
 def hctl(*args):
     try:
@@ -70,6 +76,19 @@ def bars_by_output(mons):
                 res[m["name"]] = pid
     return res
 
+launched_at = {}   # saida -> instante do ultimo lancamento
+
+def bar_surfaces():
+    """saida -> conjunto de pids de waybar com layer-surface realmente criada."""
+    res = {}
+    d = hctl("layers") or {}
+    for out, v in d.items():
+        for ls in (v.get("levels") or {}).values():
+            for l in ls:
+                if l.get("namespace") == "waybar":
+                    res.setdefault(out, set()).add(l.get("pid"))
+    return res
+
 def ensure_bars(mons):
     """1 waybar por monitor conectado (idempotente). Mata barras orfas."""
     os.makedirs(RUNDIR, exist_ok=True)
@@ -91,11 +110,24 @@ def ensure_bars(mons):
                 except Exception: pass
     except Exception:
         pass
-    # lanca as que faltam
+    # mata barras vivas mas SEM surface (pos suspend/resume), passada a carencia
     running = bars_by_output(mons)
+    surf = bar_surfaces()
+    now = time.time()
+    for name, pid in list(running.items()):
+        if pid in surf.get(name, ()):
+            continue
+        if now - launched_at.get(name, 0) < BAR_GRACE:
+            continue
+        try: os.kill(pid, signal.SIGKILL)
+        except Exception: pass
+        del running[name]
+        time.sleep(0.2)
+    # lanca as que faltam
     launched = False
     for name in names:
         if name not in running:
+            launched_at[name] = time.time()
             with open(wrapper(name), "w") as f:
                 json.dump({"output": name, "include": [MAIN_CONFIG]}, f)
             subprocess.Popen(["waybar", "-c", wrapper(name), "-s", STYLE],
@@ -167,8 +199,9 @@ s = socket.socket(socket.AF_UNIX)
 s.connect(sockpath)
 s.setblocking(False)
 buf = b""
+last_health = time.time()
 while True:
-    timeout = POLL if any_fs else None   # so faz polling em fullscreen
+    timeout = POLL if any_fs else HEALTH_EVERY   # polling rapido so em fullscreen; senao so health check
     r, _, _ = select.select([s], [], [], timeout)
     if r:
         try:
@@ -191,5 +224,8 @@ while True:
         if hotplug or changed:
             any_fs = reconcile()
     else:
+        if time.time() - last_health >= HEALTH_EVERY:
+            ensure_bars(monitors())
+            last_health = time.time()
         any_fs = reconcile()
 PY

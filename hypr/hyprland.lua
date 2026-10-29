@@ -89,6 +89,14 @@ hl.on("hyprland.start", function ()
     hl.exec_cmd("wl-paste --type image --watch cliphist store")
 end)
 
+-- Monitor conectado a QUENTE (hotplug): a waybar-por-monitor ja reage sozinha
+-- (o waybar-fullscreen.sh escuta o socket de eventos), mas o WALLPAPER nao —
+-- sem isto o monitor recem-plugado fica SEM papel de parede (aparencia de
+-- "Hyprland cru"). Aqui restauramos o wallpaper quando um monitor e adicionado.
+hl.on("monitor.added", function()
+    hl.exec_cmd("~/.config/waybar/scripts/wallpaper-restore.sh")
+end)
+
 
 -------------------------------
 ---- ENVIRONMENT VARIABLES ----
