@@ -63,8 +63,10 @@ vim.api.nvim_create_autocmd("SwapExists", {
   end,
 })
 
--- Pisca o texto copiado por 1 segundo
+-- Pisca o texto copiado por 1 segundo (substitui o highlight_yank do LazyVim,
+-- recriando o mesmo augroup em vez de rodar os dois)
 vim.api.nvim_create_autocmd("TextYankPost", {
+  group = vim.api.nvim_create_augroup("lazyvim_highlight_yank", { clear = true }),
   desc = "Highlight on yank",
   callback = function()
     vim.highlight.on_yank({ higroup = "IncSearch", timeout = 1000 })
@@ -189,17 +191,5 @@ vim.api.nvim_create_autocmd("FileType", {
 
     -- gd em blade → gf (LSP não resolve tags Livewire/Blade)
     vim.keymap.set("n", "gd", "gf", { buffer = true, remap = true, desc = "Go to Blade/Livewire component" })
-  end,
-})
-
--- Restaura o cursor na última posição ao reabrir um arquivo
-vim.api.nvim_create_autocmd("BufReadPost", {
-  desc = "Restore cursor position",
-  callback = function()
-    local mark = vim.api.nvim_buf_get_mark(0, '"')
-    local line_count = vim.api.nvim_buf_line_count(0)
-    if mark[1] > 0 and mark[1] <= line_count then
-      vim.api.nvim_win_set_cursor(0, mark)
-    end
   end,
 })

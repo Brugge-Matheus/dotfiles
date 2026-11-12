@@ -1,7 +1,5 @@
--- Configuração Ruby para LazyVim
+-- Configuração Ruby para LazyVim (o extra lang.ruby é habilitado via lazyvim.json)
 return {
-  { import = "lazyvim.plugins.extras.lang.ruby" },
-
   {
     "neovim/nvim-lspconfig",
     opts = {

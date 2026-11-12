@@ -1,4 +1,4 @@
--- Use intelephense, não phpactor
+-- Use intelephense, não phpactor (o extra lang.php instala via Mason)
 vim.g.lazyvim_php_lsp = "intelephense"
 
 return {
@@ -9,7 +9,20 @@ return {
         intelephense = {
           settings = {
             intelephense = {
+              environment = { phpVersion = "8.3" },
+              stubs = {
+                "bcmath", "bz2", "calendar", "Core", "curl", "date",
+                "dom", "exif", "fileinfo", "filter", "gd", "gettext",
+                "hash", "iconv", "json", "libxml", "mbstring", "meta",
+                "mysqli", "openssl", "pcntl", "pcre", "PDO", "pdo_mysql",
+                "pdo_pgsql", "pdo_sqlite", "Phar", "posix", "random",
+                "readline", "redis", "Reflection", "session", "SimpleXML",
+                "soap", "sockets", "sodium", "SPL", "sqlite3", "standard",
+                "superglobals", "tokenizer", "xml", "xmlreader", "xmlwriter",
+                "zip", "zlib",
+              },
               files = {
+                maxSize = 5000000,
                 associations = { "*.php", "*.inc", "*.phtml", "*.blade.php" },
               },
               diagnostics = {
@@ -35,17 +48,5 @@ return {
         php = {}, -- desliga phpcs
       },
     },
-  },
-  {
-    "nvim-treesitter/nvim-treesitter",
-    opts = function(_, opts)
-      opts.ensure_installed = opts.ensure_installed or {}
-      vim.filetype.add({
-        extension = {
-          inc = "php",
-          phtml = "php",
-        },
-      })
-    end,
   },
 }

@@ -2,7 +2,7 @@ return {
   {
     "Shatur/neovim-ayu",
     name = "ayu",
-    priority = 1000,
+    lazy = true, -- só carrega se rodar :colorscheme ayu (o tema ativo é o min-darker)
     opts = {
       mirage = false,
     },
