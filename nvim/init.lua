@@ -2,8 +2,12 @@
 vim.env.PATH = vim.env.HOME .. "/.asdf/shims:" .. vim.env.PATH
 
 vim.filetype.add({
-    pattern = { [".*%.blade%.php"] = "blade" },
-  })
+  extension = {
+    inc = "php",
+    phtml = "php",
+  },
+  pattern = { [".*%.blade%.php"] = "blade" },
+})
 
 -- bootstrap lazy.nvim, LazyVim and your plugins
 require("config.lazy")
