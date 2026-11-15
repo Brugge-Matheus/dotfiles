@@ -33,7 +33,7 @@ Neovim, e também só pelo terminal com o `arduino-cli`. Tem que funcionar no **
 ## Arquivos
 | Arquivo | O que faz |
 |---|---|
-| `nvim/lua/arduino/init.lua` | Todo o módulo (~600 linhas): comandos, pickers, compile/upload async, monitor, LSP, decode |
+| `nvim/lua/arduino/init.lua` | Todo o módulo (~750 linhas): comandos, pickers, compile/upload async, monitor, LSP, decode |
 | `nvim/lua/config/autocmds.lua` | `require("arduino").setup()` no fim (carrega no VeryLazy) |
 | `nvim/lua/plugins/c.lua` | clangd: `filetypes` inclui `arduino`; `cmd` ganhou `--query-driver=` (via `require("arduino").query_driver()`); treesitter ganhou `arduino` |
 | `arch/packages/04-apps.txt` | + `arduino-cli`, `picocom` |
