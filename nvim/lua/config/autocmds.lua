@@ -193,3 +193,6 @@ vim.api.nvim_create_autocmd("FileType", {
     vim.keymap.set("n", "gd", "gf", { buffer = true, remap = true, desc = "Go to Blade/Livewire component" })
   end,
 })
+
+-- Arduino/ESP32 via arduino-cli (lua/arduino/init.lua) — atalhos em <leader>m
+require("arduino").setup()

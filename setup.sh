@@ -168,6 +168,7 @@ install_macos_deps() {
     coreutils gnu-sed gawk tree wget curl git
     lazygit fd bat asdf go
     gcc make
+    arduino-cli picocom
   )
 
   for pkg in "${BREW_PACKAGES[@]}"; do

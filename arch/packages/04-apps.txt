@@ -13,6 +13,10 @@ imagemagick          # preview/convert de imagens
 7zip                 # extrair/compactar (yazi)
 jq                   # usado por previews/scripts do yazi
 
+# Desenvolvimento embarcado (Arduino/ESP32 no nvim — ver nvim/lua/arduino e docs/arduino-cli-manual.pdf)
+arduino-cli          # facade p/ compilar/gravar/monitor (gcc cruzado, esptool, avrdude)
+picocom              # terminal serial alternativo p/ uso fora do nvim
+
 # Apps
 discord              # chat/voz
 obsidian             # notas markdown
