@@ -373,7 +373,7 @@ function open_monitor(ctx, baud, focus, attempt)
   vim.wo[w].winbar = monitor_title(ctx.port, baud)
   follow(w)
   vim.keymap.set("n", "q", close_monitor, { buffer = b, silent = true, desc = "Fechar monitor" })
-  state.monitor = { buf = b, job = job, port = ctx.port, baud = baud }
+  state.monitor = { buf = b, job = job, port = ctx.port, baud = baud, ctx = ctx }
   if ctx.fqbn:match("^esp32:") then
     watch_flood(ctx, baud, focus, attempt or 1, b)
   end
@@ -520,14 +520,56 @@ local function join_fqbn(base, opts)
   return base .. ":" .. table.concat(kv, ",")
 end
 
-local function detect_baud(dir)
+--- baud do `Serial.begin(N)` no código do sketch (lê o buffer se estiver aberto, senão o arquivo)
+local function code_baud(dir)
   for _, f in ipairs(vim.fn.glob(dir .. "/*.ino", false, true)) do
-    local b = (read(f) or ""):match("Serial%d?%.begin%s*%(%s*(%d+)")
-    if b then
-      return tonumber(b)
+    local text
+    local b = vim.fn.bufnr(f)
+    if b > 0 and vim.api.nvim_buf_is_loaded(b) then
+      text = table.concat(vim.api.nvim_buf_get_lines(b, 0, -1, false), "\n")
+    else
+      text = read(f) or ""
+    end
+    local n = text:match("Serial%d?%.begin%s*%(%s*(%d+)")
+    if n then
+      return tonumber(n)
     end
   end
-  return 115200
+end
+
+local function detect_baud(dir)
+  return code_baud(dir) or 115200
+end
+
+-- baud ESCOLHIDO no nvim (por sketch, persistido em stdpath("state"))
+local function baud_file()
+  return vim.fn.stdpath("state") .. "/arduino-baud.json"
+end
+
+local function saved_baud(dir)
+  local ok, t = pcall(vim.json.decode, read(baud_file()) or "{}")
+  return ok and type(t) == "table" and tonumber(t[dir]) or nil
+end
+
+local function save_baud(dir, baud)
+  local ok, t = pcall(vim.json.decode, read(baud_file()) or "{}")
+  t = (ok and type(t) == "table") and t or {}
+  t[dir] = baud -- nil remove
+  vim.fn.mkdir(vim.fn.stdpath("state"), "p")
+  write(baud_file(), vim.json.encode(t))
+end
+
+--- baud que o monitor vai usar + de onde veio: "escolhido" | "codigo" | "padrao"
+local function monitor_baud(dir)
+  local saved = saved_baud(dir)
+  if saved then
+    return saved, "escolhido"
+  end
+  local code = code_baud(dir)
+  if code then
+    return code, "codigo"
+  end
+  return 115200, "padrao"
 end
 
 -- ───────────────────────── LSP (clangd) ─────────────────────────
@@ -944,7 +986,7 @@ local function run_compile(ctx, upload)
         end
         notify((upload and "Gravado ✔\n" or "Compilado ✔\n") .. table.concat(sizes, "\n"), L.INFO, "arduino-build")
         if upload then
-          open_monitor(ctx, vim.g.arduino_baud or detect_baud(ctx.dir), false)
+          open_monitor(ctx, (monitor_baud(ctx.dir)), false)
         end
       else
         stream.finish(("✘ falhou (código %s)"):format(res.code))
@@ -1027,7 +1069,7 @@ function M.monitor(baud)
   close_monitor() -- limpa monitor que já terminou ou que vai trocar de baud
   with_ctx(true, function(ctx)
     ensure_port_free(ctx.port, function()
-      open_monitor(ctx, new_baud or vim.g.arduino_baud or detect_baud(ctx.dir), true)
+      open_monitor(ctx, new_baud or (monitor_baud(ctx.dir)), true)
     end)
   end)
 end
@@ -1131,6 +1173,52 @@ end
 
 -- ───────────────────────── info / novo sketch ─────────────────────────
 
+--- texto em janela flutuante: fica até você fechar (q / Esc / Enter), cresce p/ caber o texto
+--- inteiro e quebra linhas longas (nada é cortado, ao contrário de vim.notify).
+local function float_text(title, lines, warn_pat)
+  local b = vim.api.nvim_create_buf(false, true)
+  vim.bo[b].bufhidden = "wipe"
+  vim.api.nvim_buf_set_lines(b, 0, -1, false, lines)
+  vim.bo[b].modifiable = false
+  local maxw = math.max(vim.o.columns - 8, 20)
+  local w = 0
+  for _, l in ipairs(lines) do
+    w = math.max(w, vim.fn.strdisplaywidth(l))
+  end
+  w = math.min(w + 2, maxw)
+  local h = 0
+  for _, l in ipairs(lines) do
+    h = h + math.max(1, math.ceil(vim.fn.strdisplaywidth(l) / w))
+  end
+  h = math.min(h, math.max(vim.o.lines - 6, 3))
+  local win = vim.api.nvim_open_win(b, true, {
+    relative = "editor",
+    style = "minimal",
+    border = "rounded",
+    title = " " .. title .. " ",
+    title_pos = "center",
+    footer = " q · Esc · Enter fecham ",
+    footer_pos = "center",
+    width = w,
+    height = h,
+    row = math.max(math.floor((vim.o.lines - h) / 2) - 1, 0),
+    col = math.max(math.floor((vim.o.columns - w) / 2), 0),
+  })
+  vim.wo[win].wrap = true
+  vim.wo[win].linebreak = false -- quebra exata na largura: nenhum caractere some
+  for _, k in ipairs({ "q", "<Esc>", "<cr>" }) do
+    vim.keymap.set("n", k, "<cmd>close<cr>", { buffer = b, silent = true, nowait = true })
+  end
+  if warn_pat then
+    for i, l in ipairs(lines) do
+      if l:find(warn_pat, 1, true) then
+        vim.api.nvim_buf_add_highlight(b, -1, "WarningMsg", i - 1, 0, -1)
+      end
+    end
+  end
+  return win
+end
+
 function M.info()
   local dir = sketch_dir()
   if not dir then
@@ -1138,14 +1226,102 @@ function M.info()
   end
   run({ "version", "--format", "json" }, function(res)
     local ok, v = pcall(vim.json.decode, res.stdout or "")
-    notify(table.concat({
-      "sketch : " .. dir,
-      "placa  : " .. (yaml_get(dir, "default_fqbn") or "— (<leader>mb)"),
-      "porta  : " .. (yaml_get(dir, "default_port") or "— (<leader>mp)"),
-      "baud   : " .. (vim.g.arduino_baud or detect_baud(dir)),
-      "cli    : " .. (ok and v.VersionString or "?") .. "  (" .. (cli() or "?") .. ")",
-      "build  : " .. build_path(dir),
-    }, "\n"))
+    local baud, src = monitor_baud(dir)
+    local code = code_baud(dir)
+    local origem = ({
+      escolhido = "escolhido no nvim (<leader>mB)",
+      codigo = "automático: Serial.begin do código",
+      padrao = "padrão — sem Serial.begin no código",
+    })[src]
+    local mon = "parado"
+    if monitor_alive() then
+      mon = ("rodando @ %d em %s%s"):format(state.monitor.baud, state.monitor.port, win_of(state.monitor.buf) and "" or " (oculto)")
+    end
+    local lines = {
+      "sketch  : " .. dir,
+      "placa   : " .. (yaml_get(dir, "default_fqbn") or "— (<leader>mb)"),
+      "porta   : " .. (yaml_get(dir, "default_port") or "— (<leader>mp)"),
+      ("baud    : %d  (%s)"):format(baud, origem),
+      "código  : " .. (code and ("Serial.begin(" .. code .. ")") or "Serial.begin não encontrado"),
+    }
+    if code and code ~= baud then
+      lines[#lines + 1] = ("⚠ monitor (%d) ≠ código (%d) — texto vai sair ilegível (<leader>mB ajusta)"):format(baud, code)
+    end
+    vim.list_extend(lines, {
+      "monitor : " .. mon,
+      "cli     : " .. (ok and v.VersionString or "?") .. "  (" .. (cli() or "?") .. ")",
+      "build   : " .. build_path(dir),
+    })
+    float_text("Arduino — " .. vim.fs.basename(dir), lines, "⚠")
+  end)
+end
+
+local BAUDS = { 300, 1200, 2400, 4800, 9600, 19200, 38400, 57600, 74880, 115200, 230400, 250000, 460800, 500000, 921600, 1000000, 2000000 }
+
+--- escolhe o baud do monitor (deve ser igual ao Serial.begin do sketch). Se o monitor está
+--- aberto, reinicia já no novo baud. "Automático" volta a seguir o Serial.begin do código.
+function M.pick_baud(arg)
+  local dir = sketch_dir()
+  if not dir then
+    return
+  end
+  local function apply(baud)
+    save_baud(dir, baud)
+    local now = monitor_baud(dir)
+    notify(baud and ("Baud do monitor: %d (escolhido)"):format(baud) or ("Baud do monitor: automático (%d)"):format(now))
+    local m = state.monitor
+    if monitor_alive() and m.baud ~= now then
+      local ctx = m.ctx
+      local visible = win_of(m.buf) ~= nil
+      close_monitor()
+      open_monitor(ctx, now, false)
+      if not visible then
+        local w = win_of(state.monitor.buf)
+        if w then
+          vim.api.nvim_win_close(w, false)
+        end
+      end
+    end
+  end
+  if arg and arg ~= "" then
+    if arg == "auto" then
+      return apply(nil)
+    end
+    local n = tonumber(arg)
+    if not n then
+      return notify("Uso: :ArduinoBaud [número|auto]", L.WARN)
+    end
+    return apply(n)
+  end
+  local cur, src = monitor_baud(dir)
+  local code = code_baud(dir)
+  local items = { { auto = true } }
+  for _, b in ipairs(BAUDS) do
+    items[#items + 1] = { baud = b }
+  end
+  vim.ui.select(items, {
+    prompt = ("Baud do monitor — atual: %d (%s)"):format(cur, src),
+    format_item = function(it)
+      if it.auto then
+        return ("Automático — seguir o Serial.begin do código (%s)%s"):format(
+          code and tostring(code) or "nenhum: usa 115200",
+          src ~= "escolhido" and "   ●" or ""
+        )
+      end
+      local tags = {}
+      if src == "escolhido" and it.baud == cur then
+        tags[#tags + 1] = "●  atual"
+      end
+      if code and it.baud == code then
+        tags[#tags + 1] = "= Serial.begin do código"
+      end
+      return tostring(it.baud) .. (#tags > 0 and ("   " .. table.concat(tags, "  ")) or "")
+    end,
+  }, function(choice)
+    if not choice then
+      return
+    end
+    apply(choice.auto and nil or choice.baud)
   end)
 end
 
@@ -1181,6 +1357,7 @@ function M.setup()
   cmd("ArduinoLsp", function() M.lsp({ restart = true }) end, { desc = "Regenerar LSP (.clangd)" })
   cmd("ArduinoLog", function() M.log() end, { desc = "Mostrar/ocultar log do build" })
   cmd("ArduinoInfo", function() M.info() end, { desc = "Estado do sketch" })
+  cmd("ArduinoBaud", function(o) M.pick_baud(o.args) end, { nargs = "?", desc = "Baud do monitor [número|auto]" })
   cmd("ArduinoNew", function(o) M.new(o.args) end, { nargs = "?", desc = "Novo sketch" })
   cmd("ArduinoDecode", function(o)
     local text
@@ -1203,7 +1380,8 @@ function M.setup()
   map("o", function() M.pick_options() end, "Opções da placa")
   map("l", function() M.lib_search() end, "Bibliotecas")
   map("g", function() M.lsp({ restart = true }) end, "Regenerar LSP")
-  map("i", function() M.info() end, "Info do sketch")
+  map("i", function() M.info() end, "Info do sketch (placa, porta, baud, monitor)")
+  map("B", function() M.pick_baud() end, "Baud do monitor")
   map("L", function() M.log() end, "Log do build (mostra/oculta)")
   map("n", function() M.new() end, "Novo sketch")
   map("d", ":ArduinoDecode<cr>", "Decodificar backtrace (seleção)", "x")
