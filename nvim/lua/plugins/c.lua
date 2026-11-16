@@ -7,12 +7,18 @@ return {
         clangd = {
           -- "arduino" = sketches .ino (ver lua/arduino/init.lua)
           filetypes = { "c", "cpp", "objc", "objcpp", "cuda", "arduino" },
+          -- .ino só inicia com .clangd gerado (evita "invalid AST"); resto = padrão do lspconfig
+          root_dir = function(bufnr, on_dir)
+            require("arduino").clangd_root_dir(bufnr, on_dir)
+          end,
           cmd = {
             "clangd",
             "--background-index",
             "--clang-tidy", -- ativa clang-tidy automaticamente se estiver instalado no sistema
             "--completion-style=detailed",
             "--header-insertion=iwyu",
+            -- padrão = 100 (alfabético): em sketches ESP32 as libs do usuário caíam fora do corte
+            "--limit-results=300",
             -- deixa o clangd perguntar ao gcc cruzado (xtensa/avr) os includes do core
             "--query-driver=" .. require("arduino").query_driver(),
           },

@@ -16,7 +16,7 @@ local M = {}
 
 local TITLE = "Arduino"
 local L = vim.log.levels
-local state = { monitor = nil, reopen = false, log = {}, data_dir = nil }
+local state = { monitor = nil, logbuf = nil, data_dir = nil, last_dir = nil, inc = {} }
 
 -- ───────────────────────── util ─────────────────────────
 
@@ -42,7 +42,8 @@ local function cli()
   return p
 end
 
---- roda o arduino-cli sem bloquear; cb(res) no loop principal
+--- roda o arduino-cli sem bloquear; cb(res) no loop principal.
+--- opts.on_output(chunk): recebe stdout+stderr ao vivo (res.stdout/stderr ficam vazios)
 local function run(args, cb, opts)
   local bin = cli()
   if not bin then
@@ -50,7 +51,19 @@ local function run(args, cb, opts)
   end
   local cmd = { bin }
   vim.list_extend(cmd, args)
-  vim.system(cmd, { text = true, cwd = opts and opts.cwd }, function(res)
+  local o = { text = true, cwd = opts and opts.cwd }
+  local on_output = opts and opts.on_output
+  if on_output then
+    local function h(_, data)
+      if data then
+        vim.schedule(function()
+          on_output(data)
+        end)
+      end
+    end
+    o.stdout, o.stderr = h, h
+  end
+  vim.system(cmd, o, function(res)
     vim.schedule(function()
       cb(res)
     end)
@@ -84,23 +97,317 @@ local function write(path, content)
   f:close()
 end
 
+-- ───────────────────── painéis: log do build | monitor serial ─────────────────────
+-- Ficam embaixo da tela, lado a lado:   [ log do build | monitor serial ]
+-- Cada um fecha/abre sozinho (<leader>mL e <leader>mm) sem afetar o outro.
+
+local function win_of(buf)
+  if not buf or not vim.api.nvim_buf_is_valid(buf) then
+    return nil
+  end
+  local w = vim.fn.bufwinid(buf)
+  return w > 0 and w or nil
+end
+
+--- cursor na última linha da janela (o terminal/log "segue" a saída nova)
+local function follow(w)
+  if w and vim.api.nvim_win_is_valid(w) then
+    local b = vim.api.nvim_win_get_buf(w)
+    pcall(vim.api.nvim_win_set_cursor, w, { vim.api.nvim_buf_line_count(b), 0 })
+    pcall(vim.api.nvim_win_call, w, function()
+      vim.cmd("normal! zb")
+    end)
+  end
+end
+
+--- janela nova embaixo; se o outro painel estiver aberto, divide ao lado dele
+local function bottom_win(other, place)
+  if other then
+    vim.api.nvim_set_current_win(other)
+    vim.cmd((place == "left" and "leftabove" or "rightbelow") .. " vsplit")
+  else
+    vim.cmd("botright 14split")
+  end
+  local w = vim.api.nvim_get_current_win()
+  vim.wo[w].winfixheight = true
+  vim.wo[w].number, vim.wo[w].relativenumber, vim.wo[w].signcolumn = false, false, "no"
+  return w
+end
+
+local function log_buf()
+  if state.logbuf and vim.api.nvim_buf_is_valid(state.logbuf) then
+    return state.logbuf
+  end
+  local b = vim.api.nvim_create_buf(false, true)
+  pcall(vim.api.nvim_buf_set_name, b, "arduino-cli://build")
+  vim.bo[b].buftype, vim.bo[b].bufhidden, vim.bo[b].swapfile = "nofile", "hide", false
+  vim.bo[b].modifiable, vim.bo[b].filetype = false, "arduinolog"
+  vim.keymap.set("n", "q", "<cmd>close<cr>", { buffer = b, silent = true, desc = "Ocultar log" })
+  vim.keymap.set("n", "<cr>", function()
+    M.log_jump()
+  end, { buffer = b, silent = true, desc = "Ir p/ arquivo:linha do erro" })
+  state.logbuf = b
+  return b
+end
+
+local function log_set(lines)
+  local b = log_buf()
+  vim.bo[b].modifiable = true
+  vim.api.nvim_buf_set_lines(b, 0, -1, false, lines)
+  vim.bo[b].modifiable = false
+end
+
+local function show_log()
+  local b = log_buf()
+  local w = win_of(b)
+  if w then
+    return w
+  end
+  local cur = vim.api.nvim_get_current_win()
+  w = bottom_win(win_of(state.monitor and state.monitor.buf), "left")
+  vim.api.nvim_win_set_buf(w, b)
+  vim.wo[w].wrap = true
+  vim.wo[w].winbar = "  Build log   (q oculta · Enter pula p/ o erro · G segue o fim)"
+  follow(w)
+  if vim.api.nvim_win_is_valid(cur) then
+    vim.api.nvim_set_current_win(cur) -- foco continua no código
+  end
+  return w
+end
+
+--- começa um log novo e devolve { feed(chunk), finish(footer) } p/ saída ao vivo
+--- (esptool usa \r p/ barra de progresso: mostramos só o estado mais recente)
+local function log_stream(header)
+  local b = log_buf()
+  log_set({ header, "" })
+  show_log()
+  local n, pending = 2, ""
+  local function put(lines)
+    if not vim.api.nvim_buf_is_valid(b) then
+      return
+    end
+    vim.bo[b].modifiable = true
+    vim.api.nvim_buf_set_lines(b, n, -1, false, lines)
+    vim.bo[b].modifiable = false
+    follow(win_of(b))
+  end
+  local function last_segment(str)
+    return (str:gsub("\r+$", "")):match("[^\r]*$")
+  end
+  return {
+    feed = function(chunk)
+      pending = pending .. chunk
+      local done = {}
+      while true do
+        local i = pending:find("\n", 1, true)
+        if not i then
+          break
+        end
+        done[#done + 1] = last_segment(pending:sub(1, i - 1))
+        pending = pending:sub(i + 1)
+      end
+      local lines = vim.list_extend({}, done)
+      local partial = last_segment(pending)
+      if partial ~= "" then
+        lines[#lines + 1] = partial -- linha em andamento (barra de progresso)
+      end
+      put(lines)
+      n = n + #done
+    end,
+    finish = function(footer)
+      local lines = {}
+      if last_segment(pending) ~= "" then
+        lines[#lines + 1] = last_segment(pending)
+      end
+      lines[#lines + 1] = ""
+      lines[#lines + 1] = footer
+      put(lines)
+    end,
+  }
+end
+
+--- encerra o monitor: MATA o processo e apaga o buffer (esconder só a janela
+--- deixaria o arduino-cli segurando a porta → "Serial port busy").
+--- Retorna true se a janela estava visível (usado pelo toggle).
+local function close_monitor()
+  local m = state.monitor
+  state.monitor = nil
+  if not m then
+    return false
+  end
+  local visible = win_of(m.buf) ~= nil
+  if m.job and m.job > 0 then
+    pcall(vim.fn.jobstop, m.job)
+  end
+  if vim.api.nvim_buf_is_valid(m.buf) then
+    pcall(vim.api.nvim_buf_delete, m.buf, { force = true })
+  end
+  return visible
+end
+
+local function monitor_title(port, baud)
+  return ("  Serial %s @ %d   (Ctrl-\\ Ctrl-n → normal · q encerra · G segue o fim)"):format(port, baud)
+end
+
+--- monitor deste nvim ainda rodando (escondido ou visível)?
+local function monitor_alive()
+  local m = state.monitor
+  if not m or not vim.api.nvim_buf_is_valid(m.buf) then
+    return false
+  end
+  return vim.fn.jobwait({ m.job }, 0)[1] == -1
+end
+
+--- mostra o monitor que já existe (com tudo que chegou enquanto estava oculto)
+local function show_monitor(focus)
+  local m = state.monitor
+  local cur = vim.api.nvim_get_current_win()
+  local w = bottom_win(win_of(state.logbuf), "right")
+  vim.api.nvim_win_set_buf(w, m.buf)
+  vim.wo[w].winbar = monitor_title(m.port, m.baud)
+  follow(w)
+  if focus then
+    vim.api.nvim_set_current_win(w)
+    vim.cmd("startinsert")
+  elseif vim.api.nvim_win_is_valid(cur) then
+    vim.api.nvim_set_current_win(cur)
+  end
+end
+
+local function sh(cmd)
+  local r = vim.system(cmd, { text = true }):wait()
+  return vim.trim(r.stdout or "")
+end
+
+--- quem está com a porta aberta (outro nvim, monitor órfão, picocom…)
+local function port_holders(port)
+  local pids = {}
+  local out = vim.fn.executable("lsof") == 1 and sh({ "lsof", "-t", port }) or sh({ "fuser", port })
+  for pid in out:gmatch("%d+") do
+    pids[#pids + 1] = tonumber(pid)
+  end
+  local list = {}
+  for _, pid in ipairs(pids) do
+    local args = sh({ "ps", "-o", "args=", "-p", tostring(pid) })
+    local ppid = tonumber(sh({ "ps", "-o", "ppid=", "-p", tostring(pid) }))
+    local pargs = ppid and sh({ "ps", "-o", "args=", "-p", tostring(ppid) }) or ""
+    local is_monitor = args:match("serial%-monitor") or args:match("arduino%-cli monitor")
+    -- o dono "de verdade" é o `arduino-cli monitor` pai do serial-monitor
+    local target = (args:match("serial%-monitor") and pargs:match("arduino%-cli monitor")) and ppid or pid
+    list[#list + 1] = { pid = pid, target = target, args = args, is_monitor = is_monitor ~= nil }
+  end
+  return list
+end
+
+--- garante a porta livre: se outro monitor a segura, oferece assumir (em vez de "busy")
+local function ensure_port_free(port, cb)
+  local holders = port_holders(port)
+  if #holders == 0 then
+    return cb()
+  end
+  local others = vim.tbl_filter(function(h)
+    return not h.is_monitor
+  end, holders)
+  if #others > 0 then
+    return notify(
+      ("Porta %s em uso por outro programa:\n  %s\nFeche-o e tente de novo."):format(port, others[1].args),
+      L.WARN
+    )
+  end
+  vim.ui.select({ "Assumir (encerra o outro monitor e abre aqui)", "Cancelar" }, {
+    prompt = ("Já existe um monitor em %s (outra sessão do nvim?)"):format(port),
+  }, function(choice)
+    if not choice or choice == "Cancelar" then
+      return
+    end
+    for _, h in ipairs(holders) do
+      pcall(vim.uv.kill, h.target, "sigterm")
+    end
+    vim.defer_fn(cb, 500)
+  end)
+end
+
+--- ESP32 + CP210x/CH340: depois de gravar, a linha serial às vezes fica presa em
+--- nível baixo (o monitor vira uma enxurrada de "�"); só um reset da placa cura.
+--- Detecta isso logo após abrir e reinicia a placa + reabre (até 3 tentativas).
+local open_monitor
+local function watch_flood(ctx, baud, focus, attempt, buf)
+  vim.defer_fn(function()
+    if not (state.monitor and state.monitor.buf == buf and vim.api.nvim_buf_is_valid(buf)) then
+      return -- fechado pelo usuário nesse meio tempo
+    end
+    local text = table.concat(vim.api.nvim_buf_get_lines(buf, 0, -1, false), "\n")
+    local _, bad = text:gsub("\239\191\189", "") -- U+FFFD
+    if bad < 100 then
+      return
+    end
+    if attempt >= 3 then
+      return notify(
+        "Serial continua com lixo após 3 resets.\nAperte EN na placa; se repetir: cabo/porta USB ou capacitor 10µF entre EN e GND.",
+        L.WARN,
+        "arduino-serial"
+      )
+    end
+    notify(("Serial com lixo (linha presa) — reiniciando a placa (%d/3)…"):format(attempt), L.WARN, "arduino-serial")
+    close_monitor()
+    M._reset_esp(ctx, function()
+      open_monitor(ctx, baud, focus, attempt + 1)
+    end)
+  end, 1500)
+end
+
+function open_monitor(ctx, baud, focus, attempt)
+  close_monitor()
+  local cur = vim.api.nvim_get_current_win()
+  local w = bottom_win(win_of(state.logbuf), "right")
+  local job
+  vim.api.nvim_win_call(w, function()
+    vim.cmd("enew")
+    job = vim.fn.jobstart(
+      { cli(), "monitor", "--no-color", "--port", ctx.port, "--config", "baudrate=" .. baud },
+      { term = true, cwd = ctx.dir }
+    )
+  end)
+  local b = vim.api.nvim_win_get_buf(w)
+  vim.bo[b].bufhidden = "hide" -- esconder a janela NÃO encerra: o monitor segue acumulando saída
+  vim.wo[w].winbar = monitor_title(ctx.port, baud)
+  follow(w)
+  vim.keymap.set("n", "q", close_monitor, { buffer = b, silent = true, desc = "Fechar monitor" })
+  state.monitor = { buf = b, job = job, port = ctx.port, baud = baud }
+  if ctx.fqbn:match("^esp32:") then
+    watch_flood(ctx, baud, focus, attempt or 1, b)
+  end
+  if focus then
+    vim.api.nvim_set_current_win(w)
+    vim.cmd("startinsert")
+  elseif vim.api.nvim_win_is_valid(cur) then
+    vim.api.nvim_set_current_win(cur)
+  end
+end
+
 -- ───────────────────────── sketch ─────────────────────────
 
---- raiz do sketch: dir com sketch.yaml acima do buffer, senão dir do .ino
+--- raiz do sketch. Buffer de arquivo: sketch.yaml acima dele, senão o dir do .ino.
+--- Buffer sem arquivo (explorer, quickfix, monitor): o último sketch em que você
+--- esteve; senão o cwd (se tiver .ino).
 local function sketch_dir()
   local name = vim.api.nvim_buf_get_name(0)
-  local start = (name ~= "" and vim.fs.dirname(name)) or vim.fn.getcwd()
+  local is_file = vim.bo.buftype == "" and name ~= ""
+  if not is_file and state.last_dir and vim.uv.fs_stat(state.last_dir) then
+    return state.last_dir
+  end
+  local start = (is_file and vim.fs.dirname(name)) or vim.fn.getcwd()
   local root = vim.fs.root(start, { "sketch.yaml", "sketch.yml" })
   if root then
     return root
   end
-  if name:match("%.ino$") then
+  if is_file and name:match("%.ino$") then
     return vim.fs.dirname(name)
   end
   if #vim.fn.glob(start .. "/*.ino", false, true) > 0 then
     return start
   end
-  notify("Nenhum sketch aqui (abra um .ino ou rode :ArduinoNew <nome>).", L.WARN)
+  notify("Nenhum sketch aqui — abra um .ino ou crie um com <leader>mn.", L.WARN)
 end
 
 local function sketch_name(dir)
@@ -120,6 +427,32 @@ local function check_sketch(dir)
     L.ERROR
   )
   return false
+end
+
+--- salva os buffers modificados do sketch (o arduino-cli lê o ARQUIVO, não o buffer;
+--- sem isso um `#include` recém-digitado não entra no build nem no banco do clangd)
+local function save_sketch(dir)
+  for _, b in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.api.nvim_buf_is_loaded(b) and vim.bo[b].modified and vim.bo[b].buftype == "" then
+      local n = vim.api.nvim_buf_get_name(b)
+      if n ~= "" and vim.startswith(n, dir .. "/") then
+        vim.api.nvim_buf_call(b, function()
+          vim.cmd("silent! update")
+        end)
+      end
+    end
+  end
+end
+
+--- "assinatura" dos #include do buffer (mudou → o banco do clangd precisa regenerar)
+local function includes_hash(buf)
+  local inc = {}
+  for _, l in ipairs(vim.api.nvim_buf_get_lines(buf, 0, -1, false)) do
+    if l:match("^%s*#%s*include") then
+      inc[#inc + 1] = vim.trim(l)
+    end
+  end
+  return table.concat(inc, "\n")
 end
 
 -- sketch.yaml: só mexemos em chaves `default_*` (resto do arquivo é preservado)
@@ -214,16 +547,98 @@ function M.query_driver()
   }, ",")
 end
 
-local function clangd_text(dir, fqbn, bp)
-  return table.concat({
+local TPL = 4 -- versão do template: mudou → .clangd antigos são regenerados sozinhos
+
+--- incs = pastas `src` das bibliotecas que VOCÊ instalou (~/Arduino/libraries):
+--- assim `#include <` no .ino já sugere os headers delas, antes de usar a primeira vez.
+local function clangd_text(dir, fqbn, bp, incs)
+  local t = {
     "# Gerado por nvim/lua/arduino — não edite (regenere com <leader>mg).",
     "# fqbn: " .. fqbn,
+    "# tpl: " .. TPL,
     "CompileFlags:",
     "  CompilationDatabase: " .. bp,
     "  Remove: [" .. table.concat(REMOVE, ", ") .. "]",
     '  Add: ["-D__GLIBC_USE(x)=0"]',
-    "",
-  }, "\n")
+    "---",
+    "# O arduino-builder injeta `#include <Arduino.h>` no .cpp gerado, mas o clangd lê o .ino",
+    "# direto — sem isso Serial/pinMode/OUTPUT ficam 'undeclared' em sketches sem libs.",
+    "# Os -I extras são as bibliotecas do usuário (completar `#include <...>`).",
+    "If:",
+    "  PathMatch: .*\\.ino",
+    "CompileFlags:",
+    "  Add:",
+    "    - -include",
+    "    - Arduino.h",
+  }
+  for _, inc in ipairs(incs or {}) do
+    t[#t + 1] = ('    - "-I%s"'):format(inc)
+  end
+  t[#t + 1] = ""
+  return table.concat(t, "\n")
+end
+
+--- pastas de include das bibliotecas do usuário compatíveis com a placa
+local function lib_includes(fqbn, cb)
+  local base = split_fqbn(fqbn)
+  run({ "lib", "list", "--all", "--fqbn", base, "--format", "json" }, function(res)
+    local ok, data = pcall(vim.json.decode, res.stdout or "")
+    local incs, seen = {}, {}
+    if ok and data and data.installed_libraries then
+      for _, item in ipairs(data.installed_libraries) do
+        local lib = item.library or {}
+        local d = lib.source_dir
+        -- só as bibliotecas do USUÁRIO: as ~44 do core (WiFi, BLE…) enterrariam as suas na
+        -- lista (o clangd corta em N itens, em ordem alfabética)
+        if d and lib.location ~= "platform" and not seen[d] then
+          seen[d] = true
+          incs[#incs + 1] = d
+        end
+      end
+    end
+    table.sort(incs)
+    cb(incs)
+  end)
+end
+
+local CLANGD_MARKERS = { ".clangd", ".clang-tidy", ".clang-format", "compile_commands.json", "compile_flags.txt", "configure.ac", ".git" }
+
+--- root_dir do clangd (plugins/c.lua). Em .ino só inicia com `.clangd` gerado:
+--- sem ele o clangd cai no comando "fallback" (`clang -- x.ino`), não monta o
+--- AST e o nvim enche de "clangd: -32001: invalid AST".
+function M.clangd_root_dir(bufnr, on_dir)
+  local name = vim.api.nvim_buf_get_name(bufnr)
+  if vim.bo[bufnr].filetype == "arduino" then
+    local dir = vim.fs.dirname(name)
+    if vim.uv.fs_stat(dir .. "/.clangd") then
+      on_dir(dir)
+    end
+    return
+  end
+  on_dir(vim.fs.root(bufnr, CLANGD_MARKERS) or vim.fs.dirname(name))
+end
+
+--- depois de gerar o .clangd: reinicia o clangd (se já roda) ou o inicia nos
+--- buffers .ino abertos daquele sketch (o enable do LSP dispara no FileType)
+local function ensure_lsp(dir, changed)
+  local running = false
+  for _, c in ipairs(vim.lsp.get_clients({ name = "clangd" })) do
+    if c.root_dir == dir then
+      running = true
+    end
+  end
+  if running then
+    if changed then
+      pcall(vim.cmd, "lsp restart clangd")
+    end
+    return
+  end
+  for _, b in ipairs(vim.api.nvim_list_bufs()) do
+    local n = vim.api.nvim_buf_get_name(b)
+    if vim.api.nvim_buf_is_loaded(b) and vim.bo[b].filetype == "arduino" and vim.fs.dirname(n) == dir then
+      vim.api.nvim_exec_autocmds("FileType", { buffer = b, modeline = false })
+    end
+  end
 end
 
 --- gera compile_commands (rápido, sem compilar) + .clangd e reinicia o clangd
@@ -233,37 +648,43 @@ function M.lsp(opts)
   if not dir or not check_sketch(dir) then
     return
   end
+  save_sketch(dir)
   local fqbn = yaml_get(dir, "default_fqbn")
   if not fqbn then
     return M.pick_board(function()
-      M.lsp({ dir = dir, silent = opts.silent })
+      M.lsp({ dir = dir, silent = opts.silent, restart = opts.restart })
     end)
   end
   local bp = build_path(dir)
   run({ "compile", "--only-compilation-database", "--no-color", "--fqbn", fqbn, "--build-path", bp, dir }, function(res)
     if res.code ~= 0 then
-      state.log = vim.split((res.stdout or "") .. (res.stderr or ""), "\n")
-      return notify("Falha ao gerar o banco de compilação (veja :ArduinoLog).", L.ERROR)
+      log_set(vim.split((res.stdout or "") .. (res.stderr or ""), "\n"))
+      show_log()
+      return notify("Falha ao gerar o banco de compilação (veja o log).", L.ERROR)
     end
-    local text = clangd_text(dir, fqbn, bp)
-    if read(dir .. "/.clangd") ~= text then
-      write(dir .. "/.clangd", text)
-      pcall(vim.cmd, "lsp restart clangd")
-    end
-    if not opts.silent then
-      notify("LSP pronto para " .. fqbn, L.INFO)
-    end
+    lib_includes(fqbn, function(incs)
+      local text = clangd_text(dir, fqbn, bp, incs)
+      local changed = read(dir .. "/.clangd") ~= text
+      if changed then
+        write(dir .. "/.clangd", text)
+      end
+      ensure_lsp(dir, changed or opts.restart)
+      if not opts.silent then
+        notify(("LSP pronto para %s (%d bibliotecas)"):format(fqbn, #incs), L.INFO)
+      end
+    end)
   end)
 end
 
---- ao abrir um .ino: se o .clangd não existe / é de outra placa, regenera
+--- ao abrir um .ino: se o .clangd não existe / está desatualizado, regenera
 function M.auto_lsp(dir)
   local fqbn = yaml_get(dir, "default_fqbn")
   if not fqbn or not check_sketch(dir) then
     return
   end
+  -- regenera se faltar, se for de outra placa ou de uma versão antiga do template
   local cur = read(dir .. "/.clangd") or ""
-  if cur:match("# fqbn: ([^\n]+)") ~= fqbn then
+  if cur:match("# fqbn: ([^\n]+)") ~= fqbn or cur:match("# tpl: (%d+)") ~= tostring(TPL) then
     M.lsp({ dir = dir, silent = true })
   end
 end
@@ -441,8 +862,14 @@ function M.lib_search()
           if res.code ~= 0 then
             return notify("Falha:\n" .. (res.stderr or ""), L.ERROR, "arduino-lib")
           end
-          notify(l.name .. " instalada.", L.INFO, "arduino-lib")
-          M.lsp({ silent = true })
+          local out = (res.stdout or "") .. (res.stderr or "")
+          local ver = out:match("Installed [^\n]+") or out:match("Already installed [^\n]+")
+          if out:match("Already installed") and not out:match("Installed ") then
+            notify(l.name .. " já estava instalada (nada mudou).\n" .. (ver or ""), L.INFO, "arduino-lib")
+          else
+            notify(l.name .. " instalada em ~/Arduino/libraries.\nLSP atualizado: já aparece em `#include <`.", L.INFO, "arduino-lib")
+          end
+          M.lsp({ silent = true, restart = true })
         end)
       end)
     end)
@@ -486,38 +913,29 @@ local function parse_errors(lines)
   return items
 end
 
-local function close_monitor()
-  local m = state.monitor
-  if m and m.win and vim.api.nvim_win_is_valid(m.win) then
-    pcall(function()
-      m:close()
-    end)
-    state.monitor = nil
-    return true
-  end
-  state.monitor = nil
-  return false
-end
-
-function M.compile(upload)
-  with_ctx(upload, function(ctx)
-    local was_open = false
-    if upload then
-      was_open = close_monitor() -- porta ocupada pelo monitor impede o upload
-    end
+--- compila (e grava se upload). O log abre ao vivo; ao gravar com sucesso o
+--- monitor serial abre sozinho ao lado do log.
+local function run_compile(ctx, upload)
+  do
+    save_sketch(ctx.dir)
     local args = { "compile", "--no-color", "--warnings", "default", "--fqbn", ctx.fqbn, "--build-path", ctx.bp }
     if upload then
       vim.list_extend(args, { "--upload", "--port", ctx.port })
     end
     args[#args + 1] = ctx.dir
+    local stream = log_stream(
+      "$ arduino-cli " .. table.concat(vim.list_slice(args, 1, #args - 1), " ") .. " " .. vim.fn.fnamemodify(ctx.dir, ":~")
+    )
+    local raw = {}
     local what = upload and "Compilando e gravando" or "Compilando"
     notify(("%s %s…"):format(what, sketch_name(ctx.dir)), L.INFO, "arduino-build")
     run(args, function(res)
-      local lines = vim.split((res.stdout or "") .. "\n" .. (res.stderr or ""), "\n")
-      state.log = lines
+      local text = table.concat(raw)
+      local lines = vim.split((text:gsub("\r", "\n")), "\n")
       local items = parse_errors(lines)
       vim.fn.setqflist({}, " ", { title = "arduino-cli", items = items })
       if res.code == 0 then
+        stream.finish(upload and "✔ gravado" or "✔ compilado")
         local sizes = {}
         for _, l in ipairs(lines) do
           if l:match("^Sketch uses") or l:match("^Global variables") then
@@ -525,57 +943,92 @@ function M.compile(upload)
           end
         end
         notify((upload and "Gravado ✔\n" or "Compilado ✔\n") .. table.concat(sizes, "\n"), L.INFO, "arduino-build")
-        if #items > 0 then
-          vim.cmd("botright copen 8 | wincmd p")
-        end
-        if was_open then
-          M.monitor()
+        if upload then
+          open_monitor(ctx, vim.g.arduino_baud or detect_baud(ctx.dir), false)
         end
       else
-        notify((upload and "Falha ao gravar" or "Falha ao compilar") .. " ✘", L.ERROR, "arduino-build")
-        if #items > 0 then
-          vim.cmd("botright copen 10")
-        else
-          M.log() -- erro de linker/upload não tem arquivo:linha → mostra o log cru
-        end
+        stream.finish(("✘ falhou (código %s)"):format(res.code))
+        notify(
+          (upload and "Falha ao gravar" or "Falha ao compilar") .. " ✘\nEnter no log pula p/ o erro · :copen lista",
+          L.ERROR,
+          "arduino-build"
+        )
       end
-    end, { cwd = ctx.dir })
+    end, {
+      cwd = ctx.dir,
+      on_output = function(chunk)
+        raw[#raw + 1] = chunk
+        stream.feed(chunk)
+      end,
+    })
+  end
+end
+
+function M.compile(upload)
+  with_ctx(upload, function(ctx)
+    if upload then
+      close_monitor() -- o monitor deste nvim segura a porta e impediria o upload
+      return ensure_port_free(ctx.port, function()
+        run_compile(ctx, true)
+      end)
+    end
+    run_compile(ctx, false)
   end)
 end
 
+--- mostra/oculta o painel de log (o conteúdo é do último build)
 function M.log()
-  if #state.log == 0 then
-    return notify("Sem log ainda.")
+  local w = win_of(state.logbuf)
+  if w then
+    return vim.api.nvim_win_close(w, false)
   end
-  vim.cmd("botright 14new")
-  local buf = vim.api.nvim_get_current_buf()
-  vim.bo[buf].buftype, vim.bo[buf].bufhidden, vim.bo[buf].swapfile = "nofile", "wipe", false
-  vim.api.nvim_buf_set_lines(buf, 0, -1, false, state.log)
-  vim.api.nvim_buf_set_name(buf, "arduino-cli://log")
-  vim.keymap.set("n", "q", "<cmd>close<cr>", { buffer = buf, silent = true })
+  if not state.logbuf or vim.api.nvim_buf_line_count(log_buf()) <= 1 then
+    return notify("Sem log ainda — compile primeiro (<leader>mc).")
+  end
+  show_log()
+end
+
+--- Enter no log: abre o arquivo:linha:coluna da linha sob o cursor
+function M.log_jump()
+  local line = vim.api.nvim_get_current_line()
+  local file, lnum, col = line:match("(/[^:%s]+):(%d+):(%d+)")
+  if not file then
+    file, lnum = line:match("(/[^:%s]+):(%d+)")
+  end
+  if not file or vim.fn.filereadable(file) == 0 then
+    return
+  end
+  for _, w in ipairs(vim.api.nvim_tabpage_list_wins(0)) do
+    local b = vim.api.nvim_win_get_buf(w)
+    if vim.bo[b].buftype == "" and w ~= vim.api.nvim_get_current_win() then
+      vim.api.nvim_set_current_win(w)
+      break
+    end
+  end
+  vim.cmd.edit(vim.fn.fnameescape(file))
+  pcall(vim.api.nvim_win_set_cursor, 0, { tonumber(lnum), math.max((tonumber(col) or 1) - 1, 0) })
 end
 
 -- ───────────────────────── monitor serial ─────────────────────────
 
+--- <leader>mm: mostra/oculta o monitor SEM encerrá-lo (a saída continua acumulando
+--- escondida). Se já existe um monitor em outra sessão do nvim, oferece assumir.
+--- `q` dentro do monitor encerra de vez. `:ArduinoMonitor 9600` reabre em outro baud.
 function M.monitor(baud)
-  if close_monitor() then
-    return -- toggle
-  end
-  with_ctx(true, function(ctx)
-    baud = tonumber(baud) or vim.g.arduino_baud or detect_baud(ctx.dir)
-    local cmd = { cli(), "monitor", "--no-color", "--port", ctx.port, "--config", "baudrate=" .. baud }
-    local ok, Snacks = pcall(require, "snacks")
-    if ok and Snacks.terminal then
-      state.monitor = Snacks.terminal.open(cmd, {
-        cwd = ctx.dir,
-        interactive = true,
-        auto_close = false,
-        win = { position = "bottom", height = 0.3, title = (" Serial %s @ %d "):format(ctx.port, baud), title_pos = "center" },
-      })
-    else
-      vim.cmd("botright 12split | terminal " .. table.concat(vim.tbl_map(vim.fn.shellescape, cmd), " "))
-      vim.cmd("startinsert")
+  local new_baud = tonumber(baud)
+  if monitor_alive() and (not new_baud or new_baud == state.monitor.baud) then
+    local w = win_of(state.monitor.buf)
+    if w then
+      vim.api.nvim_win_close(w, false)
+      return notify("Monitor oculto — segue rodando e guardando a saída.\n<leader>mm mostra · q (dentro dele) encerra.")
     end
+    return show_monitor(true)
+  end
+  close_monitor() -- limpa monitor que já terminou ou que vai trocar de baud
+  with_ctx(true, function(ctx)
+    ensure_port_free(ctx.port, function()
+      open_monitor(ctx, new_baud or vim.g.arduino_baud or detect_baud(ctx.dir), true)
+    end)
   end)
 end
 
@@ -588,6 +1041,24 @@ local function data_dir(cb)
   run({ "config", "get", "directories.data" }, function(res)
     state.data_dir = vim.trim(res.stdout or "")
     cb(state.data_dir)
+  end)
+end
+
+--- reinicia o ESP32 (pulso em EN via RTS) usando o esptool do próprio core
+function M._reset_esp(ctx, cb)
+  data_dir(function(dd)
+    local found = vim.fn.glob(dd .. "/packages/esp32/tools/esptool_py/*/esptool", false, true)
+    if #found == 0 then
+      found = vim.fn.glob(dd .. "/packages/esp32/tools/esptool_py/*/esptool.py", false, true)
+    end
+    table.sort(found)
+    local tool = found[#found]
+    if not tool then
+      return cb()
+    end
+    vim.system({ tool, "--port", ctx.port, "--after", "hard-reset", "read-mac" }, { text = true }, function()
+      vim.defer_fn(cb, 300)
+    end)
   end)
 end
 
@@ -707,8 +1178,8 @@ function M.setup()
   cmd("ArduinoBoard", function() M.pick_board() end, { desc = "Escolher placa" })
   cmd("ArduinoOptions", function() M.pick_options() end, { desc = "Opções da placa" })
   cmd("ArduinoLib", function() M.lib_search() end, { desc = "Buscar/instalar biblioteca" })
-  cmd("ArduinoLsp", function() M.lsp() end, { desc = "Regenerar LSP (.clangd)" })
-  cmd("ArduinoLog", function() M.log() end, { desc = "Último log do arduino-cli" })
+  cmd("ArduinoLsp", function() M.lsp({ restart = true }) end, { desc = "Regenerar LSP (.clangd)" })
+  cmd("ArduinoLog", function() M.log() end, { desc = "Mostrar/ocultar log do build" })
   cmd("ArduinoInfo", function() M.info() end, { desc = "Estado do sketch" })
   cmd("ArduinoNew", function(o) M.new(o.args) end, { nargs = "?", desc = "Novo sketch" })
   cmd("ArduinoDecode", function(o)
@@ -719,31 +1190,60 @@ function M.setup()
     M.decode(text)
   end, { range = true, desc = "Decodificar backtrace do ESP32" })
 
+  -- Atalhos GLOBAIS (o grupo aparece no which-key em qualquer buffer); sem
+  -- sketch por perto, cada ação avisa em vez de falhar.
+  local function map(lhs, rhs, desc, mode)
+    vim.keymap.set(mode or "n", "<leader>m" .. lhs, rhs, { desc = desc })
+  end
+  map("c", function() M.compile(false) end, "Compilar")
+  map("u", function() M.compile(true) end, "Compilar + gravar")
+  map("m", function() M.monitor() end, "Monitor serial (toggle)")
+  map("p", function() M.pick_port() end, "Porta")
+  map("b", function() M.pick_board() end, "Placa")
+  map("o", function() M.pick_options() end, "Opções da placa")
+  map("l", function() M.lib_search() end, "Bibliotecas")
+  map("g", function() M.lsp({ restart = true }) end, "Regenerar LSP")
+  map("i", function() M.info() end, "Info do sketch")
+  map("L", function() M.log() end, "Log do build (mostra/oculta)")
+  map("n", function() M.new() end, "Novo sketch")
+  map("d", ":ArduinoDecode<cr>", "Decodificar backtrace (seleção)", "x")
+  map("d", function() M.decode() end, "Decodificar backtrace (clipboard)")
+  local ok, wk = pcall(require, "which-key")
+  if ok then
+    wk.add({ { "<leader>m", group = "arduino/esp32", mode = { "n", "x" }, icon = "" } })
+  end
+
   local group = vim.api.nvim_create_augroup("arduino_nvim", { clear = true })
+  -- lembra o último sketch (p/ agir a partir do explorer/quickfix/monitor)
+  vim.api.nvim_create_autocmd({ "BufEnter", "FileType" }, {
+    group = group,
+    pattern = { "*.ino", "arduino" },
+    callback = function(ev)
+      local name = vim.api.nvim_buf_get_name(ev.buf)
+      if name ~= "" and vim.bo[ev.buf].buftype == "" then
+        state.last_dir = vim.fs.root(name, { "sketch.yaml", "sketch.yml" }) or vim.fs.dirname(name)
+      end
+    end,
+  })
+  -- salvou mudando os #include → regenera o banco (senão `#include <Lib.h>` fica "not found")
+  vim.api.nvim_create_autocmd("BufWritePost", {
+    group = group,
+    pattern = "*.ino",
+    callback = function(ev)
+      local dir = vim.fs.root(ev.buf, { "sketch.yaml", "sketch.yml" }) or vim.fs.dirname(ev.file)
+      local h = includes_hash(ev.buf)
+      local before = state.inc[ev.file]
+      state.inc[ev.file] = h
+      if before ~= nil and before ~= h and vim.uv.fs_stat(dir .. "/.clangd") then
+        M.lsp({ dir = dir, silent = true, restart = true })
+      end
+    end,
+  })
   vim.api.nvim_create_autocmd("FileType", {
     group = group,
     pattern = "arduino",
     callback = function(ev)
-      local function map(lhs, rhs, desc, mode)
-        vim.keymap.set(mode or "n", "<leader>m" .. lhs, rhs, { buffer = ev.buf, desc = desc })
-      end
-      map("c", function() M.compile(false) end, "Compilar")
-      map("u", function() M.compile(true) end, "Compilar + gravar")
-      map("m", function() M.monitor() end, "Monitor serial (toggle)")
-      map("p", function() M.pick_port() end, "Porta")
-      map("b", function() M.pick_board() end, "Placa")
-      map("o", function() M.pick_options() end, "Opções da placa")
-      map("l", function() M.lib_search() end, "Bibliotecas")
-      map("g", function() M.lsp() end, "Regenerar LSP")
-      map("i", function() M.info() end, "Info do sketch")
-      map("L", function() M.log() end, "Log do build")
-      map("n", function() M.new() end, "Novo sketch")
-      map("d", ":ArduinoDecode<cr>", "Decodificar backtrace (seleção)", "x")
-      map("d", function() M.decode() end, "Decodificar backtrace (clipboard)")
-      local ok, wk = pcall(require, "which-key")
-      if ok then
-        wk.add({ { "<leader>m", group = "arduino/esp32", buffer = ev.buf, icon = "" } })
-      end
+      state.inc[vim.api.nvim_buf_get_name(ev.buf)] = includes_hash(ev.buf)
       local dir = vim.fs.root(ev.buf, { "sketch.yaml", "sketch.yml" })
       if dir then
         vim.schedule(function()
