@@ -929,7 +929,7 @@ function M.lib_search()
           if out:match("Already installed") and not out:match("Installed ") then
             notify(l.name .. " já estava instalada (nada mudou).\n" .. (ver or ""), L.INFO, "arduino-lib")
           else
-            notify(l.name .. " instalada em ~/Arduino/libraries.\nLSP atualizado: já aparece em `#include <`.", L.INFO, "arduino-lib")
+            notify(l.name .. " instalada (pasta de libs do arduino-cli).\nLSP atualizado: já aparece em `#include <`.", L.INFO, "arduino-lib")
           end
           M.lsp({ silent = true, restart = true })
         end)
