@@ -66,6 +66,7 @@
 | `SUPER + F` | Tela cheia (fullscreen — igual ao `SUPER + V`) | ✅ |
 | `SUPER + SHIFT + F` | Tela cheia (fullscreen — igual ao `SUPER + V`) | ✅ |
 | `SUPER + SHIFT + R` | Recarregar config do Hyprland | ✅ |
+| `SUPER + CTRL + ALT + R` | **Reset de vídeo** — socorro p/ *tela preta ao acordar da suspensão* (máquina viva): religa o DPMS, reaplica os monitores e reinicia o `hyprlock` (a sessão **continua travada**). Funciona até com a tela de bloqueio ativa. Pode piscar 1–3 s. Ver [Suspend/idle](README.md#-notas) | ✅ |
 | `SUPER + M` | Encerrar a sessão (uwsm stop → volta ao login) | ✅ |
 
 ## 📸 Capturas & utilitários

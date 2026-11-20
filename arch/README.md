@@ -105,6 +105,7 @@ arch/
 └── scripts/                   # gen-default-wallpaper.py, thunar-minimal.sh
 
 hypr/   → hyprland.lua, hyprlock.conf, hypridle.conf  (symlinks p/ ~/.config/hypr/)
+          scripts/: lock.sh · resume-log.sh · video-reset.sh · suspend-stats.py  (ver Suspend/idle)
 waybar/ → config.jsonc, style.css, scripts/           (uma instância por monitor)
 rofi/   → config.rasi, colors-*.rasi, scripts/        (launcher + extensões — ver ROFI.md)
 ```
@@ -148,6 +149,33 @@ abre `nmtui` ao clicar. `systemd-networkd` foi desativado.
   ela a causa. O `hypridle` faz
   dim → lock; **não** faz `dpms off` com a sessão travada (o hyprlock não lida com o display
   sumindo — issue hyprwm/hyprlock#953).
+  - **Estado atual (medido em 20/11/2026, journal de 121 boots / 338 suspensões):** a tela
+    preta ao acordar **ainda acontece em ≈ 9% dos ciclos** (32 falhas) — o `enable_psr=0`
+    ajudou pouco (≈ 14% → 8,8%, mas só 43 ciclos antes dele) e **não resolveu**. Em todas as
+    falhas o kernel, a rede e o logind acordaram (o desligamento pelo botão curto foi *limpo*):
+    é a **saída de vídeo** que não volta. Padrão: quase só depois de **mais de ~10 min de sono**
+    (0/37 entre 1–10 min; ≈ 17% de 10 min em diante) e mais com a **tampa** (14,7% ao abrir a
+    tampa vs 5–7% por tecla). **Causa raiz não provada.** Hipóteses: estados profundos do
+    display Intel, re-modeset do HDMI no resume, NVIDIA em D3cold (menos provável).
+  - **Restrição:** manter o sono profundo (S3) com o **mínimo de bateria** — não adotar
+    `mem_sleep_default=s2idle`, `i915.enable_dc=0` nem desligar o D3cold como "correção".
+  - **Quando acontecer (tela preta com a máquina viva):** espere ~15 s, tente
+    **`SUPER+CTRL+ALT+R`** (reset de vídeo, `hypr/scripts/video-reset.sh`; funciona na tela de
+    bloqueio). Se não resolver: **Ctrl+Alt+F3 → Ctrl+Alt+F1**, ou fechar e abrir a tampa, ou
+    digitar a senha às cegas. Só então o **botão de energia em clique CURTO** (nunca segurar:
+    o desligamento limpo preserva o journal). Anote qual passo funcionou.
+  - **Ferramentas (em `hypr/scripts/`):**
+    - `resume-log.sh` — chamado pelo `hypridle` (`after_sleep_cmd`); grava em
+      `~/.cache/resume-log/resume.log`, em +0/2/5/12 s após acordar: duração do sono, tampa,
+      estado dos conectores DRM, `dpms` dos monitores, `hyprlock` e avisos do kernel; e religa
+      saídas que sigam apagadas (sem piscar se estiver tudo ligado).
+    - `video-reset.sh` — o atalho `SUPER+CTRL+ALT+R` (log no mesmo arquivo). Não faz `dpms off`
+      (hyprlock#953).
+    - `suspend-stats.py` — taxa de falha por duração do sono / tampa a partir do journal
+      (~10 s). `suspend-stats.py --desde AAAA-MM-DD` compara *antes × depois* de uma mudança
+      (com ≈ 17% de falha em sonos longos, 20 sonos longos sem nenhuma falha já é evidência
+      forte de melhora).
+  - Depois de uma falha: `tail -n 60 ~/.cache/resume-log/resume.log` e `journalctl -b -1`.
 - **Vídeo por hardware (VA-API):** a **iGPU Intel** (que dirige a tela) decodifica VP9/AV1/H264
   em hardware → YouTube 1440p sem travar e sem torrar a CPU. `intel-media-driver` (iHD) é
   instalado no `01-foundation.sh`; o `install.sh` linka `zen/user.js` no perfil do Zen para
