@@ -22,6 +22,7 @@
 # vivo). Por isso verificamos a layer-surface real (hyprctl layers) e relancamos
 # a instancia daquele monitor se ela nao tiver barra desenhada.
 # Iniciado no autostart do Hyprland (substitui o "waybar" direto).
+export WF_SELF="$(readlink -f "$0")"   # usado pelo watchdog p/ se reexecutar
 exec python3 <<'PY'
 import socket, os, json, subprocess, select, time, signal
 
@@ -40,11 +41,24 @@ POLL       = 0.10  # polling do cursor enquanto algum monitor estiver em fullscr
 SETTLE     = 0.25  # apos um toggle, espera propagar antes da proxima leitura
 HEALTH_EVERY = 3.0 # checagem periodica das barras (mesmo sem eventos)
 BAR_GRACE    = 4.0 # tempo p/ uma barra recem-lancada criar a surface antes de ser julgada
+WATCHDOG     = int(os.environ.get("WF_WATCHDOG", "20"))  # s sem o laco principal rodar => daemon travado
+
+# Auto-cura do PROPRIO daemon: ja vimos o processo ficar vivo porem parado (sem acordar
+# nem reagir a fullscreen) por horas. O laco principal re-arma este alarme a cada volta;
+# se ele parar de rodar (travado em qualquer chamada bloqueante), o SIGALRM dispara e o
+# script se reexecuta do zero (mesmo PID; as waybars em andamento sao reaproveitadas).
+def _wedged(signum, frame):
+    self_path = os.environ.get("WF_SELF")
+    if self_path:
+        os.execv("/usr/bin/env", ["env", "bash", self_path])
+    os._exit(1)
+signal.signal(signal.SIGALRM, _wedged)
+signal.alarm(WATCHDOG)
 
 def hctl(*args):
     try:
         out = subprocess.run(["hyprctl", *args, "-j"],
-                             capture_output=True, text=True).stdout
+                             capture_output=True, text=True, timeout=3).stdout
         return json.loads(out)
     except Exception:
         return None
@@ -63,7 +77,7 @@ def bars_by_output(mons):
     res = {}
     try:
         out = subprocess.run(["pgrep", "-a", "-x", "waybar"],
-                             capture_output=True, text=True).stdout
+                             capture_output=True, text=True, timeout=3).stdout
     except Exception:
         return res
     for line in out.splitlines():
@@ -102,7 +116,7 @@ def ensure_bars(mons):
     # mata qualquer waybar "solta" (sem nosso wrapper) p/ evitar duplicata
     try:
         out = subprocess.run(["pgrep", "-a", "-x", "waybar"],
-                             capture_output=True, text=True).stdout
+                             capture_output=True, text=True, timeout=3).stdout
         for line in out.splitlines():
             parts = line.split(None, 1)
             if len(parts) == 2 and RUNDIR not in parts[1]:
@@ -201,6 +215,7 @@ s.setblocking(False)
 buf = b""
 last_health = time.time()
 while True:
+    signal.alarm(WATCHDOG)                       # laco vivo: re-arma o watchdog
     timeout = POLL if any_fs else HEALTH_EVERY   # polling rapido so em fullscreen; senao so health check
     r, _, _ = select.select([s], [], [], timeout)
     if r:
