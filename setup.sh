@@ -180,6 +180,28 @@ install_macos_deps() {
     fi
   done
 
+  # Rosetta 2: o avr-gcc do core arduino:avr (Uno/Nano) só existe em x86_64 no macOS.
+  # O ESP32 tem toolchain arm64 nativa e não precisa disso.
+  if [ "$(uname -m)" = "arm64" ] && ! /usr/bin/pgrep -q oahd 2>/dev/null; then
+    log_info "Instalando Rosetta 2 (necessário p/ avr-gcc do Arduino Uno)..."
+    softwareupdate --install-rosetta --agree-to-license ||
+      log_warn "Rosetta não instalado — Uno/AVR não vai compilar. Rode: softwareupdate --install-rosetta"
+  fi
+
+  # Cores do Arduino (centenas de MB — baixa só se ainda não existirem)
+  if command -v arduino-cli &>/dev/null; then
+    arduino-cli config init 2>/dev/null || true
+    arduino-cli core update-index || log_warn "Falha ao atualizar índice do arduino-cli"
+    for core in esp32:esp32 arduino:avr; do
+      if arduino-cli core list 2>/dev/null | grep -q "^$core "; then
+        log_ok "core $core já instalado."
+      else
+        log_info "Instalando core $core..."
+        arduino-cli core install "$core" || log_warn "Falha ao instalar core $core (rode manualmente depois)"
+      fi
+    done
+  fi
+
   # Fontes
   log_info "Instalando fontes..."
   FONTS=(
