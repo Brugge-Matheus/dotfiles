@@ -406,6 +406,10 @@ hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit"))    -- dwindle only
 hl.bind(mainMod .. " + F",         hl.dsp.window.fullscreen({ mode = "fullscreen" })) -- tela cheia
 hl.bind(mainMod .. " + SHIFT + F", hl.dsp.window.fullscreen({ mode = "fullscreen" })) -- tela cheia real
 hl.bind(mainMod .. " + SHIFT + R", hl.dsp.exec_cmd("hyprctl reload"))                 -- recarregar config
+-- Tela PRETA ao acordar da suspensao (maquina viva): religa DPMS, reaplica monitores e reinicia o
+-- hyprlock. { locked = true } = vale TAMBEM com a sessao travada (e la que o problema aparece).
+-- Script: hypr/scripts/video-reset.sh (log em ~/.cache/resume-log/resume.log).
+hl.bind(mainMod .. " + CTRL + ALT + R", hl.dsp.exec_cmd("~/.config/hypr/scripts/video-reset.sh"), { locked = true })
 hl.bind(mainMod .. " + L",         hl.dsp.exec_cmd("loginctl lock-session"))          -- bloquear (hyprlock)
 hl.bind(mainMod .. " + N",         hl.dsp.exec_cmd("swaync-client -t -sw"))           -- central de notificacoes
 
