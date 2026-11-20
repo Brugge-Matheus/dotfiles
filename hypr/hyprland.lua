@@ -147,6 +147,24 @@ hl.env("LC_TIME", "pt_BR.UTF-8")
 hl.env("AQ_DRM_DEVICES", "/dev/dri/intel-gpu")
 
 
+------------------
+---- RENDER ----
+------------------
+
+-- Tela PRETA por alguns segundos ao entrar/sair do fullscreen (SUPER+V) em apps
+-- Chromium/Electron (Obsidian...), com erro de "10 bits". Causa: o `cm_auto_hdr`
+-- (padrao = 1) troca o monitor para modo HDR/10 bits quando o app em tela cheia
+-- declara cor ampla pelo protocolo de color-management do Wayland; isso e um
+-- MODESET completo do HDMI (sinal some alguns segundos) na ida e de novo na volta.
+-- Desligado, o monitor fica sempre em SDR/8 bits e o fullscreen e instantaneo.
+-- (Nosso hardware nao tem tela HDR; nada se perde.)
+hl.config({
+    render = {
+        cm_auto_hdr = 0,
+    },
+})
+
+
 -----------------------
 ----- PERMISSIONS -----
 -----------------------
