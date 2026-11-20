@@ -331,6 +331,18 @@ end
 --- nível baixo (o monitor vira uma enxurrada de "�"); só um reset da placa cura.
 --- Detecta isso logo após abrir e reinicia a placa + reabre (até 3 tentativas).
 local open_monitor
+
+--- aviso no painel do monitor enquanto a placa reinicia (em vez de lixo ou tela preta)
+local function placeholder(w, lines)
+  local ph = vim.api.nvim_create_buf(false, true)
+  vim.bo[ph].bufhidden = "wipe"
+  vim.api.nvim_buf_set_lines(ph, 0, -1, false, lines)
+  vim.bo[ph].modifiable = false
+  vim.api.nvim_win_set_buf(w, ph)
+  vim.wo[w].winbar = "  Serial — reiniciando a placa…"
+  return ph
+end
+
 local function watch_flood(ctx, baud, focus, attempt, buf)
   vim.defer_fn(function()
     if not (state.monitor and state.monitor.buf == buf and vim.api.nvim_buf_is_valid(buf)) then
@@ -348,18 +360,26 @@ local function watch_flood(ctx, baud, focus, attempt, buf)
         "arduino-serial"
       )
     end
-    notify(("Serial com lixo (linha presa) — reiniciando a placa (%d/3)…"):format(attempt), L.WARN, "arduino-serial")
-    close_monitor()
+    local w = win_of(buf)
+    if w then
+      placeholder(w, {
+        "",
+        ("  ⟳ Serial com lixo (linha presa) — reiniciando a placa (%d/3)…"):format(attempt),
+        "",
+        "  Aguarde ~3 s: o monitor reabre sozinho nesta janela.",
+      })
+    end
+    close_monitor() -- a janela fica (mostra o aviso); só o processo e o buffer antigo saem
     M._reset_esp(ctx, function()
-      open_monitor(ctx, baud, focus, attempt + 1)
+      open_monitor(ctx, baud, focus, attempt + 1, w)
     end)
   end, 1500)
 end
 
-function open_monitor(ctx, baud, focus, attempt)
+function open_monitor(ctx, baud, focus, attempt, win)
   close_monitor()
   local cur = vim.api.nvim_get_current_win()
-  local w = bottom_win(win_of(state.logbuf), "right")
+  local w = (win and vim.api.nvim_win_is_valid(win)) and win or bottom_win(win_of(state.logbuf), "right")
   local job
   vim.api.nvim_win_call(w, function()
     vim.cmd("enew")
@@ -986,7 +1006,7 @@ local function run_compile(ctx, upload)
         end
         notify((upload and "Gravado ✔\n" or "Compilado ✔\n") .. table.concat(sizes, "\n"), L.INFO, "arduino-build")
         if upload then
-          open_monitor(ctx, (monitor_baud(ctx.dir)), false)
+          M._open_after_upload(ctx, (monitor_baud(ctx.dir)))
         end
       else
         stream.finish(("✘ falhou (código %s)"):format(res.code))
@@ -1052,6 +1072,24 @@ function M.log_jump()
 end
 
 -- ───────────────────────── monitor serial ─────────────────────────
+
+--- depois de gravar um ESP32: reinicia a placa ANTES de abrir o monitor (logo após o upload a
+--- linha serial tende a ficar presa → enxurrada de lixo) e mostra um aviso no painel.
+--- (a linha `Aquecendo…` do setup() sai 0,18 s após o reset: nenhum monitor conecta a tempo)
+function M._open_after_upload(ctx, baud)
+  if not ctx.fqbn:match("^esp32:") then
+    return open_monitor(ctx, baud, false)
+  end
+  local cur = vim.api.nvim_get_current_win()
+  local w = bottom_win(win_of(state.logbuf), "right")
+  placeholder(w, { "", "  ⟳ Upload concluído — reiniciando a placa para abrir o monitor limpo…", "" })
+  if vim.api.nvim_win_is_valid(cur) then
+    vim.api.nvim_set_current_win(cur)
+  end
+  M._reset_esp(ctx, function()
+    open_monitor(ctx, baud, false, 1, w)
+  end)
+end
 
 --- <leader>mm: mostra/oculta o monitor SEM encerrá-lo (a saída continua acumulando
 --- escondida). Se já existe um monitor em outra sessão do nvim, oferece assumir.
