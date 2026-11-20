@@ -117,7 +117,10 @@ conforme o chip (xtensa-esp32/s2/s3; riscv32-esp-elf p/ C2/C3/C5/C6/H2/P4), roda
 - `:ArduinoDecode` mapeou o endereço real de `loop()` para `ventoinha.ino:38`.
 
 ## NÃO validado / pendências
-- **macOS inteiro** (caminhos/portas seguem a doc oficial; lógica não rodou lá) e **Uno/AVR** (`avr-gcc` no clangd).
+- **macOS inteiro** (caminhos/portas seguem a doc oficial; lógica não rodou lá — alvo: MacBook Pro M4, Apple Silicon) e **Uno/AVR** (`avr-gcc` no clangd).
+  - Verificado nos índices oficiais (20/11/2026): core `esp32:esp32` 3.3.12 tem toolchain, esptool e openocd `arm64-apple-darwin` (nativo). O `avr-gcc` do `arduino:avr` só tem `x86_64-apple-darwin` → **precisa de Rosetta 2** (o `setup.sh` instala).
+  - `setup.sh` (macOS) agora instala Rosetta e os cores `esp32:esp32` + `arduino:avr` (no Mac não há `~/.arduino15` vindo do IDE).
+  - Checklist do 1º uso no Mac: `brew install arduino-cli`; `arduino-cli core install esp32:esp32`; plugar a placa; `ls /dev/cu.*`; clone CP210x/CH340 pode exigir driver do fabricante; `:checkhealth`/`<leader>mi`.
 - Menu do blink.cmp na tela do usuário (testado só o que o clangd devolve); `<leader>ml` com download real de lib nova.
 - `arduino-language-server` não testado (plano B p/ o falso "undeclared").
 - Linux: `brltty` pode derrubar `/dev/ttyUSB*` de CH340/CP210x; usuário já está no grupo `uucp`.
