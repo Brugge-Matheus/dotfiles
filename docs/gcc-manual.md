@@ -332,7 +332,35 @@ No nvim, `%` é o arquivo atual e `%:r` é o mesmo nome sem a extensão (`main.c
 
 > **Falta instalar as man pages.** Nesta máquina `man 3 printf` e `man malloc` respondem `No manual entry`. Instale com `sudo pacman -S man-pages` e o `K` do nvim passa a funcionar para as funções da libc.
 
-## 11. Resumo de uma página
+## 11. No macOS (MacBook Apple Silicon)
+
+O `gcc` do macOS é o **Clang da Apple** (`gcc --version` mostra "Apple clang"). Compilar, `-Wall -Wextra -g`, `-fsanitize=address,undefined`, Makefile e `-l/-L/-I` funcionam igual. O que muda:
+
+| No Linux | No macOS (M4) |
+|---|---|
+| `gdb ./prog` | **`lldb ./prog`** (o gdb não roda bem em Apple Silicon). Comandos: `b main`, `run`, `n`, `s`, `p x`, `bt`, `c`, `q` |
+| `ldd prog` | `otool -L prog` |
+| `objdump -d prog` | `otool -tV prog` (ou `objdump -d`, que o Clang da Apple também traz) |
+| `readelf -h prog` | `otool -hv prog` (o formato é Mach-O, não ELF) |
+| `file prog` | igual, mas mostra `Mach-O 64-bit executable arm64` |
+| `size prog` | igual |
+| `valgrind` | não suportado: use `-fsanitize=address` ou `leaks --atExit -- ./prog` |
+| `LD_LIBRARY_PATH` | `DYLD_LIBRARY_PATH` (ou `-Wl,-rpath,@executable_path/lib`) |
+| biblioteca dinâmica `.so` | `.dylib`: `gcc -shared -fPIC soma.c -o lib/libsomad.dylib` |
+| `man 3 printf` | já vem instalado |
+| `Segmentation fault (core dumped)` | `Segmentation fault: 11` (código de saída 139 igual) |
+
+`brew install gcc` instala o GCC de verdade como `gcc-15` (o `gcc` continua sendo o Clang). Só use se precisar comparar.
+
+Depurar um segfault no lldb:
+
+```
+lldb ./prog
+(lldb) run
+(lldb) bt
+```
+
+## 12. Resumo de uma página
 
 ```
 # compilar e rodar
