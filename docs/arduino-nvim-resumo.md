@@ -43,10 +43,10 @@ testado — só o Arch). Reaproveitar ao máximo o que já existe.
 
 ## Atalhos (globais, prefixo `<leader>m`; em buffer sem arquivo usam o último sketch, `state.last_dir`)
 `mc` compilar · `mu` compilar+gravar (+ monitor automático) · `mm` mostra/oculta monitor · `mL` mostra/oculta log ·
-`mp` porta · `mb` placa · `mo` opções da placa · `ml` buscar/instalar lib · `mg` regenerar LSP · `md` decodificar backtrace
+`mp` porta · `mb` placa · `mB` baud do monitor · `mo` opções da placa · `ml` buscar/instalar lib · `mg` regenerar LSP · `md` decodificar backtrace
 (visual ou clipboard) · `mi` info · `mn` novo sketch.
 Comandos: `:ArduinoCompile :ArduinoUpload :ArduinoMonitor [baud] :ArduinoPort :ArduinoBoard :ArduinoOptions :ArduinoLib
-:ArduinoLsp :ArduinoLog :ArduinoInfo :ArduinoNew [nome] :ArduinoDecode`.
+:ArduinoBaud [n|auto] :ArduinoLsp :ArduinoLog :ArduinoInfo :ArduinoNew [nome] :ArduinoDecode`.
 
 ## Como funciona (pontos não óbvios)
 - **Sketch root**: `vim.fs.root` por `sketch.yaml`; senão dir do `.ino`. O arduino-cli exige `<pasta>/<pasta>.ino`
@@ -86,6 +86,13 @@ Comandos: `:ArduinoCompile :ArduinoUpload :ArduinoMonitor [baud] :ArduinoPort :A
 - **Porta já em uso** (outra sessão de nvim, monitor órfão): `ensure_port_free` acha os donos (`lsof -t`/`fuser` + `ps`); se
   todos são `arduino-cli monitor` oferece "Assumir" (mata o `arduino-cli` pai do `serial-monitor`) ou "Cancelar"; se é outro
   programa (picocom, python…) só avisa. Não dá para "anexar" ao terminal de OUTRA instância do nvim — por isso o "assumir".
+
+### Baud do monitor
+`monitor_baud(dir)`: escolha salva (`stdpath("state")/arduino-baud.json`, por sketch) > `Serial.begin(N)` do código
+(`code_baud`, lê o buffer se aberto) > 115200. `<leader>mB`/`:ArduinoBaud [n|auto]` (menu com 17 bauds + "Automático"); com o
+monitor aberto ele reinicia no baud novo mantendo oculto/visível. `<leader>mi` mostra baud + origem, o `Serial.begin` do código,
+estado do monitor e avisa (⚠) quando monitor ≠ código. O `info` é uma **janela flutuante** (`float_text`) que fica aberta até
+`q`/`Esc`/`Enter`, dimensionada p/ caber o texto e com `wrap` exato (nenhum caractere é cortado, ao contrário do `vim.notify`). `Serial.begin(MACRO)` não é detectado (só número literal).
 
 ### Serial com lixo após gravar (hardware, mitigado em software)
 - Sintoma: depois do upload, o monitor vira enxurrada de `�`. Medido: ~143 mil bytes/s de `00`/`80`, igual em qualquer baud
