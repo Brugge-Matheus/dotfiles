@@ -395,6 +395,18 @@ hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
 hl.bind(mainMod .. " + V", hl.dsp.window.fullscreen({ mode = "fullscreen" }))           -- tela cheia (preenche o monitor, na frente)
 hl.bind(mainMod .. " + SHIFT + Space", hl.dsp.window.float({ action = "toggle" }))      -- alternar janela flutuante
 hl.bind(mainMod .. " + space", hl.dsp.exec_cmd(menu))
+-- Picture-in-Picture p/ QUALQUER janela (hypr/scripts/pip.sh): flutuante e pequena, na workspace dela;
+-- SUPER+CTRL+O fixa em todas as workspaces. Posicao livre: SUPER + mouse esquerdo arrastando.
+local PIP = "~/.config/hypr/scripts/pip.sh"
+hl.bind(mainMod .. " + O",         hl.dsp.exec_cmd(PIP .. " toggle"))        -- liga/desliga o PiP da janela ativa
+hl.bind(mainMod .. " + CTRL + O",  hl.dsp.exec_cmd(PIP .. " pin"))           -- fixa/solta em todas as workspaces
+hl.bind(mainMod .. " + SHIFT + O", hl.dsp.exec_cmd(PIP .. " next"))          -- proximo canto (horario)
+hl.bind(mainMod .. " + ALT + left",  hl.dsp.exec_cmd(PIP .. " nudge -40 0"), { repeating = true })  -- ajuste fino
+hl.bind(mainMod .. " + ALT + right", hl.dsp.exec_cmd(PIP .. " nudge 40 0"),  { repeating = true })
+hl.bind(mainMod .. " + ALT + up",    hl.dsp.exec_cmd(PIP .. " nudge 0 -40"), { repeating = true })
+hl.bind(mainMod .. " + ALT + down",  hl.dsp.exec_cmd(PIP .. " nudge 0 40"),  { repeating = true })
+hl.bind(mainMod .. " + ALT + equal", hl.dsp.exec_cmd(PIP .. " size +"))      -- aumenta o PiP
+hl.bind(mainMod .. " + ALT + minus", hl.dsp.exec_cmd(PIP .. " size -"))      -- diminui o PiP
 -- Extensoes do rofi (ver arch/ROFI.md). O rofi-ext.sh resolve os caminhos.
 hl.bind(mainMod .. " + equal",     hl.dsp.exec_cmd("~/.config/rofi/scripts/rofi-ext.sh calc"))   -- calculadora
 hl.bind(mainMod .. " + T",         hl.dsp.exec_cmd("~/.config/rofi/scripts/rofi-ext.sh trans"))  -- tradutor (EN/PT)

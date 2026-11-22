@@ -22,6 +22,28 @@
 | `SUPER + LMB` (arrastar) | Mover janela | ✅ |
 | `SUPER + RMB` (arrastar) | Redimensionar janela | ✅ |
 
+### 📺 Picture-in-Picture (qualquer janela)
+
+Transforma a janela ativa num "mini-player": **flutuante e pequena (28% do monitor, 16:9), na workspace
+dela**; a fixação em todas as workspaces (por cima de tudo) é opcional, em outro atalho. Serve para vídeo, terminal com logs, chamada, documentação...
+Script: [`hypr/scripts/pip.sh`](../hypr/scripts/pip.sh).
+
+| Atalho | Ação | Status |
+|---|---|---|
+| `SUPER + O` | **Liga/desliga** o PiP da janela ativa (desligar devolve ao tiling e desafixa) | ✅ |
+| `SUPER + CTRL + O` | **Fixa/solta** a janela flutuante em **todas as workspaces** (acompanha você ao trocar de workspace) | ✅ |
+| `SUPER + SHIFT + O` | Próximo **canto** (sentido horário: ↗ → ↘ → ↙ → ↖) | ✅ |
+| `SUPER + ALT + ← ↑ ↓ →` | **Ajuste fino**: move 40 px por toque (segure para repetir; não sai do monitor) | ✅ |
+| `SUPER + ALT + =` / `SUPER + ALT + -` | **Aumentar / diminuir** o PiP (~15%, mantém a proporção e o canto) | ✅ |
+| `SUPER + LMB` (arrastar) | **Posição livre** com o mouse (vale para qualquer janela flutuante) | ✅ |
+| `SUPER + RMB` (arrastar) | Redimensionar livremente com o mouse | ✅ |
+
+> **Dicas.** O PiP respeita a área útil do monitor (não cobre a waybar) e vale no monitor onde a janela
+> está. O PiP nativo do navegador (Zen/Firefox) já nasce flutuante e fixado por uma regra própria; use
+> `SUPER + SHIFT + O` / `SUPER + ALT + setas` nele só se a janela já tiver sido ativada com `SUPER + O`.
+> O `SUPER + SHIFT + Space` continua sendo só o flutuar/desflutuar simples (sem tamanho, canto ou fixação).
+> Também dá para usar na linha de comando: `pip.sh toggle | next | corner tl|tr|bl|br | nudge DX DY | size +|- | pin`.
+
 ## 🗂️ Workspaces
 
 | Atalho | Ação | Status |
