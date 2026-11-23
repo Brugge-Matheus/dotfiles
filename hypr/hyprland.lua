@@ -350,6 +350,10 @@ hl.config({
         -- opcoes fazem QUALQUER tecla/movimento de mouse religar a tela na hora.
         key_press_enables_dpms  = true,
         mouse_move_enables_dpms = true,
+        -- Se o hyprlock MORRER com a sessao travada (acontece no resume quando o HDMI some e volta:
+        -- o wl_output sumido derruba os clientes), o Hyprland mostra a tela vermelha "lockscreen crashed"
+        -- e NAO aceita outro hyprlock. Com isto o novo hyprlock (relancado pelo lock.sh) reassume a trava.
+        allow_session_lock_restore = true,
     },
 })
 
