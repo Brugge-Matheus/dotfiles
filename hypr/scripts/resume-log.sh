@@ -76,6 +76,7 @@ snapshot() {
 }
 
 log "================ ACORDOU (dormiu ~$(sleep_secs)s) ================"
+log "$("$(dirname "$0")/wake-source.sh" report)"   # quem acordou a maquina (contadores do kernel)
 prev=0
 for t in 0 2 5 12; do
   [ "$t" -gt "$prev" ] && sleep $(( t - prev ))
