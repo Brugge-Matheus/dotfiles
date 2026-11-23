@@ -55,3 +55,46 @@ vim.keymap.set("n", "<leader>ci", function()
     apply = true,
   })
 end, { desc = "Importar namespace da classe sob o cursor" })
+
+-- Trocar a codificacao do arquivo aberto, SO neste buffer (<leader>ce).
+-- Ao fechar o buffer e reabrir o arquivo volta a codificacao padrao (config/autocmds.lua: ~/svn = latin1, .md = UTF-8).
+--   Recarregar lendo como X : corrige o texto quebrado ("Ã§" em vez de "ç"); descarta edicoes nao salvas (pede confirmacao)
+--   Converter ao salvar p/ X: o texto na tela nao muda; o PROXIMO :w grava o arquivo em X
+vim.keymap.set("n", "<leader>ce", function()
+  local encs = {
+    { "utf-8", "UTF-8" },
+    { "latin1", "ISO-8859-1 (Latin-1)" },
+    { "cp1252", "Windows-1252" },
+    { "utf-16le", "UTF-16 LE" },
+    { "utf-16", "UTF-16" },
+  }
+  local cur = (vim.bo.fileencoding ~= "" and vim.bo.fileencoding or vim.o.encoding)
+  vim.ui.select(encs, {
+    prompt = "Codificacao (atual: " .. cur .. ")",
+    format_item = function(e) return e[2] .. (e[1] == cur and "  ← atual" or "") end,
+  }, function(enc)
+    if not enc then return end
+    local buf = vim.api.nvim_get_current_buf()
+    if vim.api.nvim_buf_get_name(buf) == "" then
+      vim.bo[buf].fileencoding = enc[1]
+      return vim.notify("Este buffer sera gravado como " .. enc[2])
+    end
+    vim.ui.select({ "Recarregar lendo como " .. enc[2], "Converter ao salvar para " .. enc[2] }, {
+      prompt = "O que fazer?",
+    }, function(_, idx)
+      if not idx then return end
+      if idx == 1 then
+        if vim.bo[buf].modified then
+          if vim.fn.confirm("Ha alteracoes nao salvas; recarregar descarta tudo. Continuar?", "&Sim\n&Nao", 2) ~= 1 then
+            return
+          end
+        end
+        vim.cmd("edit! ++enc=" .. enc[1])
+        vim.notify("Relido como " .. enc[2] .. " (so neste buffer)")
+      else
+        vim.bo[buf].fileencoding = enc[1]
+        vim.notify("O proximo :w grava como " .. enc[2] .. " (so neste buffer)")
+      end
+    end)
+  end)
+end, { desc = "Trocar codificacao do arquivo (so neste buffer)" })

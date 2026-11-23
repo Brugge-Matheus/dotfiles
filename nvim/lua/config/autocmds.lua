@@ -17,6 +17,12 @@ local DEFAULT_ENCODINGS = "ucs-bom,utf-8,default,latin1"
 vim.api.nvim_create_autocmd("BufReadPre", {
   callback = function(ev)
     local path = vim.fn.fnamemodify(ev.match, ":p")
+    -- Markdown e SEMPRE UTF-8 (em qualquer projeto, inclusive ~/svn). Se o arquivo nao for UTF-8 valido (ex.: um .md
+    -- antigo em ISO-8859-1) cai em latin1 so para LER, e o BufReadPost abaixo regrava como UTF-8.
+    if path:match("%.md$") or path:match("%.markdown$") then
+      vim.opt.fileencodings = "ucs-bom,utf-8,latin1"
+      return
+    end
     for _, entry in ipairs(PROJECT_ENCODINGS) do
       if path:sub(1, #entry.path) == entry.path then
         vim.opt.fileencodings = entry.encoding
@@ -26,6 +32,22 @@ vim.api.nvim_create_autocmd("BufReadPre", {
     vim.opt.fileencodings = DEFAULT_ENCODINGS
   end,
 })
+
+-- .md lido em outra codificacao (fallback latin1) passa a ser gravado em UTF-8 (sem marcar o buffer como alterado)
+vim.api.nvim_create_autocmd("BufReadPost", {
+  pattern = { "*.md", "*.markdown" },
+  callback = function()
+    if vim.v.cmdarg:find("enc=") or vim.v.cmdarg:find("encoding=") then return end   -- troca manual (<leader>ce): respeita
+    if vim.bo.fileencoding ~= "" and vim.bo.fileencoding ~= "utf-8" and vim.bo.modifiable then
+      local mod = vim.bo.modified
+      vim.bo.fileencoding = "utf-8"
+      vim.bo.modified = mod
+    end
+  end,
+})
+
+-- Trocar a codificacao do arquivo ABERTO (<leader>ce, ver keymaps.lua) vale so para este buffer: ao fechar e reabrir
+-- o arquivo, volta a regra acima (projeto/ .md). Nada e gravado em disco ate voce salvar.
 
 -- Highlight em tempo real de todas as ocorrências da seleção visual (como VSCode)
 -- Funciona para seleções de linha única com 2+ caracteres
