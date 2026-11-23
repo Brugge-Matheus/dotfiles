@@ -10,6 +10,7 @@
 #    files -> navegador de arquivos (rofi-file-browser-extended)
 # =====================================================================
 DIR="$(cd "$(dirname "$0")" && pwd)"
+export ROFI_STANDALONE=1   # nos atalhos dedicados (SUPER+= / SUPER+T) o texto puro continua valendo, sem precisar do `>`
 
 case "${1:-}" in
   calc)

@@ -5,14 +5,16 @@
 #    - variaveis de sessao:   base = 10 - 2      (define base = 8)
 #    - reuso + funcoes:       round(base*10/100, 2)
 #    - tudo do qalc:          sqrt(2), 200 * 15%, hex(255), 2 GiB to MB...
-#    - comandos:              :vars  :clear  :clearhist  :del <nome>
+#    - comandos (com > na aba; sem > no atalho SUPER+=):  clear | clear vars | clear all | rm <nome> | rm *
+#         clear        limpa o HISTORICO (mesmo comando do tradutor)   clear vars  limpa as VARIAVEIS   clear all  os dois
+#         (os antigos :clearhist / :clear / :del continuam funcionando)
 #    - Enter num resultado/variavel  -> COPIA o valor (wl-copy)
 #    - Control+Delete numa entrada   -> APAGA aquela variavel/linha (kb-custom-1)
 #
 #  As variaveis sao substituidas (palavra inteira) pelos valores ANTES de ir
 #  pro qalc -> evita colisao com palavras reservadas (ex.: "base"). E o qalc
 #  roda com inbase=10 (decimal) p/ nao depender do qalc.cfg do usuario.
-#  Estado em $XDG_CACHE_HOME/rofi-calc-dev/ (momentaneo; :clear zera).
+#  Estado em $XDG_CACHE_HOME/rofi-calc-dev/ (historico e variaveis; `clear` zera).
 # =====================================================================
 set -u
 CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/rofi-calc-dev"
@@ -21,6 +23,8 @@ HIST="$CACHE/history"     # linhas: expr => resultado
 mkdir -p "$CACHE"; touch "$VARS" "$HIST"
 
 emit_prompt(){ printf '\0prompt\x1f%s\n' "$1"; }
+# icone da aba (U+F1EC "calculator"), gerado em runtime como no tradutor; o rofi usa o prompt como rotulo da aba
+ICON=$(printf '\uf1ec')
 emit_msg(){ printf '\0message\x1f%s\n' "$1"; }
 strip_ansi(){ sed 's/\x1b\[[0-9;]*m//g'; }
 
@@ -70,18 +74,22 @@ list_hist(){
 # IMPORTANTE: se o script imprime NADA, o rofi FECHA. Entao SEMPRE terminamos
 # imprimindo linhas (refresh) e NUNCA usamos 'exit' no meio -> a janela fica aberta.
 refresh(){
-  emit_prompt "Calc"
+  emit_prompt "$ICON"
   list_vars
   list_hist
   # linha-ancora sempre presente: garante saida nao-vazia (senao o rofi fecharia)
   printf '  — digite uma conta ou  nome = expr\0nonselectable\x1ftrue\n'
 }
 
-msg_default="conta · nome = expr · rm nome · Ctrl+Enter copia · Ctrl+Del apaga · Ctrl+Shift+Del limpa historico"
+if [ -n "${ROFI_STANDALONE:-}" ]; then
+  msg_default="conta · nome = expr · rm nome · clear (histórico) · clear vars · Enter avalia · Ctrl+Enter copia a linha"
+else
+  msg_default="escreva >conta e Ctrl+Enter, ou > conta (com espaço) e Enter · >nome = expr · >rm nome · >clear limpa o histórico · >clear vars as variáveis"
+fi
 
 case "${ROFI_RETV:-0}" in
   0)
-    emit_prompt "Calc"
+    emit_prompt "$ICON"
     emit_msg "$msg_default"
     list_vars
     list_hist
@@ -100,13 +108,22 @@ case "${ROFI_RETV:-0}" in
       refresh; exit 0
     fi
     # texto digitado (accept-custom)
+    # Na ABA do launcher o texto so vira conta com `>` (sem ele e so busca no historico). Nos atalhos dedicados
+    # (rofi-ext.sh exporta ROFI_STANDALONE=1) continua valendo o texto puro, com ou sem `>`.
+    case "$sel" in
+      *\>*) sel="${sel#*>}" ;;
+      *)     if [ -z "${ROFI_STANDALONE:-}" ]; then
+               emit_msg "para calcular escreva > antes da conta (ex.: >2+2*3) e Ctrl+Enter"; refresh; exit 0
+             fi ;;
+    esac
     if [ -z "$sel" ]; then emit_msg "$msg_default"; refresh; exit 0; fi
     sel="$(printf '%s' "$sel" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')"
 
     case "$sel" in
-      :clear)     : > "$VARS"; emit_msg "variaveis limpas" ;;
-      :clearhist) : > "$HIST"; emit_msg "historico limpo" ;;
-      :vars)      emit_msg "$msg_default" ;;
+      clear|:clearhist)              : > "$HIST"; emit_msg "histórico limpo" ;;
+      clear\ vars|clear\ variaveis|:clear) : > "$VARS"; emit_msg "variáveis limpas" ;;
+      clear\ all|clear\ tudo)               : > "$VARS"; : > "$HIST"; emit_msg "histórico e variáveis limpos" ;;
+      :vars)                         emit_msg "$msg_default" ;;
       rm\ \*|rm\ all|:del\ \*)   # rm *  -> remove TODAS as variaveis
         : > "$VARS"; emit_msg "todas as variaveis removidas" ;;
       rm\ *|:del\ *)             # rm nome [nome2 ...]  -> remove variavel(is)

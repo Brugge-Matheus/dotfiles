@@ -61,7 +61,7 @@ Script: [`hypr/scripts/pip.sh`](../hypr/scripts/pip.sh).
 |---|---|---|
 | `SUPER + Q` | Terminal (ghostty) | ✅ |
 | `SUPER + E` | Gerenciador de arquivos (thunar) | ✅ |
-| `SUPER + Espaço` | Launcher de apps (rofi — busca com ícones) | ✅ |
+| `SUPER + Espaço` | Launcher (rofi): 6 abas — Apps · Arquivos · Comandos · Janelas · Calculadora · Tradutor. **`Tab` / `Shift+Tab`** trocam de aba; `↑ ↓` andam pela lista; **`>comando` + `Ctrl+Enter`** executa em qualquer aba (ver `ROFI.md`) | ✅ |
 | `SUPER + =` | Calculadora dev (variáveis de sessão, round(), qalc; Ctrl+Del apaga) | ✅ |
 | `SUPER + T` | Tradutor (rofi + translate-shell: PT↔EN, copia) | ✅ |
 | `SUPER + SHIFT + E` | Navegar arquivos pelo teclado (rofi-file-browser) | ✅ |
@@ -108,14 +108,16 @@ Script: [`hypr/scripts/pip.sh`](../hypr/scripts/pip.sh).
 
 ## 🖱️ Cliques na Waybar
 
+> Os sliders (brilho/volume) abrem logo abaixo da barra, perto do clique, no tema do sistema. Fecham com `Esc`, clicando no indicador de novo ou sozinhos quando o mouse sai de cima do painel (ou em ~4 s se você nem chegar a entrar nele). Abrem em ~0,2 s (renderizador cairo; o padrão GL levava ~2 s). Script: `waybar/scripts/slider-popup.py` (usa `/usr/bin/python3` + GTK4 + gtk4-layer-shell). Para aplicar mudanças no `config.jsonc` use `hypr-restart --only waybar` (nunca `SIGUSR2`).
+
 | Onde | Ação |
 |---|---|
 | Workspace (número) | Vai para o workspace **e leva o cursor junto** (só no clique; o teclado não move o mouse) |
 | App aberto (ícone, centro) | Foca a janela (vai para o workspace dela) · (botão do meio) fecha |
 | Spotify | Abre/foca o Spotify · (botão direito) play/pause |
 | CPU | Abre `btop` |
-| Volume | Mutar · (botão direito) `pavucontrol` · scroll = volume |
-| Brilho | Scroll = ajusta brilho |
+| Volume | **Esquerdo:** mutar · **Direito:** slider de volume (0–200%, marca em 100%; botão Mutar e atalho p/ o mixer) · **Meio:** `pavucontrol` · **Scroll:** ±5% **sem limite** de 100% (pode passar de 200% e distorcer) |
+| Brilho | **Clique:** slider de brilho (1–100%) · **Scroll:** ±5% |
 | Bluetooth | Abre `bluetoothctl` |
 | Rede | Abre `nmtui` (config detalhada) · troca rápida no menu `SUPER + ,` |
 | Clima | Atualiza · (hover) min/máx/sensação |
@@ -137,7 +139,35 @@ Menu único (fuzzel) que abre o app/ação de cada área — só lista o que est
 | Bluetooth | `blueman-manager` |
 | Som | `pavucontrol` |
 | Rede | Menu Wi-Fi (fuzzel): lista redes, conecta, pede senha; liga/desliga o rádio |
+| Tempo de bloqueio | Sub-menu: **tempo até bloquear a tela** por inatividade (1, 2, 3, 5, 10, 15, 30 min ou Nunca). A opção atual aparece marcada com ●. Aplica na hora (reinicia o `hypridle`) e fica salva em `hypr/hypridle.conf`. O escurecimento da tela (dim) acompanha: 2,5 min, ou 30 s antes do bloqueio quando ele vem antes. Também via CLI: `lock-timeout.sh get \| set <seg\|never>` |
 | Impressoras | `system-config-printer` |
 | Sistema | `xfce4-settings-manager` |
+| Reiniciar serviços | Pergunta **Sim/Não**; se sim, grava um **snapshot de diagnóstico** e reinicia waybar, swaync, hypridle, clipboard, wallpaper, botões de workspace e polkit — sem perder o estado. Mesmo comando no terminal: `hypr-restart` (ver abaixo) |
 
+> "Nunca" desativa só o bloqueio por inatividade; `SUPER + L` e o bloqueio ao suspender continuam funcionando.
 > A troca de layout do teclado vale por sessão (volta a US Internacional ao reiniciar o Hyprland).
+
+## 🔄 Reiniciar os serviços do Hyprland (`hypr-restart`)
+
+Botão em `SUPER + ,` → **Reiniciar serviços**, ou no terminal:
+
+| Comando | O que faz |
+|---|---|
+| `hypr-restart` | Pergunta `[s/N]`, tira o snapshot e reinicia tudo |
+| `hypr-restart -y` | Igual, sem perguntar |
+| `hypr-restart --only waybar,swaync` | Só esses (`--list` mostra todos; `portals` só entra com `--only`) |
+| `hypr-restart --snapshot` | Só o snapshot, sem reiniciar |
+| `hypr-restart --last` | Caminho do último snapshot |
+
+**Snapshot** (`~/.cache/hypr-restart/snapshot-AAAAMMDD-HHMMSS.log`, guarda os 30 últimos): estado do Hyprland
+(monitores, workspaces, janelas — só classe, sem títulos —, layers da waybar com nível/alpha), cada processo
+(tempo no ar, estado, `wchan`, atividade, memória), serviços systemd + journal do daemon da barra, avisos e
+**coredumps** do dia, e o estado a preservar. O resultado do reinício é anexado ao mesmo arquivo; o histórico
+fica em `~/.cache/hypr-restart/restart.log`.
+
+**Preservado:** wallpaper por monitor, "Não perturbe" do swaync, histórico do clipboard, tempo de bloqueio,
+janelas e workspaces. **Perde-se:** notificações na tela e o relógio de inatividade do hypridle (zera).
+**Nunca reiniciado:** Hyprland, hyprlock, pipewire.
+
+> ⚠️ **Nunca recarregue a waybar com `SIGUSR2`** (nem `pkill -SIGUSR2 waybar`): derruba a barra (assertion do GLib).
+> Use `hypr-restart --only waybar`.

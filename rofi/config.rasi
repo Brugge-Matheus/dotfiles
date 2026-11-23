@@ -4,17 +4,16 @@
  *  rofi 2.0+ roda nativo no Wayland. Modo: drun (apps).
  *
  *  PALETA (troque a linha @import abaixo p/ mudar de tema):
- *    @import "colors-ayu.rasi"     -> mesma paleta do LazyVim (ayu-dark)  [ATIVA]
+ *    @import "colors-brugge.rasi"   -> Terminal Refinado (design do blog)  [ATIVA]
+ *    @import "colors-ayu.rasi"     -> ayu-dark (LazyVim)
  *    @import "colors-black.rasi"   -> black minimalista
  * ===================================================================== */
-@import "colors-ayu.rasi"
+@import "colors-brugge.rasi"
 
 configuration {
-    /* Modos das ABAS. calcd (calc) e trans NAO ficam aqui de proposito: sao
-     * modos "script" que precisam do Enter = accept-custom (avaliar o texto
-     * digitado). Na barra comum o Enter e accept-entry e o modo fecharia.
-     * Eles abrem so pelos atalhos dedicados SUPER+= e SUPER+T (ver rofi-ext.sh). */
-    modes:                       "drun,file-browser-extended,run,window";
+    /* Modos das ABAS (Tab / Shift+Tab alternam): Apps, Arquivos, Comandos (script proprio, no lugar do `run`
+     * nativo que listava ~3.700 executaveis), Janelas (script proprio: PID, icone e kill, no lugar do `window` nativo), Calculadora e Tradutor (scripts em rofi/scripts/). */
+    modes:                       "drun,file-browser-extended,cmds:~/.config/rofi/scripts/rofi-cmds.sh,win:~/.config/rofi/scripts/rofi-windows.sh,calcd:~/.config/rofi/scripts/rofi-calc-dev.sh,trans:~/.config/rofi/scripts/rofi-translate.sh";
     font:                        "JetBrainsMono Nerd Font 11";
     show-icons:                  true;
     icon-theme:                  "Papirus-Dark";
@@ -22,11 +21,31 @@ configuration {
     /* Abas = so o icone (glifo Nerd Font; a barra mode-switcher mostra estes rotulos) */
     display-drun:                "";
     display-file-browser-extended: "";
-    display-run:                 "";
-    display-window:              "";
+    display-cmds:                "";
+    display-win:                 "";
+    display-calcd:               "";
+    display-trans:               "";
     terminal:                    "ghostty";
     hover-select:                true;
-    kb-custom-1:               "Control+Delete";
+
+    /* Comandos com ">" em QUALQUER aba. A parte "o > deixa de filtrar a lista" NAO vem deste arquivo: o rofi nao aceita
+     * `matching-negate-char` em .rasi (marcado "unsupported"), so na linha de comando -> o launcher e aberto com
+     * `rofi -show drun -matching-negate-char '>'` (variavel `menu` em hypr/hyprland.lua). O ">" vira o caractere de negacao:
+     * a palavra colada nele (">kill") e tratada como "nao contem", o que quase sempre passa, entao o que vem DEPOIS do ">"
+     * nao esconde mais a lista; o texto antes do ">" continua filtrando. Executar = Ctrl+Enter. Nas abas nativas (Apps/
+     * Arquivos) quem recebe o texto e o rofi-dispatch.sh (run-command); nas de script, o proprio script.
+     * Tradeoff: o "-" deixa de negar ("-foo" nao exclui mais). */
+    run-command:                 "sh -c '$HOME/.config/rofi/scripts/rofi-dispatch.sh \"$1\"' _ \"{cmd}\"";
+    /* kb-custom-1/2 NAO sao definidos aqui: o navegador de arquivos usa Alt+1 (abrir sem fechar) e Alt+2 (ocultos).
+     * A calculadora so usa Ctrl+Delete no atalho dedicado SUPER+= (rofi-ext.sh passa as teclas la). */
+
+    /* Tab / Shift+Tab TROCAM DE MODO (Apps -> Arquivos -> Executar -> Janelas -> ...) em vez de andar pela lista.
+     * A lista continua com Setas / Ctrl+j / Ctrl+k / Ctrl+n / Ctrl+p. (Os atalhos antigos de modo seguem valendo.)
+     * kb-element-next/prev ficam vazios: senao Tab seria "de dois donos" e o rofi recusa/ignora. */
+    kb-mode-next:              "Tab,Shift+Right,Control+Tab";
+    kb-mode-previous:          "ISO_Left_Tab,Shift+Left,Control+ISO_Left_Tab";
+    kb-element-next:           "";
+    kb-element-prev:           "";
 }
 
 /* As cores (bg, fg, accent, sel, ...) vem do @import la em cima. */
@@ -39,7 +58,7 @@ window {
     transparency:     "real";
     location:         center;
     anchor:           center;
-    width:            30%;
+    width:            34%;
     border:           1px;
     border-color:     @border-c;
     border-radius:    0px;
@@ -50,7 +69,19 @@ window {
 mainbox {
     padding:  14px;
     spacing:  12px;
-    children: [ "inputbar", "listview", "mode-switcher" ];
+    children: [ "inputbar", "message", "listview", "mode-switcher" ];
+}
+
+/* Linha de mensagem: o rofi so a mostra se o mainbox a incluir. Ela leva a ajuda de cada aba e o RESULTADO das acoes
+ * (ex.: "= 8 (copiado)", "✓ kill -9 em Zen Browser (PID 1234)"). Some sozinha quando a aba nao manda mensagem. */
+message {
+    padding:          8px 14px;
+    border:           0px;
+    background-color: @bg-alt;
+}
+textbox {
+    text-color:       @fg-dim;
+    background-color: transparent;
 }
 
 /* Barra de abas dos modos = pequenos icones (Apps/Calc/Files/Traduzir/...).
@@ -89,8 +120,11 @@ inputbar {
 }
 
 entry {
-    text-color:        #ffffff;    /* texto digitado branco, igual as entradas */
-    placeholder:       "Buscar…";
+    text-color:        @fg;
+    /* o rofi NAO aceita placeholder por aba (tema estatico; o texto do prompt tambem vira o rotulo do botao do rodape).
+     * Por isso um unico texto que vale p/ as 4 abas de busca (Apps/Arquivos/Janelas/Executar); a Calculadora e o
+     * Tradutor explicam o uso na linha de mensagem logo abaixo (emitida pelos scripts). Mais longo que isso o rofi corta no meio. */
+    placeholder:       "Buscar app, arquivo, janela ou comando…";
     placeholder-color: @fg-dim;
     cursor:            text;
     vertical-align:    0.5;

@@ -1,0 +1,13 @@
+# rofi-file-browser-extended (aba "Arquivos" do launcher e SUPER+SHIFT+E) — ver `man rofi-file-browser-extended`.
+# Linhas "opcao valor"; sem o prefixo -file-browser-. Antes o plugin avisava que este arquivo nao existia.
+
+# abrir o item selecionado com o app padrao do sistema
+cmd "xdg-open"
+
+# Shift+Enter num arquivo = "abrir com..." (lista abaixo). Alt+1 abre sem fechar o rofi; Alt+2 mostra/oculta ocultos.
+oc-cmd "ghostty -e nvim;icon:nvim;name:Neovim (terminal)"
+oc-cmd "mpv;icon:mpv;name:mpv (video/audio)"
+oc-cmd "qimgv;icon:qimgv;name:qimgv (imagem)"
+oc-cmd "zathura;icon:zathura;name:zathura (PDF)"
+oc-cmd "gimp;icon:gimp;name:GIMP"
+oc-cmd "thunar;icon:org.xfce.thunar;name:Thunar (pasta)"
