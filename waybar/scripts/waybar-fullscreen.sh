@@ -24,12 +24,44 @@
 # Iniciado no autostart do Hyprland (substitui o "waybar" direto).
 export WF_SELF="$(readlink -f "$0")"   # usado pelo watchdog p/ se reexecutar
 exec python3 <<'PY'
-import socket, os, json, subprocess, select, time, signal
+import socket, os, json, subprocess, select, time, signal, sys, faulthandler
 
 HOME = os.environ["HOME"]
-his  = os.environ.get("HYPRLAND_INSTANCE_SIGNATURE", "")
 rt   = os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")
-sockpath = f"{rt}/hypr/{his}/.socket2.sock"
+his  = os.environ.get("HYPRLAND_INSTANCE_SIGNATURE", "")
+
+def _find_sock(sig):
+    """socket de eventos do Hyprland; se a variavel faltar/estiver velha (rodando como servico), usa a instancia mais nova"""
+    p = f"{rt}/hypr/{sig}/.socket2.sock"
+    if sig and os.path.exists(p):
+        return p, sig
+    cands = [d for d in os.listdir(f"{rt}/hypr") if os.path.exists(f"{rt}/hypr/{d}/.socket2.sock")] if os.path.isdir(f"{rt}/hypr") else []
+    if not cands:
+        sys.exit("waybar-fullscreen: nenhuma instancia do Hyprland encontrada")
+    cands.sort(key=lambda d: os.path.getmtime(f"{rt}/hypr/{d}/.socket2.sock"))
+    return f"{rt}/hypr/{cands[-1]}/.socket2.sock", cands[-1]
+
+sockpath, his = _find_sock(his)
+os.environ["HYPRLAND_INSTANCE_SIGNATURE"] = his   # hyprctl filho usa a mesma instancia
+
+# --- Protecao EXTERNA (systemd): heartbeat WATCHDOG=1 a cada volta do laco. Se o laco parar (travado em
+# qualquer chamada, inclusive as que ignoram sinais), o systemd mata e reinicia o servico. Fora do systemd
+# (NOTIFY_SOCKET ausente) vira no-op.
+def sd_notify(msg):
+    addr = os.environ.get("NOTIFY_SOCKET")
+    if not addr:
+        return
+    try:
+        if addr[0] == "@":
+            addr = "\0" + addr[1:]
+        with socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM) as n:
+            n.connect(addr)
+            n.send(msg.encode())
+    except Exception:
+        pass
+
+# Diagnostico: se o laco ficar parado >15s, imprime no stderr (journal) ONDE esta travado.
+faulthandler.enable(file=sys.stderr)
 
 RUNDIR      = f"{rt}/waybar"
 MAIN_CONFIG = f"{HOME}/.config/waybar/config.jsonc"
@@ -214,8 +246,11 @@ s.connect(sockpath)
 s.setblocking(False)
 buf = b""
 last_health = time.time()
+sd_notify("READY=1")
 while True:
     signal.alarm(WATCHDOG)                       # laco vivo: re-arma o watchdog
+    sd_notify("WATCHDOG=1")                      # heartbeat p/ o systemd (watchdog externo)
+    faulthandler.dump_traceback_later(15, repeat=False, file=sys.stderr)   # re-arma o dump de diagnostico
     timeout = POLL if any_fs else HEALTH_EVERY   # polling rapido so em fullscreen; senao so health check
     r, _, _ = select.select([s], [], [], timeout)
     if r:

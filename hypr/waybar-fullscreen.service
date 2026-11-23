@@ -1,0 +1,23 @@
+[Unit]
+Description=Waybar por monitor com auto-hide em tela cheia (daemon)
+After=graphical-session.target
+
+[Service]
+Type=notify
+NotifyAccess=main
+ExecStart=%h/.config/waybar/scripts/waybar-fullscreen.sh
+# Watchdog EXTERNO: o daemon manda WATCHDOG=1 a cada volta; se parar por 20s o systemd o mata e reinicia
+# (ja vimos o processo ficar vivo mas parado por horas, deixando a barra escondida/vazia).
+WatchdogSec=20
+# Mata com SIGKILL (o padrao SIGABRT gera core dump a cada travamento)
+WatchdogSignal=SIGKILL
+Restart=always
+RestartSec=1
+# NAO derruba as waybars ao reiniciar o daemon: o novo daemon as reaproveita (sem piscar a barra).
+KillMode=process
+# stdout/stderr -> journal (inclui o traceback do faulthandler quando o laco trava)
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

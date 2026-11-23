@@ -11,6 +11,8 @@ python3 - <<'PY'
 import shutil, os
 kbd = os.path.expanduser("~/.config/waybar/scripts/keyboard-layout.sh")
 wifi = os.path.expanduser("~/.config/waybar/scripts/wifi-menu.sh")
+lock = os.path.expanduser("~/.config/waybar/scripts/lock-timeout.sh")
+restart = os.path.expanduser("~/.config/hypr/scripts/hypr-restart.sh") + " --gui"
 items = [
     (0xF108, "Monitores",    "nwg-displays"),
     (0xF1FC, "Aparencia",    "nwg-look"),
@@ -18,8 +20,10 @@ items = [
     (0xF294, "Bluetooth",    "blueman-manager"),
     (0xF028, "Som",          "pavucontrol"),
     (0xF1EB, "Rede",         wifi),
+    (0xF023, "Tempo de bloqueio", lock),
     (0xF02F, "Impressoras",  "system-config-printer"),
     (0xF013, "Sistema",      "xfce4-settings-manager"),
+    (0xF021, "Reiniciar serviços", restart),
 ]
 for cp, label, cmd in items:
     exe = cmd.split()[0]
@@ -33,8 +37,10 @@ menu="$(build_menu)"
 
 # mostra so o rotulo (1a coluna ate o TAB); retorna o comando (apos o TAB)
 chosen="$(cut -f1 <<<"$menu" | fuzzel --dmenu --config "$HOME/.config/fuzzel/powermenu.ini" \
-  --anchor center --width 26 --lines 8)" || exit 0
+  --anchor center --width 26 --lines 10)" || exit 0
 [ -z "$chosen" ] && exit 0
 
 cmd="$(awk -F'\t' -v sel="$chosen" '$1==sel{print $2}' <<<"$menu")"
-[ -n "$cmd" ] && setsid -f $cmd >/dev/null 2>&1
+mkdir -p "$HOME/.cache"
+# erros do item escolhido ficam em ~/.cache/settings-menu.log (antes iam para /dev/null e nao dava p/ saber por que nada abriu)
+[ -n "$cmd" ] && { echo "$(date '+%F %T') abrindo: $cmd" >>"$HOME/.cache/settings-menu.log"; setsid -f $cmd >>"$HOME/.cache/settings-menu.log" 2>&1; }

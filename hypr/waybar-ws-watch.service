@@ -1,0 +1,9 @@
+[Unit]
+Description=Atualiza os botoes de workspace da waybar (eventos do Hyprland)
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=%h/.config/waybar/scripts/ws-watch.sh
+Restart=always
+RestartSec=1

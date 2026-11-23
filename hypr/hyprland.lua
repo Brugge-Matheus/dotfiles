@@ -43,7 +43,7 @@ pcall(dofile, os.getenv("HOME") .. "/.config/hypr/monitors.lua")
 -- Set programs that you use
 local terminal    = "ghostty"
 local fileManager = "thunar"   -- GUI; yazi (terminal) disponivel via `yazi` no ghostty
-local menu        = "rofi -show drun"
+local menu        = "rofi -show drun -matching-negate-char '>'"   -- ">" nao filtra a lista (comandos com >; ver rofi/config.rasi)
 
 
 -------------------
@@ -75,11 +75,13 @@ hl.on("hyprland.start", function ()
     -- Barra de status: o script lanca uma Waybar POR MONITOR (fixada a sua
     -- saida) e cuida do auto-hide em fullscreen + revelar-ao-hover de forma
     -- independente por monitor. (Por isso NAO chamamos "waybar" direto aqui.)
-    hl.exec_cmd("~/.config/waybar/scripts/waybar-fullscreen.sh")
+    -- Roda como SERVICO do systemd (hypr/waybar-fullscreen.service): watchdog externo reinicia o daemon se
+    -- ele travar (a barra ficava escondida/vazia). Idempotente: se ja estiver ativo, nao faz nada.
+    hl.exec_cmd("systemctl --user start waybar-fullscreen.service")
     -- Atualiza os botoes de workspace (custom/ws*) ao trocar/abrir/fechar janela.
     -- Necessario porque o clique nativo do waybar quebra na config Lua (bug upstream);
     -- usamos botoes custom que chamam hl.dsp.focus, e este daemon os mantem ao vivo.
-    hl.exec_cmd("~/.config/waybar/scripts/ws-watch.sh")
+    hl.exec_cmd("systemctl --user start waybar-ws-watch.service")   -- servico (Restart=always); ver hypr/waybar-ws-watch.service
     -- Notificacoes (daemon + central)
     hl.exec_cmd("swaync")
     -- Gerenciador de inatividade (dim/lock/dpms)
@@ -191,14 +193,15 @@ hl.config({
 -- Refer to https://wiki.hypr.land/Configuring/Basics/Variables/
 hl.config({
     general = {
-        gaps_in  = 2,
-        gaps_out = 5,
+        gaps_in  = 3,
+        gaps_out = 8,
 
-        border_size = 2,
+        border_size = 1,   -- bordas finas de 1px, como no design do blog
 
+        -- Tema "Terminal Refinado" (design do blog bruggeOnGrails; ver arch/THEME.md)
         col = {
-            active_border   = "rgba(ffffffff)",   -- borda da janela ativa: branca
-            inactive_border = "rgba(2a2a2aaa)",    -- inativa: cinza neutro (tema black)
+            active_border   = "rgba(d6a84aff)",   -- ativa: ambar #d6a84a (unico acento)
+            inactive_border = "rgba(22222aff)",   -- inativa: #22222a
         },
 
         -- Set to true to enable resizing windows by clicking and dragging on borders and gaps
@@ -211,18 +214,21 @@ hl.config({
     },
 
     decoration = {
-        rounding       = 6,
+        rounding       = 2,   -- cantos quase retos (blog: radius 2px)
         rounding_power = 2,
 
         -- Change transparency of focused and unfocused windows
         active_opacity   = 1.0,
         inactive_opacity = 1.0,
 
+        dim_inactive = true,   -- janelas sem foco levemente escurecidas (destaca a ativa; custo ~zero)
+        dim_strength = 0.12,
+
         shadow = {
             enabled      = true,
             range        = 3,
             render_power = 2,
-            color        = 0xee0a0a0a,
+            color        = 0xee0b0b0c,
         },
 
         blur = {
@@ -301,6 +307,29 @@ hl.config({
 })
 
 -- See https://wiki.hypr.land/Configuring/Layouts/Scrolling-Layout/ for more
+-- Grupos de janelas (abas): barra fina no mesmo tema (ambar na aba ativa)
+hl.config({
+    group = {
+        col = {
+            border_active   = "rgba(d6a84aff)",
+            border_inactive = "rgba(22222aff)",
+        },
+        groupbar = {
+            font_family    = "JetBrainsMono Nerd Font",
+            font_size      = 11,
+            height         = 16,
+            rounding       = 2,
+            gradients      = false,
+            col = {
+                active   = "rgba(d6a84aff)",
+                inactive = "rgba(16161aff)",
+            },
+            text_color          = "rgba(0b0b0cff)",
+            text_color_inactive = "rgba(8a8a8fff)",
+        },
+    },
+})
+
 hl.config({
     scrolling = {
         fullscreen_on_one_column = true,
@@ -313,6 +342,7 @@ hl.config({
 
 hl.config({
     misc = {
+        background_color        = 0xff0b0b0c, -- fundo atras de tudo (sem wallpaper): #0b0b0c
         force_default_wallpaper = -1,    -- Set to 0 or 1 to disable the anime mascot wallpapers
         disable_hyprland_logo   = false, -- If true disables the random hyprland logo / anime girl background. :(
         -- DPMS: o hypridle apaga a tela aos 6min (dpms off). Por padrao o Hyprland

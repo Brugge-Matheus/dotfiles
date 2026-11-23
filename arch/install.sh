@@ -70,6 +70,11 @@ safe_link "$DOTFILES_DIR/gsimplecal/config"  "$HOME/.config/gsimplecal/config"
 safe_link "$DOTFILES_DIR/gtk-3.0/gtk.css"    "$HOME/.config/gtk-3.0/gtk.css"
 safe_link "$DOTFILES_DIR/gtk-3.0/settings.ini" "$HOME/.config/gtk-3.0/settings.ini"
 safe_link "$DOTFILES_DIR/gtk-4.0/settings.ini" "$HOME/.config/gtk-4.0/settings.ini"
+safe_link "$DOTFILES_DIR/gtk-4.0/gtk.css"      "$HOME/.config/gtk-4.0/gtk.css"      # tema Terminal Refinado (libadwaita)
+mkdir -p "$HOME/.config/btop/themes"
+safe_link "$DOTFILES_DIR/btop/themes/brugge.theme" "$HOME/.config/btop/themes/brugge.theme"  # tema do btop
+mkdir -p "$HOME/.config/qt6ct/colors"
+safe_link "$DOTFILES_DIR/qt6ct/colors/brugge.conf" "$HOME/.config/qt6ct/colors/brugge.conf"  # paleta Qt
 safe_link "$DOTFILES_DIR/qt6ct/qt6ct.conf" "$HOME/.config/qt6ct/qt6ct.conf"
 safe_link "$DOTFILES_DIR/fuzzel/powermenu.ini" "$HOME/.config/fuzzel/powermenu.ini"
 safe_link "$DOTFILES_DIR/rofi"               "$HOME/.config/rofi"   # launcher (config.rasi + temas de cor)
@@ -87,6 +92,10 @@ if [ -f "$DOTFILES_DIR/qimgv/qimgv.conf" ] && [ ! -e "$HOME/.config/qimgv/qimgv.
 fi
 # Unit que ativa o graphical-session.target (portais/polkit no Hyprland do TTY)
 safe_link "$DOTFILES_DIR/systemd/user/tty-graphical-session.target" "$HOME/.config/systemd/user/tty-graphical-session.target"
+safe_link "$DOTFILES_DIR/hypr/waybar-fullscreen.service" "$HOME/.config/systemd/user/waybar-fullscreen.service"  # daemon das barras (watchdog externo)
+safe_link "$DOTFILES_DIR/hypr/waybar-ws-watch.service" "$HOME/.config/systemd/user/waybar-ws-watch.service"  # botoes de workspace
+mkdir -p "$HOME/.local/bin"
+safe_link "$DOTFILES_DIR/hypr/scripts/hypr-restart.sh" "$HOME/.local/bin/hypr-restart"  # comando: hypr-restart
 
 # Tema de icones (Papirus-Dark) p/ apps GTK4/walker via gsettings
 gsettings set org.gnome.desktop.interface icon-theme 'Papirus-Dark' 2>/dev/null || true

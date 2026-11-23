@@ -4,6 +4,9 @@
 # pede senha no proprio fuzzel quando necessario, liga/desliga o radio.
 set -uo pipefail
 
+LOG="$HOME/.cache/wifi-menu.log"; mkdir -p "$(dirname "$LOG")"
+exec 2>>"$LOG"                      # erros ficam registrados (antes eram descartados)
+echo "$(date '+%F %T') abriu (radio=$(nmcli radio wifi 2>&1))" >>"$LOG"
 CFG="$HOME/.config/fuzzel/powermenu.ini"
 fz() { fuzzel --dmenu --config "$CFG" "$@"; }
 
@@ -16,6 +19,8 @@ fi
 
 # pede um rescan (ignora se foi recente demais)
 nmcli dev wifi rescan 2>/dev/null || true
+# logo apos ligar o radio ou desconectar a lista pode vir vazia: espera ate ~5s pelos primeiros resultados
+for _ in $(seq 1 10); do nmcli -t -f SSID dev wifi list 2>/dev/null | grep -q . && break; sleep 0.5; done
 
 # --- monta a lista de redes (display \t ssid \t security) ---
 # (o proprio python chama o nmcli: nada de pipe, pra nao colidir com o stdin do heredoc)
@@ -60,6 +65,9 @@ PY
 menu="$menu
   Desligar Wi-Fi\t__off__\t
   Atualizar lista\t__rescan__\t"
+
+# as linhas de controle acima trazem "\t" literal; converte p/ TAB de verdade (senao a escolha nao era reconhecida)
+menu="${menu//\\t/$'\t'}"
 
 # conta linhas para dimensionar o fuzzel
 n="$(printf '%s\n' "$menu" | grep -c . )"
