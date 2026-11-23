@@ -89,7 +89,6 @@ Script: [`hypr/scripts/pip.sh`](../hypr/scripts/pip.sh).
 | `SUPER + SHIFT + F` | Tela cheia (fullscreen — igual ao `SUPER + V`) | ✅ |
 | `SUPER + SHIFT + R` | Recarregar config do Hyprland | ✅ |
 | `SUPER + CTRL + ALT + R` | **Reset de vídeo** — socorro p/ *tela preta ao acordar da suspensão* (máquina viva): religa o DPMS, reaplica os monitores e reinicia o `hyprlock` (a sessão **continua travada**). Funciona até com a tela de bloqueio ativa. Pode piscar 1–3 s. Ver [Suspend/idle](README.md#-notas) | ✅ |
-| `SUPER + M` | Encerrar a sessão (uwsm stop → volta ao login) | ✅ |
 
 ## 📸 Capturas & utilitários
 
@@ -108,7 +107,7 @@ Script: [`hypr/scripts/pip.sh`](../hypr/scripts/pip.sh).
 
 ## 🖱️ Cliques na Waybar
 
-> Os sliders (brilho/volume) abrem logo abaixo da barra, perto do clique, no tema do sistema. Fecham com `Esc`, clicando no indicador de novo ou sozinhos quando o mouse sai de cima do painel (ou em ~4 s se você nem chegar a entrar nele). Abrem em ~0,2 s (renderizador cairo; o padrão GL levava ~2 s). Script: `waybar/scripts/slider-popup.py` (usa `/usr/bin/python3` + GTK4 + gtk4-layer-shell). Para aplicar mudanças no `config.jsonc` use `hypr-restart --only waybar` (nunca `SIGUSR2`).
+> Os sliders (brilho/volume) abrem logo abaixo da barra, perto do clique, no tema do sistema. Ficam abertos até você apertar `Enter` ou `Esc`, ou clicar fora do painel (tirar o mouse de cima não fecha). Abrem em ~0,2 s (renderizador cairo; o padrão GL levava ~2 s). Script: `waybar/scripts/slider-popup.py` (usa `/usr/bin/python3` + GTK4 + gtk4-layer-shell). Para aplicar mudanças no `config.jsonc` use `hypr-restart --only waybar` (nunca `SIGUSR2`).
 
 | Onde | Ação |
 |---|---|

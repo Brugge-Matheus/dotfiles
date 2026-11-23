@@ -420,7 +420,6 @@ local mainMod = "SUPER" -- Sets "Windows" key as main modifier
 hl.bind(mainMod .. " + Q", hl.dsp.exec_cmd(terminal))
 local closeWindowBind = hl.bind(mainMod .. " + C", hl.dsp.window.close())
 -- closeWindowBind:set_enabled(false)
-hl.bind(mainMod .. " + M", hl.dsp.exec_cmd("uwsm stop"))                                -- encerra a sessao (uwsm)
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
 hl.bind(mainMod .. " + V", hl.dsp.window.fullscreen({ mode = "fullscreen" }))           -- tela cheia (preenche o monitor, na frente)
 hl.bind(mainMod .. " + SHIFT + Space", hl.dsp.window.float({ action = "toggle" }))      -- alternar janela flutuante
@@ -487,6 +486,13 @@ hl.bind(mainMod .. " + mouse_down", hl.dsp.focus({ workspace = "e+1" }))
 hl.bind(mainMod .. " + mouse_up",   hl.dsp.focus({ workspace = "e-1" }))
 
 -- Move/resize windows with mainMod + LMB/RMB and dragging
+-- Waybar em fullscreen: o waybar-fullscreen.sh precisa saber de cliques e Esc para manter a barra aberta enquanto
+-- um menu dela (bandeja, slider...) estiver aberto. Binds NAO consumidores: o clique/Esc segue normal para o app.
+local WB_TOUCH = 'touch "$XDG_RUNTIME_DIR/waybar/%s" 2>/dev/null'
+for _, b in ipairs({ "mouse:272", "mouse:273", "mouse:274" }) do
+    hl.bind(b, hl.dsp.exec_cmd(string.format(WB_TOUCH, "click")), { mouse = true, non_consuming = true })
+end
+hl.bind("Escape", hl.dsp.exec_cmd(string.format(WB_TOUCH, "esc")), { non_consuming = true })
 hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(),   { mouse = true })
 hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { mouse = true })
 
