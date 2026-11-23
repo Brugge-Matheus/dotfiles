@@ -27,3 +27,5 @@ yt-dlp            # deixa o mpv tocar links do YouTube/etc direto (mpv <url>)
 # --- Imagem ---
 # qimgv (AUR, ver 02-visual-aur.txt) = visualizador rapido + edicao leve (crop/rotate/resize)
 gimp              # editor "pesado": camadas, retoque, filtros. Hook 'e' do qimgv abre nele
+python-gobject    # popup de slider (brilho/volume) da waybar — waybar/scripts/slider-popup.py
+gtk4-layer-shell  # idem: janela layer-shell em GTK4

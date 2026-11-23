@@ -1,18 +1,18 @@
 return {
   "nvim-lualine/lualine.nvim",
   opts = function(_, opts)
-    -- Cores exatas do statusBar do Min Darker Theme
-    local bg  = "#070707" -- statusBar.background
-    local fg  = "#7E7E7E" -- statusBar.foreground
-    local sel = "#303030" -- list.activeSelectionBackground (usado no bloco "a")
+    -- Cores do tema "Terminal Refinado" (ver arch/THEME.md)
+    local bg  = "#101012" -- painel
+    local fg  = "#8a8a8f" -- texto apagado
+    local sel = "#22222a" -- selecao (bloco "a")
 
     opts.options = opts.options or {}
     opts.options.theme = {
-      normal   = { a = { bg = sel, fg = "#FAFAFA", gui = "bold" }, b = { bg = bg, fg = fg }, c = { bg = bg, fg = fg } },
-      insert   = { a = { bg = "#c74e39", fg = "#FAFAFA", gui = "bold" }, b = { bg = bg, fg = fg } },
-      visual   = { a = { bg = "#b392f0", fg = "#0C0C0C", gui = "bold" }, b = { bg = bg, fg = fg } },
-      replace  = { a = { bg = "#FF9800", fg = "#0C0C0C", gui = "bold" }, b = { bg = bg, fg = fg } },
-      command  = { a = { bg = "#81b88b", fg = "#0C0C0C", gui = "bold" }, b = { bg = bg, fg = fg } },
+      normal   = { a = { bg = "#d6a84a", fg = "#0b0b0c", gui = "bold" }, b = { bg = bg, fg = fg }, c = { bg = bg, fg = fg } },
+      insert   = { a = { bg = "#7ba96a", fg = "#0b0b0c", gui = "bold" }, b = { bg = bg, fg = fg } },
+      visual   = { a = { bg = "#eac884", fg = "#0b0b0c", gui = "bold" }, b = { bg = bg, fg = fg } },
+      replace  = { a = { bg = "#c87067", fg = "#0b0b0c", gui = "bold" }, b = { bg = bg, fg = fg } },
+      command  = { a = { bg = "#8a6e31", fg = "#e7e7e6", gui = "bold" }, b = { bg = bg, fg = fg } },
       inactive = { a = { bg = bg, fg = fg }, b = { bg = bg, fg = fg }, c = { bg = bg, fg = fg } },
     }
 
@@ -28,9 +28,9 @@ return {
       color = function()
         local enc = vim.bo.fileencoding ~= "" and vim.bo.fileencoding or vim.o.encoding
         if enc ~= "utf-8" and enc ~= "utf8" then
-          return { fg = "#e5c07b", gui = "bold" } -- amarelo para encodings não-UTF-8
+          return { fg = "#d6a84a", gui = "bold" } -- amarelo para encodings não-UTF-8
         end
-        return { fg = "#6c7086" } -- cinza sutil para UTF-8
+        return { fg = "#55555a" } -- cinza sutil para UTF-8
       end,
       padding = { left = 1, right = 1 },
     }

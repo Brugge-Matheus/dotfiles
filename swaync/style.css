@@ -1,4 +1,4 @@
-/* SwayNC — tema black minimalista (combina com a Waybar) */
+/* SwayNC — tema "Terminal Refinado" (design do blog bruggeOnGrails): preto, bordas 1px, cantos 2px, acento ambar */
 
 * {
   font-family: "JetBrainsMono Nerd Font", monospace;
@@ -16,46 +16,46 @@
 
 /* cada notificacao (popup) */
 .notification {
-  border-radius: 10px;
+  border-radius: 2px;
   margin: 6px 10px;
-  background: #0a0a0a;
-  border: 1px solid #1c1c1c;
+  background: #0b0b0c;
+  border: 1px solid #22222a;
   padding: 0;
 }
 .notification-content {
   padding: 10px;
   background: transparent;
-  color: #d4d4d4;
+  color: #e7e7e6;
 }
 
-.notification.critical { border-color: #e06c75; }
+.notification.critical { border-color: #c87067; border-left: 2px solid #c87067; }
 
-.summary { color: #ffffff; font-weight: 700; }
-.body    { color: #a0a0a0; }
-.time    { color: #555555; font-size: 11px; }
+.summary { color: #e7e7e6; font-weight: 700; }
+.body    { color: #8a8a8f; }
+.time    { color: #55555a; font-size: 11px; }
 
 .notification-default-action,
 .notification-action {
   background: transparent;
-  color: #d4d4d4;
+  color: #e7e7e6;
   border: none;
 }
-.notification-default-action { border-radius: 10px; }
+.notification-default-action { border-radius: 2px; }
 .notification-action {
-  border: 1px solid #1c1c1c;
-  border-radius: 8px;
+  border: 1px solid #22222a;
+  border-radius: 2px;
   margin: 4px;
 }
-.notification-action:hover { background: #1c1c1c; color: #ffffff; }
+.notification-action:hover { background: #22222a; color: #e7e7e6; }
 
 .close-button {
   background: transparent;
-  color: #e06c75;
-  border-radius: 8px;
+  color: #c87067;
+  border-radius: 2px;
   margin: 4px;
   padding: 0 6px;
 }
-.close-button:hover { background: #e06c75; color: #0a0a0a; }
+.close-button:hover { background: #c87067; color: #0b0b0c; }
 
 /* imagens/icones dentro da notificacao */
 .notification-content .image,
@@ -63,34 +63,34 @@
 
 /* ============ Central de notificacoes (SUPER+N) ============ */
 .control-center {
-  background: #0a0a0a;
-  border: 1px solid #1c1c1c;
-  border-radius: 14px;
+  background: #0b0b0c;
+  border: 1px solid #22222a;
+  border-radius: 2px;
   margin: 8px;
   padding: 10px;
-  color: #d4d4d4;
+  color: #e7e7e6;
 }
-.control-center .notification { background: #111111; }
+.control-center .notification { background: #101012; }
 .control-center-list { background: transparent; }
 
-.widget-title { color: #ffffff; font-size: 15px; font-weight: 700; padding: 4px 8px; }
+.widget-title { color: #e7e7e6; font-size: 15px; font-weight: 700; padding: 4px 8px; }
 .widget-title > button {
-  color: #0a0a0a;
-  background: #5e81ff;
+  color: #0b0b0c;
+  background: #d6a84a;
   border: none;
-  border-radius: 8px;
+  border-radius: 2px;
   padding: 4px 12px;
 }
-.widget-title > button:hover { background: #ffffff; }
+.widget-title > button:hover { background: #eac884; }
 
-.widget-dnd { color: #d4d4d4; padding: 4px 8px; }
+.widget-dnd { color: #e7e7e6; padding: 4px 8px; }
 .widget-dnd > switch {
-  background: #1c1c1c;
-  border: 1px solid #2a2a2a;
-  border-radius: 12px;
+  background: #22222a;
+  border: 1px solid #30303a;
+  border-radius: 2px;
 }
-.widget-dnd > switch:checked { background: #5e81ff; }
-.widget-dnd > switch slider { background: #d4d4d4; border-radius: 10px; }
+.widget-dnd > switch:checked { background: #d6a84a; }
+.widget-dnd > switch slider { background: #e7e7e6; border-radius: 2px; }
 
 /* sem notificacoes */
 .control-center .notification-row:only-child,

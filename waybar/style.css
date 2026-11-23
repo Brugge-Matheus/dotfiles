@@ -1,4 +1,5 @@
-/* Waybar — barra preta solida, compacta (estilo dev minimalista) */
+/* Waybar — tema "Terminal Refinado" (mesmo design do blog bruggeOnGrails):
+   preto #0b0b0c, texto #e7e7e6/#8a8a8f, UNICO acento ambar #d6a84a, bordas 1px, cantos 2px. */
 
 * {
   font-family: "JetBrainsMono Nerd Font", monospace;
@@ -11,9 +12,9 @@
 
 /* barra solida de ponta a ponta */
 window#waybar {
-  background: #0a0a0a;
-  border-bottom: 1px solid #161616;
-  color: #d4d4d4;
+  background: #0b0b0c;
+  border-bottom: 1px solid #22222a;
+  color: #e7e7e6;
 }
 
 /* sem pilulas — containers transparentes */
@@ -41,24 +42,25 @@ window#waybar {
 #custom-clock,
 #custom-power {
   padding: 0 11px;
-  color: #d4d4d4;
+  color: #e7e7e6;
 }
 
 /* workspaces (botoes custom/wsN — clique via hl.dsp.focus; vazios colapsam) */
 #custom-ws1, #custom-ws2, #custom-ws3, #custom-ws4, #custom-ws5, #custom-ws6, #custom-ws7, #custom-ws8, #custom-ws9, #custom-ws10 {
-  color: #555555;
+  color: #55555a;
   padding: 0 9px;
   margin: 4px 2px;
-  border-radius: 6px;
+  border-radius: 2px;
   background: transparent;
 }
 #custom-ws1.active, #custom-ws2.active, #custom-ws3.active, #custom-ws4.active, #custom-ws5.active, #custom-ws6.active, #custom-ws7.active, #custom-ws8.active, #custom-ws9.active, #custom-ws10.active {
-  color: #0a0a0a;
-  background: #d4d4d4;
+  color: #d6a84a;
+  background: transparent;
+  border-bottom: 1px solid #d6a84a;
 }
 #custom-ws1:hover, #custom-ws2:hover, #custom-ws3:hover, #custom-ws4:hover, #custom-ws5:hover, #custom-ws6:hover, #custom-ws7:hover, #custom-ws8:hover, #custom-ws9:hover, #custom-ws10:hover {
-  color: #ffffff;
-  background: #1c1c1c;
+  color: #e7e7e6;
+  background: #22222a;
 }
 /* workspace vazio/inativo: some (sem largura) */
 #custom-ws1.empty, #custom-ws2.empty, #custom-ws3.empty, #custom-ws4.empty, #custom-ws5.empty, #custom-ws6.empty, #custom-ws7.empty, #custom-ws8.empty, #custom-ws9.empty, #custom-ws10.empty {
@@ -73,43 +75,51 @@ window#waybar {
 #taskbar button {
   padding: 0 8px;
   margin: 4px 2px;
-  border-radius: 6px;
+  border-radius: 2px;
   background: transparent;
 }
-#taskbar button.active { background: #d4d4d4; }   /* janela em foco */
-#taskbar button:hover  { background: #1c1c1c; }
+#taskbar button.active { background: #16161a; border-bottom: 1px solid #d6a84a; }   /* janela em foco */
+#taskbar button:hover  { background: #22222a; }
 
 /* widget do spotify */
-#custom-spotify         { color: #777777; }
-#custom-spotify.playing { color: #1db954; }   /* verde spotify quando tocando */
-#custom-spotify.paused  { color: #b0b0b0; }
-#custom-spotify.closed  { color: #555555; }
+#custom-spotify         { color: #8a8a8f; }
+#custom-spotify.playing { color: #7ba96a; }   /* verde spotify quando tocando */
+#custom-spotify.paused  { color: #8a8a8f; }
+#custom-spotify.closed  { color: #55555a; }
 
 /* apps em segundo plano (tray) */
 #tray { padding: 0 6px; }
-#tray menu { background: #0a0a0a; color: #d4d4d4; }
+#tray menu { background: #0b0b0c; color: #e7e7e6; }
 
 /* sistema (centro) */
-#cpu, #memory, #temperature { color: #c8c8c8; }
-#temperature.critical { color: #e06c75; }
+#cpu, #memory, #temperature { color: #e7e7e6; }
+#temperature.critical { color: #c87067; }
 
 /* direita */
-#custom-weather { color: #7aa2cf; }
-#backlight, #pulseaudio, #bluetooth, #network, #battery, #custom-battery { color: #c8c8c8; }
-#custom-clock { color: #ffffff; font-weight: 700; }
+#custom-weather { color: #8a8a8f; }
+#backlight, #pulseaudio, #bluetooth, #network, #battery, #custom-battery { color: #e7e7e6; }
+#custom-clock { color: #e7e7e6; font-weight: 700; letter-spacing: 0.5px; }
 
 #pulseaudio.muted,
 #network.disconnected,
-#bluetooth.disabled { color: #555555; }
+#bluetooth.disabled { color: #55555a; }
 
-#battery.charging, #custom-battery.charging { color: #98c379; }
-#battery.warning:not(.charging),  #custom-battery.warning:not(.charging)  { color: #e5c07b; }
+#battery.charging, #custom-battery.charging { color: #7ba96a; }
+#battery.warning:not(.charging),  #custom-battery.warning:not(.charging)  { color: #d6a84a; }
 #battery.critical:not(.charging), #custom-battery.critical:not(.charging) {
-  color: #e06c75;
+  color: #c87067;
   animation: blink 1s steps(2) infinite;
 }
-@keyframes blink { to { color: #0a0a0a; } }
+@keyframes blink { to { color: #0b0b0c; } }
 
 /* power */
-#custom-power { color: #e06c75; padding-right: 14px; font-size: 14px; }
-#custom-power:hover { color: #ffffff; }
+#custom-power { color: #c87067; padding-right: 14px; font-size: 14px; }
+#custom-power:hover { color: #eac884; }
+
+/* tooltips (hover) no mesmo tema */
+tooltip { background: #101012; border: 1px solid #30303a; border-radius: 2px; }
+tooltip label { color: #e7e7e6; padding: 2px 4px; }
+
+/* indicadores clicaveis (brilho/volume abrem slider): realce ao passar o mouse, como botao */
+#backlight, #pulseaudio { border-radius: 2px; }
+#backlight:hover, #pulseaudio:hover { background: #16161a; color: #eac884; }

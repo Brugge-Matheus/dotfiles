@@ -9,7 +9,7 @@ return {
   {
     "LazyVim/LazyVim",
     opts = {
-      colorscheme = "min-darker", -- colors/min-darker.lua — port do tema VSCode gmsgarcia.min-darker-theme
+      colorscheme = "brugge", -- colors/brugge.lua — "Terminal Refinado" (design do blog; ver arch/THEME.md)
     },
   },
 }

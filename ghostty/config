@@ -1,5 +1,27 @@
 gtk-titlebar = false
-theme = Ayu
+# Tema "Terminal Refinado" (design do blog bruggeOnGrails; ver arch/THEME.md): preto, off-white, ambar.
+background = 0b0b0c
+foreground = e7e7e6
+cursor-color = d6a84a
+cursor-text = 0b0b0c
+selection-background = 30303a
+selection-foreground = eac884
+palette = 0=#16161a
+palette = 1=#c87067
+palette = 2=#7ba96a
+palette = 3=#d6a84a
+palette = 4=#7d93a8
+palette = 5=#a8869f
+palette = 6=#7aa6a1
+palette = 7=#e7e7e6
+palette = 8=#55555a
+palette = 9=#d98a82
+palette = 10=#93c081
+palette = 11=#eac884
+palette = 12=#9bb0c4
+palette = 13=#c2a1b9
+palette = 14=#98c2bd
+palette = 15=#ffffff
 macos-option-as-alt = true
 font-size = 12
 
@@ -18,8 +40,29 @@ keybind = ctrl+backspace=text:\x1b\x7f
 
 # Nivel de transparencia do fundo (0.0 = invisivel .. 1.0 = opaco).
 # Referencia:  0.95 quase solido  |  0.90 sutil  |  0.82 medio  |  0.70 bem transparente.
-# 0.82 = transparencia visivel o suficiente pro blur aparecer, sem perder leitura.
-background-opacity = 0.82
+# 1.0 = SOLIDO (tema Terminal Refinado e o design do blog sao preto solido).
+# POR QUE nao translucido: tmux/nvim pintam as celulas com fundo OPACO, enquanto a margem (padding) e o
+# rodape ficam translucidos -> viram uma "borda cinza" (o wallpaper aparece por tras). Se quiser
+# transparencia de volta, use 0.9 JUNTO com  background-opacity-cells = true  (tudo translucido por igual).
+background-opacity = 1.0
 # Desfoca o que esta atras da janela (desktop/janelas): raio do blur.
 # true = raio padrao; numero maior = mais "fosco". 20 = frosted glass equilibrado.
+# (sem efeito com opacidade 1.0; volte p/ 20 se reativar a transparencia)
 background-blur = 20
+
+# =====================================================================
+#  Bordas/rodape sem "faixa cinza" (tema Terminal Refinado)
+# =====================================================================
+# Sem a barra de rolagem do GTK (aparecia como faixa cinza na direita; o scroll continua pelo mouse/teclado).
+scrollbar = never
+# A sobra de pixels da grade (rodape) e pintada pelo GTK de cinza; "extend" cobre com a cor da ultima
+# linha. Por isso a barra do tmux usa EXATAMENTE o fundo do terminal (#0b0b0c): a extensao fica invisivel
+# e a barra mantem o tamanho normal. Se mudar a cor da barra do tmux, ela "cresce" pela sobra.
+window-padding-color = extend
+window-padding-balance = false
+# Barra do tmux RENTE ao fim da janela: sem padding vertical, 49 linhas x 21px = 1029px das janelas
+# de 1030px (altura tipica do tiling com a waybar) -> sobra de ~1px em vez de ~15px preto embaixo.
+# O padding lateral continua (8px), so o vertical some.
+window-padding-y = 0
+# Janela/decoracao com as cores do tema do terminal (nao o libadwaita claro/cinza).
+window-theme = ghostty

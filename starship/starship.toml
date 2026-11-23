@@ -3,21 +3,21 @@ add_newline = true
 
 # Personaliza o caractere do prompt
 [character]
-success_symbol = "[➜](bold green)"
-error_symbol = "[➜](bold red)"
+success_symbol = "[➜](bold #d6a84a)"
+error_symbol = "[➜](bold #c87067)"
 
 # Diretório atual com truncamento e ícone
 [directory]
 truncation_length = 3
 truncation_symbol = "…/"
-style = "bold cyan"
+style = "bold #d6a84a"
 read_only = " "
 format = "[$path]($style)[$read_only]($read_only_style) "
 
 # Git: mostra branch, status e ícones
 [git_branch]
 symbol = " "
-style = "bold purple"
+style = "bold #8a8a8f"
 
 [git_status]
 conflicted = "⚔️ "

@@ -1,0 +1,16 @@
+/* =====================================================================
+ *  Paleta: "Terminal Refinado" — o mesmo design do blog bruggeOnGrails
+ *  (preto quase-preto + texto off-white + UNICO acento ambar #d6a84a).
+ *  Fonte da verdade das cores do sistema: arch/THEME.md
+ * ===================================================================== */
+* {
+    bg:        #0b0b0c;   /* fundo da janela */
+    bg-alt:    #16161a;   /* barra de busca */
+    fg:        #e7e7e6;   /* texto */
+    fg-dim:    #8a8a8f;   /* placeholder / detalhes apagados */
+    accent:    #d6a84a;   /* ambar: aba ativa, itens ativos */
+    sel:       #16161a;   /* linha selecionada */
+    sel-fg:    #eac884;   /* texto da selecao: ambar claro */
+    urgent:    #c87067;   /* erro / urgente */
+    border-c:  #30303a;   /* borda externa */
+}
