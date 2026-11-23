@@ -444,6 +444,7 @@ hl.bind(mainMod .. " + ALT + minus", hl.dsp.exec_cmd(PIP .. " size -"))      -- 
 hl.bind(mainMod .. " + equal",     hl.dsp.exec_cmd("~/.config/rofi/scripts/rofi-ext.sh calc"))   -- calculadora
 hl.bind(mainMod .. " + T",         hl.dsp.exec_cmd("~/.config/rofi/scripts/rofi-ext.sh trans"))  -- tradutor (EN/PT)
 hl.bind(mainMod .. " + SHIFT + E", hl.dsp.exec_cmd("~/.config/rofi/scripts/rofi-ext.sh files"))  -- navegar arquivos
+hl.bind(mainMod .. " + M",         hl.dsp.exec_cmd("~/.config/rofi/scripts/rofi-ext.sh mixer"))  -- mixer de volume por programa
 hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
 hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit"))    -- dwindle only
 

@@ -179,6 +179,12 @@ As 6 abas, da esquerda para a direita (ícones no rodapé):
 | **Calculadora** | `calcd` | calculadora dev (variáveis, `qalc`) com **histórico** salvo; `>clear` limpa |
 | **Tradutor** | `trans` | PT⇄EN com **histórico** salvo (precisa de internet para traduzir); `>clear` limpa |
 
+### 🔊 Mixer de volume por programa — `SUPER + M`
+Como o mixer do Windows (`rofi/scripts/rofi-mixer.py`, aberto por `rofi-ext.sh mixer`): uma linha para o **volume geral** e uma por programa tocando som (abas do mesmo navegador viram uma linha).
+- **`←` / `→`** diminui/aumenta 5% do programa selecionado (até 150%, amarelo acima de 100%); **`↑` / `↓`** escolhem o programa; **`Enter`** silencia/reativa; **`Esc`** fecha.
+- Janela própria (não é aba do launcher): nela as setas deixam de mover o cursor do campo de busca (use `Ctrl+B` / `Ctrl+F`); numa aba do launcher isso quebraria os outros modos.
+- Só aparece quem está com áudio aberto.
+
 ### Comandos com `>` (em qualquer aba)
 
 Para **escrever um comando** em qualquer aba, comece com `>`. Há **dois jeitos**, e a diferença é o **espaço** depois do `>`:

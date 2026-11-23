@@ -65,6 +65,7 @@ Script: [`hypr/scripts/pip.sh`](../hypr/scripts/pip.sh).
 | `SUPER + =` | Calculadora dev (variáveis de sessão, round(), qalc; Ctrl+Del apaga) | ✅ |
 | `SUPER + T` | Tradutor (rofi + translate-shell: PT↔EN, copia) | ✅ |
 | `SUPER + SHIFT + E` | Navegar arquivos pelo teclado (rofi-file-browser) | ✅ |
+| `SUPER + M` | Mixer de volume por programa (`←/→` ±5%, `Enter` silencia) | ✅ |
 | `SUPER + ,` | Painel de configurações (settings-menu) | ✅ |
 
 > Extensões do rofi documentadas em [`ROFI.md`](ROFI.md) (instalação, config e como usar).
