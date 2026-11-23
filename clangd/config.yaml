@@ -1,0 +1,8 @@
+# clangd (config de usuario) — padrao quando o projeto NAO define o proprio.
+# Sem compile_commands.json/.clangd o clangd assume C17: `nullptr`, `constexpr`, `true/false` como
+# palavras-chave, `typeof` etc. (C23) viram "undeclared identifier". Aqui o padrao dos .c passa a C23.
+# Um `.clangd` ou compile_commands.json no projeto continua mandando (vem depois deste arquivo).
+If:
+  PathMatch: .*\.c
+CompileFlags:
+  Add: [-std=c23]

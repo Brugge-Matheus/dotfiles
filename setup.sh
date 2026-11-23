@@ -762,6 +762,7 @@ done
 
 # Neovim
 safe_link "$DOTFILES_DIR/nvim"                   "$HOME/.config/nvim"
+safe_link "$DOTFILES_DIR/clangd"                 "$HOME/.config/clangd"   # clangd: C23 por padrao nos .c
 
 # Git
 safe_link "$DOTFILES_DIR/git/.gitconfig"         "$HOME/.gitconfig"
