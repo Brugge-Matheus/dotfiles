@@ -201,6 +201,12 @@ Uma instância **por monitor** (daemon `waybar/scripts/waybar-fullscreen.sh`: au
 fullscreen + revelar-ao-hover, por monitor). ⚠️ **Não recarregue com `SIGUSR2`** (crasha);
 para aplicar mudanças, reinicie esse daemon.
 
+**Menus abertos pela barra em fullscreen:** a barra fica **fixa** enquanto um menu dela estiver aberto (botão direito
+num app da bandeja como Discord, sliders de brilho/volume, menus fuzzel/rofi, central de notificações). Ela solta
+quando o menu fecha: **Esc**, ou clique fora da barra. Como o menu da bandeja (GTK) não aparece em `hyprctl layers`,
+o daemon usa binds não-consumidores de clique/`Esc` em `hypr/hyprland.lua` (tocam `$XDG_RUNTIME_DIR/waybar/click|esc`);
+sliders e menus de launcher são detectados pela layer-surface (`MENU_LAYERS` no daemon).
+
 - **Workspaces (`custom/ws1..10`):** botões dinâmicos (só ocupados + o ativo). Reconstruídos
   como módulos custom porque o clique do módulo nativo `hyprland/workspaces` **quebra** na
   config Lua do Hyprland 0.55+ (manda `dispatch workspace N` por IPC, que o interpretador

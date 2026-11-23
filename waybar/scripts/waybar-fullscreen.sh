@@ -87,6 +87,50 @@ def _wedged(signum, frame):
 signal.signal(signal.SIGALRM, _wedged)
 signal.alarm(WATCHDOG)
 
+# --- Menus abertos a partir da barra (botao direito num app da bandeja, slider, menu fuzzel...) -------------
+# Em fullscreen a barra some quando o cursor desce de 40px, e o menu aberto some junto (e o pai dele). Entao a barra
+# fica FIXA (pinned) enquanto houver um menu aberto. Dois sinais:
+#   1. layer-surface de menu na tela (fuzzel, rofi, slider-popup, central de notificacoes...): visivel em `hyprctl layers`.
+#   2. menu "popup" da bandeja (GTK): NAO aparece em layers/clients. Aqui usamos os cliques: binds nao-consumidores do
+#      Hyprland (hypr/hyprland.lua) tocam $RUNDIR/click a cada clique de mouse e $RUNDIR/esc a cada Esc. Clique na
+#      barra = fixa; clique fora da barra (ou noutro monitor) ou Esc = solta. Clique na barra com ela ja fixa mantem.
+CLICK_FILE = f"{rt}/waybar/click"
+ESC_FILE   = f"{rt}/waybar/esc"
+MENU_LAYERS = {"fuzzel", "launcher", "rofi", "walker", "slider-popup", "swaync-control-center", "wlogout"}
+pinned = {}        # saida -> True enquanto um menu aberto pela barra deve mante-la visivel
+
+def _mtime(path):
+    try:    return os.stat(path).st_mtime_ns
+    except OSError: return 0
+_seen = {"click": _mtime(CLICK_FILE), "esc": _mtime(ESC_FILE)}
+
+def menu_layers():
+    """saidas que tem agora uma layer de menu aberta"""
+    res = set()
+    d = hctl("layers") or {}
+    for out, v in d.items():
+        for ls in (v.get("levels") or {}).values():
+            for l in ls:
+                if l.get("namespace") in MENU_LAYERS:
+                    res.add(out)
+    return res
+
+def poll_inputs(mons, c, fs_by_mon):
+    """consome cliques/Esc novos e atualiza `pinned`"""
+    clk, esc = _mtime(CLICK_FILE), _mtime(ESC_FILE)
+    if esc != _seen["esc"]:
+        _seen["esc"] = esc
+        pinned.clear()
+    if clk != _seen["click"]:
+        _seen["click"] = clk
+        for m in mons:
+            ry = rel_y(m, c)
+            name = m["name"]
+            if ry is not None and fs_by_mon.get(name) and ry < HIDE_BELOW:
+                pinned[name] = True        # clicou na barra: o que abrir (menu) fica protegido
+            else:
+                pinned.pop(name, None)     # clicou fora da barra / noutro monitor: menu fechou
+
 def hctl(*args):
     try:
         out = subprocess.run(["hyprctl", *args, "-j"],
@@ -206,13 +250,21 @@ def reconcile():
     c      = cursor()
     any_fs = False
     toggled = False
+    fs_by_mon = {m["name"]: wsfs.get(m.get("activeWorkspace", {}).get("id"), False) for m in mons}
+    for name in list(pinned):              # sem fullscreen nao ha o que proteger
+        if not fs_by_mon.get(name):
+            del pinned[name]
+    poll_inputs(mons, c, fs_by_mon)
+    menus = menu_layers() if any(fs_by_mon.values()) else set()
     for m in mons:
         awid   = m.get("activeWorkspace", {}).get("id")
         mon_fs = wsfs.get(awid, False)
         if mon_fs:
             any_fs = True
             ry = rel_y(m, c)
-            if ry is None:                 # cursor noutro monitor -> esconde
+            if pinned.get(m["name"]) or m["name"] in menus:   # menu aberto pela barra -> mantem visivel
+                desired = True
+            elif ry is None:               # cursor noutro monitor -> esconde
                 desired = False
             elif ry <= REVEAL_AT:          # encostou no topo -> revela
                 desired = True

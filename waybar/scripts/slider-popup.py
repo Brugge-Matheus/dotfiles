@@ -6,8 +6,8 @@
   slider-popup.py --get brightness|volume        valor atual em % (para testes/scripts)
   slider-popup.py --set brightness|volume N      aplica N%
 
-O popup aparece logo abaixo da barra, perto do cursor, no monitor onde voce clicou. Fecha com Esc, clicando
-no indicador de novo ou ao tirar o mouse de cima do painel. O volume vai de 0 a 200% (marca em 100%) — o scroll da waybar continua
+O popup aparece logo abaixo da barra, perto do cursor, no monitor onde voce clicou. Fecha com Enter, Esc ou clicando
+fora do painel (tirar o mouse de cima NAO fecha). O volume vai de 0 a 200% (marca em 100%) — o scroll da waybar continua
 sem limite (acima de 100% pode distorcer). Usa /usr/bin/python3 (precisa de python-gobject + gtk4-layer-shell;
 o python3 do asdf nao tem 'gi').
 """
@@ -201,16 +201,14 @@ class Popup(Gtk.Application):
         self.refresh_labels(cur, muted)
 
         win.set_child(panel)
-        # fecha sozinho quando o mouse sai do painel (700ms) ou se ele nunca entrar nele (4s)
-        motion = Gtk.EventControllerMotion()
-        motion.connect("enter", lambda *_: self.cancel_close())
-        motion.connect("leave", lambda *_: self.arm_close(700))
-        panel.add_controller(motion)
-        self.close_timer = None
-        self.arm_close(4000)
+        # NAO fecha sozinho: so com Enter, Esc ou clicando fora do painel (o clique vem do bind nao-consumidor do
+        # Hyprland que toca $XDG_RUNTIME_DIR/waybar/click; comparamos o cursor com a geometria da layer).
+        self.click_seen = self.click_mtime()
+        GLib.timeout_add(100, self.check_click_outside)
 
         keys = Gtk.EventControllerKey()
-        keys.connect("key-pressed", lambda c, kv, kc, st: (self.quit(), True)[1] if kv == Gdk.KEY_Escape else False)
+        keys.connect("key-pressed", lambda c, kv, kc, st: (self.quit(), True)[1]
+                     if kv in (Gdk.KEY_Escape, Gdk.KEY_Return, Gdk.KEY_KP_Enter) else False)
         win.add_controller(keys)
         win.present()
         try:
@@ -222,14 +220,32 @@ class Popup(Gtk.Application):
         GLib.timeout_add(400, self.sync_external)
 
     # ------------------------------------------------------------------ eventos
-    def arm_close(self, ms):
-        self.cancel_close()
-        self.close_timer = GLib.timeout_add(ms, lambda: (self.quit(), False)[1])
+    CLICK_FILE = os.path.join(os.environ.get("XDG_RUNTIME_DIR", "/tmp"), "waybar", "click")
 
-    def cancel_close(self):
-        if self.close_timer is not None:
-            GLib.source_remove(self.close_timer)
-            self.close_timer = None
+    def click_mtime(self):
+        try:
+            return os.stat(self.CLICK_FILE).st_mtime_ns
+        except OSError:
+            return 0
+
+    def check_click_outside(self):
+        m = self.click_mtime()
+        if m == self.click_seen:
+            return True
+        self.click_seen = m
+        try:
+            cur = json.loads(subprocess.check_output(["hyprctl", "cursorpos", "-j"], timeout=2))
+            layers = json.loads(subprocess.check_output(["hyprctl", "layers", "-j"], timeout=2))
+        except Exception:
+            return True
+        for v in layers.values():
+            for ls in (v.get("levels") or {}).values():
+                for l in ls:
+                    if l.get("namespace") == "slider-popup":
+                        if l["x"] <= cur["x"] < l["x"] + l["w"] and l["y"] <= cur["y"] < l["y"] + l["h"]:
+                            return True          # clique dentro do painel
+        self.quit()
+        return False
 
     def on_change(self, scale):
         if self.updating:
