@@ -94,6 +94,7 @@ fi
 safe_link "$DOTFILES_DIR/systemd/user/tty-graphical-session.target" "$HOME/.config/systemd/user/tty-graphical-session.target"
 safe_link "$DOTFILES_DIR/hypr/waybar-fullscreen.service" "$HOME/.config/systemd/user/waybar-fullscreen.service"  # daemon das barras (watchdog externo)
 safe_link "$DOTFILES_DIR/hypr/waybar-ws-watch.service" "$HOME/.config/systemd/user/waybar-ws-watch.service"  # botoes de workspace
+safe_link "$DOTFILES_DIR/hypr/waybar-sni-watcher.service" "$HOME/.config/systemd/user/waybar-sni-watcher.service"  # watcher da bandeja (sobrevive aos relancamentos da waybar)
 mkdir -p "$HOME/.local/bin"
 safe_link "$DOTFILES_DIR/hypr/scripts/hypr-restart.sh" "$HOME/.local/bin/hypr-restart"  # comando: hypr-restart
 

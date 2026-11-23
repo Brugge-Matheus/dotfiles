@@ -1,6 +1,7 @@
 [Unit]
 Description=Waybar por monitor com auto-hide em tela cheia (daemon)
-After=graphical-session.target
+After=graphical-session.target waybar-sni-watcher.service
+Wants=waybar-sni-watcher.service
 
 [Service]
 Type=notify

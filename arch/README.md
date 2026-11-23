@@ -201,6 +201,10 @@ Uma instância **por monitor** (daemon `waybar/scripts/waybar-fullscreen.sh`: au
 fullscreen + revelar-ao-hover, por monitor). ⚠️ **Não recarregue com `SIGUSR2`** (crasha);
 para aplicar mudanças, reinicie esse daemon.
 
+**Bandeja (tray):** o `StatusNotifierWatcher` roda num serviço próprio (`waybar-sni-watcher.service`, `waybar/scripts/sni-watcher.py`),
+independente da waybar. Antes ele morava na primeira waybar; quando ela era relançada (ex.: HDMI religado ao acordar) a lista de
+ícones sumia e apps como o Discord só voltavam reiniciando. Agora as waybars são só "hosts" e os ícones sobrevivem aos relançamentos.
+
 **Menus abertos pela barra em fullscreen:** a barra fica **fixa** enquanto um menu dela estiver aberto (botão direito
 num app da bandeja como Discord, sliders de brilho/volume, menus fuzzel/rofi, central de notificações). Ela solta
 quando o menu fecha: **Esc**, ou clique fora da barra. Como o menu da bandeja (GTK) não aparece em `hyprctl layers`,
