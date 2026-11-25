@@ -138,3 +138,6 @@ alias acesse-up='docker compose -f ~/svn/docker/erp/docker-compose.yml up -d'
 alias acesse-down='docker compose -f ~/svn/docker/erp/docker-compose.yml down'
 alias acesse-rebuild='docker compose -f ~/svn/docker/erp/docker-compose.yml build web && docker compose -f ~/svn/docker/erp/docker-compose.yml up -d'
 alias acesse-erros='docker compose -f ~/svn/docker/erp/docker-compose.yml exec web tail -f /var/log/apache2/php_errors.log'
+
+# sentry
+fpath=("/home/brugge-matheus/.local/share/zsh/site-functions" $fpath); if [[ -o interactive ]]; then if ! (( $+functions[compdef] )); then autoload -Uz compinit; compinit; fi; autoload -Uz _sentry; compdef _sentry sentry; fi

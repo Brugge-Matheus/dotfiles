@@ -42,7 +42,7 @@ log "======== VIDEO-RESET acionado (SUPER+CTRL+ALT+R) ========"
 log "antes : monitores: $(mons) | hyprlock=$(lock_pids)"
 
 # 1) religa o DPMS
-hyprctl dispatch 'hl.dsp.dpms("on")' >/dev/null 2>&1
+hyprctl dispatch 'hl.dsp.dpms({ action = "enable" })' >/dev/null 2>&1
 sleep 0.5
 
 # 2) reaplica os monitores (config + monitors.lua)
@@ -63,7 +63,7 @@ t0=$(date +%s%N); resent=0
 for i in $(seq 1 20); do
   mons | grep -q 'OFF' || break
   if [ "$i" -ge 12 ] && [ "$resent" -eq 0 ]; then
-    hyprctl dispatch 'hl.dsp.dpms("on")' >/dev/null 2>&1
+    hyprctl dispatch 'hl.dsp.dpms({ action = "enable" })' >/dev/null 2>&1
     log "monitores ainda OFF apos ~6 s -> dpms on reenviado"
     resent=1
   fi

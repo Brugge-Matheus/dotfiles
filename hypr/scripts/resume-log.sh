@@ -83,7 +83,8 @@ for t in 0 2 5 12; do
   prev=$t
   if snapshot "+${t}s"; then
     # alguma saida apagada: tenta religar
-    hyprctl dispatch 'hl.dsp.dpms("on")' >/dev/null 2>&1
+    # ATENCAO: dpms("on") NAO existe — o Hyprland trata como TOGGLE (apagava o que estava ligado). Usar {action="enable"}.
+    hyprctl dispatch 'hl.dsp.dpms({ action = "enable" })' >/dev/null 2>&1
     log "+${t}s CURA: saida apagada detectada -> dpms on reenviado"
   fi
 done
